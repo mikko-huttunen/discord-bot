@@ -2,7 +2,8 @@ require("dotenv").config();
 
 const discord = require("discord.js");
 const greetings = require("./greetings");
-const botData = require("./botData")
+const botData = require("./botData");
+const handleRoles = require("./handleRoles");
 const generateImage = require("./generateImage");
 const client = new discord.Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers"],
@@ -23,11 +24,11 @@ client.on("ready", () => {
 client.on("messageCreate", (msg) => {
     userName = msg.member.user.username;
 
-    if (
-        greetings.greet(userName, msg)
-            ? msg.reply(greetings.greet(userName, msg))
-            : false
-    );
+    !msg.author.bot ? greetings.greet(userName, msg) : false;
+
+    msg.content.startsWith("!role list")
+        ? handleRoles.handleRoleMessage(msg)
+        : false;
 });
 
 client.on("guildMemberAdd", async (member) => {
