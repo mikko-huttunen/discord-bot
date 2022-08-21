@@ -21,10 +21,13 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", (msg) => {
-    const msgToLowerCase = msg.content.toLowerCase();
     userName = msg.member.user.username;
 
-    if (greetings.greetCheck(userName, msg, msgToLowerCase) ? msg.reply(greetings.greetCheck(userName, msg, msgToLowerCase)) : false);
+    if (
+        greetings.greet(userName, msg)
+            ? msg.reply(greetings.greet(userName, msg))
+            : false
+    );
 });
 
 client.on("guildMemberAdd", async (member) => {
