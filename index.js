@@ -26,7 +26,7 @@ client.on("messageCreate", (msg) => {
 
     !msg.author.bot ? greetings.greet(userName, msg) : false;
 
-    msg.content.startsWith("!role list")
+    msg.content.startsWith("!role")
         ? handleRoles.handleRoleMessage(msg)
         : false;
 });
