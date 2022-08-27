@@ -1,27 +1,29 @@
 const canvas = require("canvas");
 const { AttachmentBuilder } = require("discord.js");
-const background = "https://i.imgur.com/zvWTUVu.png";
+const background = "https://i.imgur.com/WtLxcC7.png";
 
 const dim = {
-    height: 675,
-    width: 1200,
+    width: 883,
+    height: 911,
     margin: 0,
 };
 
 const av = {
     size: 256,
-    x: 480,
-    y: 170,
+    x: 313,
+    y: 300,
 };
 
 const generateImage = async (member) => {
-    let username = member.user.username;
-    let discrim = "#" + member.user.discriminator;
-    let avatarURL = member.user.avatarURL({
+    const username = member.user.username;
+    const discrim = "#" + member.user.discriminator;
+    const avatarURL = member.user.avatarURL({
         extension: "png",
-        forceStatic: false,
+        forceStatic: true,
         size: av.size,
     });
+
+    console.log(background);
 
     const canvasPaper = canvas.createCanvas(dim.width, dim.height);
     const ctx = canvasPaper.getContext("2d");
@@ -57,20 +59,20 @@ const generateImage = async (member) => {
     ctx.textAlign = "center";
 
     // draw in Welcome
-    ctx.font = "50px Roboto";
-    ctx.fillText("Welcome", dim.width / 2, dim.margin + 100);
+    ctx.font = "80px Roboto";
+    ctx.fillText("Welcome", dim.width / 2, dim.margin + 180);
 
     // draw in the username
-    ctx.font = "60px Roboto";
+    ctx.font = "70px Roboto";
     ctx.fillText(
         username + discrim,
         dim.width / 2,
-        dim.height - dim.margin - 145
+        dim.height - 210
     );
 
     // draw in to the server
-    ctx.font = "40px Roboto";
-    ctx.fillText("to the server", dim.width / 2, dim.height - dim.margin - 70);
+    ctx.font = "60px Roboto";
+    ctx.fillText("to the server", dim.width / 2, dim.height - 120);
 
     const attachment = new AttachmentBuilder(canvasPaper.toBuffer(), {
         name: "welcome.png",

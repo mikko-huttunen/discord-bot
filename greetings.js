@@ -1,40 +1,41 @@
 const botData = require("./botData");
 const emotes = require("./emotes")
 
-const greetingsFin = ["hei", "moi", "moro", "morjens", "morjensta", "terve", "tere"];
+const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere"];
 const greetingsEn = ["hi", "hello", "greetings", "yo", "hi there"];
 
 const greet = (userName, msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
     let message = "";
 
-    if (
-        msgToLowerCase ===
-        greetingsFin.find((greeting) => msgToLowerCase.startsWith(greeting)) +
+    switch(msgToLowerCase) {
+        
+        case botData.getBotName(msgToLowerCase) +
             " " +
-            botData.getBotName(msgToLowerCase)
-    ) {
-        message =
-            greetingsFin[Math.floor(Math.random() * greetingsFin.length)] +
+            greetingsFin.find(greeting => greeting === msgToLowerCase.split(" ")[1]):
+        case greetingsFin.find(greeting => msgToLowerCase.startsWith(greeting)) +
             " " +
-            userName +
-            emotes.getRandomCustomEmote(msg);
-        msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
-    } else if (
-        msgToLowerCase ===
-        greetingsEn.find((greeting) => msgToLowerCase.startsWith(greeting)) +
-            " " +
-            botData.getBotName(msgToLowerCase)
-    ) {
-        message =
-            greetingsEn[Math.floor(Math.random() * greetingsEn.length)] +
-            " " +
-            userName +
-            emotes.getRandomCustomEmote(msg);
-        msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
-    }
+            botData.getBotName(msgToLowerCase):
+                message = greetingsFin[Math.floor(Math.random() * greetingsFin.length)] +
+                " " +
+                userName +
+                emotes.getRandomCustomEmote(msg);
+                msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
+                break;
 
-    return;
+        case botData.getBotName(msgToLowerCase) +
+            " " +
+            greetingsEn.find(greeting => greeting === msgToLowerCase.split(" ")[1]):
+        case greetingsEn.find(greeting => msgToLowerCase.startsWith(greeting)) +
+            " " +
+            botData.getBotName(msgToLowerCase):
+                message = greetingsEn[Math.floor(Math.random() * greetingsEn.length)] +
+                " " +
+                userName +
+                emotes.getRandomCustomEmote(msg);
+                msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
+                break;
+    }
 };
 
 module.exports = { greetingsFin, greetingsEn, greet };

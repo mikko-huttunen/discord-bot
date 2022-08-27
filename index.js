@@ -15,10 +15,12 @@ const welcomeChannelId = "1007764026387877979";
 client.on("ready", () => {
     console.log("Logged in as " + client.user.tag);
     botData.botNames.push(
+        "<@" + client.user.id + ">",
         client.user.tag.split("#", 1)[0].toLowerCase(),
         client.user.tag.split("Bot", 1)[0].toLowerCase(),
         "mb"
     );
+    console.log(botData.botNames);
 });
 
 client.on("messageCreate", (msg) => {
