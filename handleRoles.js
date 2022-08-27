@@ -12,7 +12,7 @@ const handleRoleMessage = (msg) => {
                 .members.map((member) => member.user.username)
                 .join(", ")
             : "-",
-        })).slice(2);
+        })).slice(1).sort((a, b) => b.position - a.position);
     let role = null;
     const botRole = msg.guild.roles.cache.find((role) => role.name === "MonkeBot")
 
@@ -21,7 +21,7 @@ const handleRoleMessage = (msg) => {
         case "!role help":
         case "!role -h":
             let helperEmbed = new EmbedBuilder()
-            .setColor(0x9900ff)
+            .setColor(0xff0000)
             .setTitle("Role Commands")
             .addFields({
                 name: "!role list",
@@ -37,9 +37,8 @@ const handleRoleMessage = (msg) => {
             break;
 
         case "!role list":
-            console.log(msg.member)
             let rolesEmbed = new EmbedBuilder()
-                .setColor(0x9900ff)
+                .setColor(0xff0000)
                 .setTitle("Roles");
 
             serverRoles.map((role) => rolesEmbed.addFields({

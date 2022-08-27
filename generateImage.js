@@ -23,8 +23,6 @@ const generateImage = async (member) => {
         size: av.size,
     });
 
-    console.log(background);
-
     const canvasPaper = canvas.createCanvas(dim.width, dim.height);
     const ctx = canvasPaper.getContext("2d");
 
@@ -33,7 +31,7 @@ const generateImage = async (member) => {
     ctx.drawImage(backimg, 0, 0);
 
     // draw black tinted box
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(dim.margin, dim.margin, dim.width, dim.height);
 
     const avimg = await canvas.loadImage(avatarURL);
@@ -60,7 +58,7 @@ const generateImage = async (member) => {
 
     // draw in Welcome
     ctx.font = "80px Roboto";
-    ctx.fillText("Welcome", dim.width / 2, dim.margin + 180);
+    ctx.fillText("Welcome", dim.width / 2, 190);
 
     // draw in the username
     ctx.font = "70px Roboto";

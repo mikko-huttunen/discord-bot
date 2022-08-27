@@ -19,6 +19,7 @@ const greet = (userName, msg) => {
                 message = greetingsFin[Math.floor(Math.random() * greetingsFin.length)] +
                 " " +
                 userName +
+                "!" +
                 emotes.getRandomCustomEmote(msg);
                 msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
                 break;
@@ -32,6 +33,7 @@ const greet = (userName, msg) => {
                 message = greetingsEn[Math.floor(Math.random() * greetingsEn.length)] +
                 " " +
                 userName +
+                "!" +
                 emotes.getRandomCustomEmote(msg);
                 msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
                 break;
