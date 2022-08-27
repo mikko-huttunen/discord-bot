@@ -52,8 +52,8 @@ const handleRoleMessage = (msg) => {
             role.name.toLowerCase() === msgToLowerCase.slice(10)).map((role) => role.name.toLowerCase()):
             role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(10));
 
-            if (!msg.member._roles.includes(role.id)) {
-                msg.reply("You don't have role " + role.name)
+            if (msg.member._roles.includes(role.id)) {
+                msg.reply("You already have the role " + role.name)
                 break;
             }
 
