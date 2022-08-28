@@ -10,7 +10,8 @@ const client = new Client({
 });
 
 let userName;
-const welcomeChannelId = "1007764026387877979";
+//const welcomeChannelId = "1007764026387877979";
+const welcomeChannelId = 340856154353696770;
 
 client.on("ready", () => {
     botData.botNames.push("<@" + client.user.id + ">",
