@@ -15,7 +15,7 @@ const initialize = (client) => {
     );
     bot.guild = client.guilds.cache.get(process.env.GUILD_ID);
     const roles = handleRoles.getServerRoles(bot.guild);
-    bot.role = roles.find(role => Object.keys(role.tags).length !== 0);
+    bot.role = roles.find(role => role.name === "mblocal");
 
     console.log("Logged in as " + client.user.tag);
 } 

@@ -7,7 +7,7 @@ const handleRoleMessage = (msg) => {
     const serverRoles = getServerRoles(msg.guild);
     let role = null;
     const roles = getServerRoles(msg.guild);
-    const botRole = roles.find(role => Object.keys(role.tags).length !== 0);
+    const botRole = roles.find(role => role.name === "mblocal");
 
     switch (msgToLowerCase) {
         case "!role":
