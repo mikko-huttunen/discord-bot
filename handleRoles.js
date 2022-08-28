@@ -14,7 +14,7 @@ const handleRoleMessage = (msg) => {
             : "-",
         })).slice(1).sort((a, b) => b.position - a.position);
     let role = null;
-    const botRole = msg.guild.roles.cache.find((role) => role.name === "MonkeBot")
+    const botRole = msg.guild.roles.cache.find((role) => role.name === "MonkeBotLocal")
 
     switch (msgToLowerCase) {
         case "!role":
@@ -53,17 +53,17 @@ const handleRoleMessage = (msg) => {
             role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(10));
 
             if (msg.member._roles.includes(role.id)) {
-                msg.reply("You already have the role " + role.name)
+                msg.reply("You already have the role " + role.name + "!")
                 break;
             }
 
-            if (role.position > botRole.position){
-                msg.reply("Sorry can't add role " + role.name);
+            if (role.position > botRole.position || role.name === botRole.name){
+                msg.reply("Sorry can't add role " + role.name + "...");
                 break;
             }
 
             msg.member.roles.add(role.id);
-            msg.reply("Role " + role.name + " added");
+            msg.reply("Role " + role.name + " added!");
             break;
 
         case "!role remove " + serverRoles.filter((role) =>
@@ -71,17 +71,17 @@ const handleRoleMessage = (msg) => {
             role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(13));
 
             if (!msg.member._roles.includes(role.id)) {
-                msg.reply("You don't have role " + role.name)
+                msg.reply("You don't have role " + role.name + "!")
                 break;
             }
 
             if (role.position > botRole.position){
-                msg.reply("Sorry cannot remove " + role.name);
+                msg.reply("Sorry cannot remove " + role.name + "...");
                 break;
             }
 
             msg.member.roles.remove(role.id);
-            msg.reply("Role " + role.name + " removed");
+            msg.reply("Role " + role.name + " removed!");
             break;
     }
 };

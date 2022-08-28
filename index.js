@@ -6,20 +6,23 @@ const botData = require("./botData");
 const handleRoles = require("./handleRoles");
 const generateImage = require("./generateImage");
 const client = new Client({
-    intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers"],
+    intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildMembers"],
 });
 
 let userName;
 const welcomeChannelId = "1007764026387877979";
 
 client.on("ready", () => {
-    console.log("Logged in as " + client.user.tag);
-    botData.botNames.push(
-        "<@" + client.user.id + ">",
+    botData.botNames.push("<@" + client.user.id + ">",
         client.user.tag.split("#", 1)[0].toLowerCase(),
         client.user.tag.split("Bot", 1)[0].toLowerCase(),
         "mb"
     );
+    botData.botGuild = client.guilds.cache.get(process.env.GUILD_ID);
+    botData.botObject = botData.botGuild.members.cache.get(client.user.id);
+    botData.botRole = botData.botObject.roles.cache.find(role => role.name === client.user.username);
+
+    console.log("Logged in as " + client.user.tag);
 });
 
 client.on("messageCreate", (msg) => {
@@ -37,6 +40,11 @@ client.on("guildMemberAdd", async (member) => {
         files: [img],
     });
 });
+
+const getBotName = (msg) => {
+    const botName = botNames.find((name) => msg.includes(name));
+    return botName;
+};
 
 const showHelperEmbed = (msg) => {
     let helperEmbed = new EmbedBuilder()
