@@ -1,8 +1,8 @@
 const botData = require("./botData");
 const emotes = require("./emotes")
 
-const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere"];
-const greetingsEn = ["hi", "hello", "greetings", "yo", "hi there"];
+const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere", "päivää"];
+const greetingsEn = ["hi there", "hi", "greetings", "hello", "hey", "yo"];
 
 const greet = (userName, msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
@@ -37,6 +37,9 @@ const greet = (userName, msg) => {
                 emotes.getRandomCustomEmote(msg);
                 msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
                 break;
+
+        default:
+            break;
     }
 };
 

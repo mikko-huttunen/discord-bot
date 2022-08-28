@@ -1,20 +1,13 @@
 const { EmbedBuilder } = require("discord.js");
+//const botData = require("./botData");
 
 const handleRoleMessage = (msg) => {
+    msg.guild.members.fetch().then(console.log("Success")).catch(console.error);
     const msgToLowerCase = msg.content.toLowerCase();
-    const serverRoles = msg.guild.roles.cache.map((role) => ({
-            id: role.id,
-            name: role.name,
-            size: msg.guild.roles.cache.get(role.id).members.size,
-            position: role.rawPosition,
-            members: msg.guild.roles.cache.get(role.id).members.size != 0 ? msg.guild.roles.cache
-                .get(role.id)
-                .members.map((member) => member.user.username)
-                .join(", ")
-            : "-",
-        })).slice(1).sort((a, b) => b.position - a.position);
+    const serverRoles = getServerRoles(msg.guild);
     let role = null;
-    const botRole = msg.guild.roles.cache.find((role) => role.name === "MonkeBotLocal")
+    const roles = getServerRoles(msg.guild);
+    const botRole = roles.find(role => Object.keys(role.tags).length !== 0);
 
     switch (msgToLowerCase) {
         case "!role":
@@ -83,7 +76,25 @@ const handleRoleMessage = (msg) => {
             msg.member.roles.remove(role.id);
             msg.reply("Role " + role.name + " removed!");
             break;
+
+        default:
+            break;
     }
 };
 
-module.exports = { handleRoleMessage };
+const getServerRoles = (guild) => {
+    return guild.roles.cache.map((role) => ({
+        id: role.id,
+        name: role.name,
+        size: guild.roles.cache.get(role.id).members.size,
+        position: role.rawPosition,
+        tags: role.tags,
+        members: guild.roles.cache.get(role.id).members.size != 0 ? guild.roles.cache
+            .get(role.id)
+            .members.map((member) => member.user.username)
+            .join(", ")
+        : "-",
+    })).slice(1).sort((a, b) => b.position - a.position);
+}
+
+module.exports = { handleRoleMessage, getServerRoles };
