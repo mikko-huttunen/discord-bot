@@ -5,11 +5,10 @@ const client = new imageSearch(process.env.SE_ID, process.env.GOOGLE_API_KEY);
 let searchCount = 0;
 
 const handleSearch = async (msg) => {
-    const msgToLowerCase = msg.content.toLowerCase();
     const keyword = msg.content.split(" ")[1];
     let imageUrl = "";
 
-    if (msgToLowerCase === `!image ${keyword}` || msgToLowerCase === `!kuva ${keyword}`) {
+    if (keyword) {
         await client.search(keyword)
         .then(response => {
             searchCount++;
