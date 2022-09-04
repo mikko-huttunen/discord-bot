@@ -1,5 +1,5 @@
 require("dotenv").config();
-const handleRoles = require("./handleRoles");
+const handleRoles = require("./handle_roles");
 
 const bot = {
     names: [],
