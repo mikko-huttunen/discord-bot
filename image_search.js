@@ -6,7 +6,7 @@ let searchCount = 0;
 
 const handleSearch = async (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
-    const keyword = msg.content.slice(msg.content.indexOf(' ') + 1);
+    const keyword = msgToLowerCase.slice(msgToLowerCase.indexOf(' ') + 1);
     let imageUrl = "";
 
     if (msgToLowerCase === `!image ${keyword}` || msgToLowerCase === `!kuva ${keyword}`) {
@@ -21,7 +21,7 @@ const handleSearch = async (msg) => {
         msg.reply({
             files: [{
                 attachment: imageUrl,
-                name: 'file.png'
+                name: 'image.png'
             }]
         });
     } else {

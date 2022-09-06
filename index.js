@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const { Client, EmbedBuilder } = require("discord.js");
+const events = require("./events");
 const greetings = require("./greetings");
 const botData = require("./botData");
 const handleRoles = require("./handle_roles");
@@ -22,6 +23,7 @@ client.on("messageCreate", async (msg) => {
 
     !msg.author.bot ? greetings.greet(userName, msg) : false;
     msg.content.startsWith("!help") ? showHelperEmbed(msg) : false;
+    msg.content.startsWith("!weekly") ? events.getInfo(msg) : false;
     msg.content.startsWith("!role") ? handleRoles.handleRoleMessage(msg) : false;
     msg.content.startsWith("!image") || msg.content.startsWith("!kuva") ? await imageSearch.handleSearch(msg) : false;
 });
@@ -39,6 +41,9 @@ const showHelperEmbed = (msg) => {
             .setColor(0xff0000)
             .setTitle("Bot Commands")
             .addFields({
+                name: "!weekly",
+                value: "Get info about weekly",
+            },{
                 name: "!role me",
                 value: "Show your roles",
             }, {

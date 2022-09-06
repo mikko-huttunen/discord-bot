@@ -1,5 +1,4 @@
 const { EmbedBuilder } = require("discord.js");
-//const botData = require("./botData");
 
 const handleRoleMessage = (msg) => {
     msg.guild.members.fetch().then(console.log("Successfully fetched server members")).catch(console.error);
