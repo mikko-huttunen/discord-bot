@@ -5,35 +5,29 @@ const events = require("./events");
 const greetings = require("./greetings");
 const botData = require("./botData");
 const handleRoles = require("./handle_roles");
-const generateImage = require("./generate_image");
+const welcomeMessage = require("./welcome_message");
 const imageSearch = require("./image_search");
+
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers", "DirectMessages", "GuildPresences"],
 });
-
-let userName;
-const welcomeChannelId = "340856154353696770";
 
 client.on("ready", () => {
     botData.initialize(client);
 });
 
 client.on("messageCreate", async (msg) => {
-    userName = msg.member.user.username;
+    const msgToLowerCase = msg.content.toLowerCase();
 
-    !msg.author.bot ? greetings.greet(userName, msg) : false;
-    msg.content.startsWith("!help") ? showHelperEmbed(msg) : false;
-    msg.content.startsWith("!weekly") ? events.getInfo(msg) : false;
-    msg.content.startsWith("!role") ? handleRoles.handleRoleMessage(msg) : false;
-    msg.content.startsWith("!image") || msg.content.startsWith("!kuva") ? await imageSearch.handleSearch(msg) : false;
+    msgToLowerCase.includes(botData.getBotNames(msgToLowerCase)) ? greetings.greet(msg) : false;
+    msgToLowerCase.startsWith("!help") ? showHelperEmbed(msg) : false;
+    msgToLowerCase.startsWith("!weekly") ? events.getInfo(msg) : false;
+    msgToLowerCase.startsWith("!role") ? handleRoles.handleRoleMessage(msg) : false;
+    msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await imageSearch.handleSearch(msg) : false;
 });
 
-client.on("guildMemberAdd", async (member) => {
-    const img = await generateImage(member);
-    member.guild.channels.cache.get(welcomeChannelId).send({
-        content: `<@${member.id}> Welcome to the server! !help to navigate around.`,
-        files: [img],
-    });
+client.on("guildMemberAdd", async (member, msg) => {
+    await welcomeMessage.generateMessage(member, msg);
 });
 
 const showHelperEmbed = (msg) => {
@@ -59,6 +53,7 @@ const showHelperEmbed = (msg) => {
                 name: "!image <keyword> | !kuva <hakusana>",
                 value: "Get random image based on keyword",
             });
+
             msg.channel.send({ embeds: [helperEmbed] });
 };
 

@@ -39,12 +39,16 @@ const handleRoleMessage = (msg) => {
 
         case "!role me":
             const userRoles = getUserRoleNames(msg);
-            roleEmbed.setTitle(msg.member.user.username);
-            roleEmbed.addFields({
-                name: "Roles",
-                value: userRoles.join(", ")
-            });
-            msg.channel.send({ embeds: [roleEmbed] });
+            if (userRoles.length > 0) {
+                roleEmbed.setTitle(msg.member.user.username);
+                roleEmbed.addFields({
+                    name: "Roles",
+                    value: userRoles.join(", ")
+                });
+                msg.channel.send({ embeds: [roleEmbed] });
+            } else {
+                msg.channel.send("Sinulla ei ole rooleja...");
+            }
             break;
 
         case "!role add " + serverRoles.filter((role) =>

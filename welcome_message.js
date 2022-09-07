@@ -1,5 +1,7 @@
 const canvas = require("canvas");
 const { AttachmentBuilder } = require("discord.js");
+
+const welcomeChannelId = "340856154353696770"; //Remember to change hardcoded value
 const background = "https://i.imgur.com/WtLxcC7.png";
 
 const dim = {
@@ -14,7 +16,7 @@ const av = {
     y: 300,
 };
 
-const generateImage = async (member) => {
+const generateMessage = async (member, msg) => {
     const username = member.user.username;
     const discrim = "#" + member.user.discriminator;
     const avatarURL = member.user.avatarURL({
@@ -58,7 +60,7 @@ const generateImage = async (member) => {
 
     // draw in Welcome
     ctx.font = "80px Roboto";
-    ctx.fillText("Welcome", dim.width / 2, 190);
+    ctx.fillText("Tervetuloa", dim.width / 2, 190);
 
     // draw in the username
     ctx.font = "70px Roboto";
@@ -70,12 +72,16 @@ const generateImage = async (member) => {
 
     // draw in to the server
     ctx.font = "60px Roboto";
-    ctx.fillText("to the server", dim.width / 2, dim.height - 120);
+    ctx.fillText("serverille!", dim.width / 2, dim.height - 120);
 
     const attachment = new AttachmentBuilder(canvasPaper.toBuffer(), {
         name: "welcome.png",
     });
-    return attachment;
+    
+    member.guild.channels.cache.get(welcomeChannelId).send({
+        content: `Tervetuloa <@${member.id}>! Lisää paikkakuntarooli komennolla **!role add <rooli>**, tai katso weeklyn tiedot komennolla **!weekly**. Muita komentoja näet komennolla **!help**.`,
+        files: [attachment],
+    });
 };
 
-module.exports = generateImage;
+module.exports = { generateMessage };
