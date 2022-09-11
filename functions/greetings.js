@@ -1,5 +1,5 @@
-const botData = require("./botData");
-const emotes = require("./emotes")
+const botData = require("../data/bot_data");
+const emotes = require("../data/emotes")
 
 const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere", "päivää"];
 const greetingsEn = ["hi there", "hi", "greetings", "hello", "hey", "yo"];

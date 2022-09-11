@@ -19,7 +19,7 @@ const handleSearch = async (msg) => {
                 msg.reply("Sori nyt ei pysty...");
             } else {
                 imageUrl = response[Math.floor(Math.random() * response.length)].url;
-                console.log("Image fetch success", "keyword: " + keyword, "image: + " + imageUrl, "search count: " + searchCount);
+                console.log("Image fetch success", "keyword: " + keyword, "image: " + imageUrl, "search count: " + searchCount);
             }
         })
         .catch(error => console.log(error));

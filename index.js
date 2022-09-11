@@ -1,12 +1,12 @@
 require("dotenv").config();
 
 const { Client, EmbedBuilder } = require("discord.js");
-const events = require("./events");
-const greetings = require("./greetings");
-const botData = require("./botData");
-const handleRoles = require("./handle_roles");
-const welcomeMessage = require("./welcome_message");
-const imageSearch = require("./image_search");
+const events = require("./functions/events");
+const greetings = require("./functions/greetings");
+const botData = require("./data/bot_data");
+const handleRoles = require("./functions/handle_roles");
+const welcomeMessage = require("./functions/welcome_message");
+const imageSearch = require("./functions/image_search");
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers", "DirectMessages", "GuildPresences"],
@@ -21,7 +21,7 @@ client.on("messageCreate", async (msg) => {
 
     msgToLowerCase.includes(botData.getBotNames(msgToLowerCase)) ? greetings.greet(msg) : false;
     msgToLowerCase.startsWith("!help") ? showHelperEmbed(msg) : false;
-    msgToLowerCase.startsWith("!weekly") ? events.getInfo(msg) : false;
+    msgToLowerCase.startsWith("!weekly") ? events.handleEvents(msg) : false;
     msgToLowerCase.startsWith("!role") ? handleRoles.handleRoleMessage(msg) : false;
     msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await imageSearch.handleSearch(msg) : false;
 });
@@ -37,7 +37,13 @@ const showHelperEmbed = (msg) => {
             .addFields({
                 name: "!weekly",
                 value: "Get info about weekly",
-            },{
+            }, {
+                name: "!weekly + | !weekly enter | !weekly osallistu",
+                value: "Register for weekly",
+            }, {
+                name: "!weekly - | !weekly leave | !weekly peruuta",
+                value: "Cancel your weekly registration",
+            }, {
                 name: "!role me",
                 value: "Show your roles",
             }, {

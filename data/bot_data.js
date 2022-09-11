@@ -1,5 +1,8 @@
 require("dotenv").config();
-const handleRoles = require("./handle_roles");
+
+const mongoose = require("mongoose");
+const database = process.env.DATABASE;
+const handleRoles = require("../functions/handle_roles");
 
 const bot = ({
     names: [],
@@ -18,6 +21,17 @@ const initialize = (client) => {
     bot.role = roles.find(role => role.name === "Bot");
 
     console.log("Logged in as " + client.user.tag);
+
+    if (!database) return;
+
+    mongoose.connect(database, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    }).then(() => {
+        console.log("Connected to database!");
+    }).catch((err) => {
+        console.log(err);
+    })
 } 
 
 const getBotNames = (msg) => {

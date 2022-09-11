@@ -16,7 +16,7 @@ const av = {
     y: 300,
 };
 
-const generateMessage = async (member, msg) => {
+const generateMessage = async (member) => {
     const username = member.user.username;
     const discrim = "#" + member.user.discriminator;
     const avatarURL = member.user.avatarURL({
