@@ -10,24 +10,6 @@ const handleRoleMessage = (msg) => {
     let roleEmbed = new EmbedBuilder().setColor(0xff0000);
 
     switch (msgToLowerCase) {
-        case "!role":
-        case "!role help":
-        case "!role -h":
-            roleEmbed
-            .setTitle("Role Commands")
-            .addFields({
-                name: "!role list",
-                value: "Show list of server roles",
-            }, {
-                name: "!role add <role name>",
-                value: "Add role to yourself",
-            }, {
-                name: "!role remove <role name>",
-                value: "Remove role from yourself",
-            });
-            msg.channel.send({ embeds: [roleEmbed] });
-            break;
-
         case "!role list":
             roleEmbed.setTitle("Roles");
             serverRoles.map((role) => roleEmbed.addFields({
@@ -51,40 +33,40 @@ const handleRoleMessage = (msg) => {
             }
             break;
 
-        case "!role add " + serverRoles.filter((role) =>
-            role.name.toLowerCase() === msgToLowerCase.slice(10)).map((role) => role.name.toLowerCase()):
-                role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(10));
+        case "!role + " + serverRoles.filter((role) =>
+            role.name.toLowerCase() === msgToLowerCase.slice(8)).map((role) => role.name.toLowerCase()):
+                role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(8));
 
                 if (msg.member._roles.includes(role.id)) {
-                    msg.reply("You already have the role " + role.name + "!")
+                    msg.reply("Sinulla on jo rooli " + role.name + "!")
                     break;
                 }
 
                 if (role.position > botRole.position || role.name === botRole.name){
-                    msg.reply("Sorry can't add role " + role.name + "...");
+                    msg.reply("En voi lisätä roolia " + role.name + "...");
                     break;
                 }
 
                 msg.member.roles.add(role.id);
-                msg.reply("Role " + role.name + " added!");
+                msg.react("👍");
                 break;
 
-        case "!role remove " + serverRoles.filter((role) =>
-            role.name.toLowerCase() === msgToLowerCase.slice(13)).map((role) => role.name.toLowerCase()):
-                role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(13));
+        case "!role - " + serverRoles.filter((role) =>
+            role.name.toLowerCase() === msgToLowerCase.slice(8)).map((role) => role.name.toLowerCase()):
+                role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(8));
 
                 if (!msg.member._roles.includes(role.id)) {
-                    msg.reply("You don't have role " + role.name + "!")
+                    msg.reply("Sinulla ei ole roolia " + role.name + "!")
                     break;
                 }
 
                 if (role.position > botRole.position){
-                    msg.reply("Sorry cannot remove " + role.name + "...");
+                    msg.reply("En voi poistaa roolia " + role.name + "...");
                     break;
                 }
 
                 msg.member.roles.remove(role.id);
-                msg.reply("Role " + role.name + " removed!");
+                msg.react("👍");
                 break;
 
         default:

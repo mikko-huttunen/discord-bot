@@ -13,14 +13,10 @@ const handleEvents = (msg) => {
 
         switch(msgToLowerCase) {
             case "!weekly +":
-            case "!weekly enter":
-            case "!weekly osallistu":
                 addParticipant(msg);
                 break;
 
             case "!weekly -":
-            case "!weekly leave":
-            case "!weekly peruuta":
                 removeParticipant(msg);
                 break;
 
@@ -32,7 +28,7 @@ const handleEvents = (msg) => {
                 break;
         }
     });
-}
+};
 
 const getInfo = (msg) => {
     let eventEmbed = new EmbedBuilder().setColor(0xBF40BF);
@@ -58,7 +54,7 @@ const getInfo = (msg) => {
     );
 
     msg.channel.send({ embeds: [eventEmbed] });
-}
+};
 
 const addParticipant = async (msg) => {
     await participant.findOneAndUpdate(
@@ -69,25 +65,25 @@ const addParticipant = async (msg) => {
         }},
         { upsert: true }
     ).then(response => {
-        console.log(response);
         if (response) {
+            console.log(response);
             msg.reply("Olet jo ilmoittaunut weeklyyn!");
         } else {
-            msg.reply("Olet nyt ilmoittautunut weeklyyn!");
+            msg.react("👍");
         }
     }).catch(err => {
         console.log(err);
         msg.reply("Sori nyt ei pysty...");
     });
-}
+};
 
 const removeParticipant = async (msg) => {
     await participant.findOneAndDelete(
         { user: msg.author.username + "#" + msg.author.discriminator },
     ).then(response => {
-        console.log(response);
         if (response) {
-            msg.reply("Ilmoittautumisesi on poistettu!");
+            console.log(response);
+            msg.react("👍");
         } else {
             msg.reply("Et ole vielä ilmoittaunut weeklyyn!")
         }
@@ -95,13 +91,23 @@ const removeParticipant = async (msg) => {
         console.log(err);
         msg.reply("Sori nyt ei pysty...");
     });
-}
+};
 
 const getParticipants = async () => {
     return await participant.find(
         {},
         { _id: 0, user: 1, nickname: 1}
     ).lean();
-}
+};
 
-module.exports = { handleEvents };
+const showParticipants = async (msg) => {
+    await getParticipants().then(data => {
+        if (data.length) {
+            participants = data.map(participant => participant.nickname ? participant.nickname : participant.user).join(", ");
+        } else participants = "-";
+    });
+
+    msg.reply("Osallistujat: " + participants);
+};
+
+module.exports = { handleEvents, showParticipants };
