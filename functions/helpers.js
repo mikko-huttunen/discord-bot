@@ -22,7 +22,7 @@ const handleHelp = (msg) => {
 const helper = (msg) => {
     const helpEmbed = {
         color: 0xFFEA00,
-        title: "Apukomennot",
+        title: "Komennot",
         fields: [
             {
                 name: "!help role",
@@ -73,7 +73,7 @@ const eventHelper = (msg) => {
                 name: "!weekly",
                 value: "Tietoa weeklystä",
             }, {
-                name: "!attendees",
+                name: "!weekly players",
                 value: "Lista weeklyyn osallistujista",
             }, {
                 name: "!weekly +",

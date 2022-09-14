@@ -2,23 +2,25 @@ require("dotenv").config();
 
 const mongoose = require("mongoose");
 const database = process.env.DATABASE;
-const handleRoles = require("../functions/handle_roles");
 
-const bot = ({
+const bot = {
     names: [],
     guild: null,
     role: null
-});
+};
 
 const initialize = (client) => {
+    const handleRoles = require("../functions/handle_roles");
+
     bot.names.push(
         "<@" + client.user.id + ">",
         client.user.username.toLowerCase(),
         client.user.username.split("Bot", 1)[0].toLowerCase()
     );
+    
     bot.guild = client.guilds.cache.get(process.env.GUILD_ID);
-    const roles = handleRoles.getServerRoles(bot.guild);
-    bot.role = roles.find(role => role.name === "Bot");
+    const roles = handleRoles.getGuildRoles(bot.guild);
+    bot.role = roles.find(role => role.members.includes(client.user.username) && role.tags.hasOwnProperty("botId"));
 
     console.log("Logged in as " + client.user.tag);
 
@@ -34,8 +36,12 @@ const initialize = (client) => {
     })
 } 
 
-const getBotNames = (msg) => {
-    return bot.names.find((name) => msg.includes(name));
+const getBotNames = () => {
+    return bot.names;
 };
 
-module.exports = { bot, initialize, getBotNames };
+const getBotRole = () => {
+    return bot.role;
+}
+
+module.exports = { initialize, getBotNames, getBotRole };

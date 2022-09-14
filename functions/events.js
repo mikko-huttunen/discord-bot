@@ -69,7 +69,7 @@ const addParticipant = async (msg) => {
             console.log(response);
             msg.reply("Olet jo ilmoittaunut weeklyyn!");
         } else {
-            msg.react("👍");
+            msg.react("✅");
         }
     }).catch(err => {
         console.log(err);
@@ -83,7 +83,7 @@ const removeParticipant = async (msg) => {
     ).then(response => {
         if (response) {
             console.log(response);
-            msg.react("👍");
+            msg.react("✅");
         } else {
             msg.reply("Et ole vielä ilmoittaunut weeklyyn!")
         }

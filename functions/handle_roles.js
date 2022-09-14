@@ -1,92 +1,102 @@
 const { EmbedBuilder } = require("discord.js");
+const botData = require("../data/bot_data");
 
-const handleRoleMessage = (msg) => {
-    msg.guild.members.fetch().then(console.log("Successfully fetched server members")).catch(console.error);
+const handleRoleMessage = async (msg) => {
+    await msg.guild.members.fetch()
+        .then(console.log("Successfully fetched server members"))
+        .catch(error => console.log(error));
+
     const msgToLowerCase = msg.content.toLowerCase();
-    const serverRoles = getServerRoles(msg.guild);
-    let role = null;
-    const roles = getServerRoles(msg.guild);
-    const botRole = roles.find(role => role.name === "Bot"); //Remember to change hardcoded value
+    const msgRole = msgToLowerCase.slice(msgToLowerCase.indexOf(" ") + 3);
+
+    const guildRoles = getGuildRoles(msg.guild);
+    const role = guildRoles.find((role) => role.name.toLowerCase() === msgRole);
+    const botRole = botData.getBotRole();
+
     let roleEmbed = new EmbedBuilder().setColor(0xff0000);
 
     switch (msgToLowerCase) {
         case "!role list":
             roleEmbed.setTitle("Roles");
-            serverRoles.map((role) => roleEmbed.addFields({
+            guildRoles.map((role) => roleEmbed.addFields({
                 name: role.name,
                 value: `${role.members}`,
             }));
+
             msg.channel.send({ embeds: [roleEmbed] });
             break;
 
         case "!role me":
             const userRoles = getUserRoleNames(msg);
-            if (userRoles.length > 0) {
-                roleEmbed.setTitle(msg.member.user.username);
-                roleEmbed.addFields({
-                    name: "Roles",
-                    value: userRoles.join(", ")
-                });
-                msg.channel.send({ embeds: [roleEmbed] });
-            } else {
-                msg.channel.send("Sinulla ei ole rooleja...");
+            
+            if (userRoles <= 0) {
+                msg.reply("Sinulla ei ole rooleja...");
+                break;
             }
+            
+            msg.reply("Roolisi: " + userRoles.join(", "));
             break;
 
-        case "!role + " + serverRoles.filter((role) =>
-            role.name.toLowerCase() === msgToLowerCase.slice(8)).map((role) => role.name.toLowerCase()):
-                role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(8));
-
-                if (msg.member._roles.includes(role.id)) {
-                    msg.reply("Sinulla on jo rooli " + role.name + "!")
-                    break;
-                }
-
-                if (role.position > botRole.position || role.name === botRole.name){
-                    msg.reply("En voi lisätä roolia " + role.name + "...");
-                    break;
-                }
-
-                msg.member.roles.add(role.id);
-                msg.react("👍");
+        case "!role + " + msgRole:
+            if (!guildRoles.find(role => role.name.toLowerCase() === msgRole)) {
+                msg.reply("Syöttämääsi roolia ei ole olemassa!");
                 break;
+            }
 
-        case "!role - " + serverRoles.filter((role) =>
-            role.name.toLowerCase() === msgToLowerCase.slice(8)).map((role) => role.name.toLowerCase()):
-                role = serverRoles.find((role) => role.name.toLowerCase() === msgToLowerCase.slice(8));
-
-                if (!msg.member._roles.includes(role.id)) {
-                    msg.reply("Sinulla ei ole roolia " + role.name + "!")
-                    break;
-                }
-
-                if (role.position > botRole.position){
-                    msg.reply("En voi poistaa roolia " + role.name + "...");
-                    break;
-                }
-
-                msg.member.roles.remove(role.id);
-                msg.react("👍");
+            if (msg.member._roles.includes(role.id)) {
+                msg.reply("Sinulla on jo rooli " + role.name + "!")
                 break;
+            }
+
+            if (role.position > botRole.position || role.name === botRole.name){
+                msg.reply("En voi lisätä roolia " + role.name + "...");
+                break;
+            }
+
+            msg.member.roles.add(role.id);
+            msg.react("✅");
+            break;
+
+        case "!role - " + msgRole:
+            if (!guildRoles.find((role) => role.name.toLowerCase() === msgRole)) {
+                msg.reply("Syöttämääsi roolia ei ole olemassa!");
+                break;
+            }
+
+            if (!msg.member._roles.includes(role.id)) {
+                msg.reply("Sinulla ei ole roolia " + role.name + "!")
+                break;
+            }
+
+            if (role.position > botRole.position){
+                msg.reply("En voi poistaa roolia " + role.name + "...");
+                break;
+            }
+
+            msg.member.roles.remove(role.id);
+            msg.react("✅");
+            break;
 
         default:
             break;
     }
 };
 
-const getServerRoles = (guild) => {
+const getGuildRoles = (guild) => {
     return guild.roles.cache.map(role => ({
         id: role.id,
         name: role.name,
         size: guild.roles.cache.get(role.id).members.size,
         position: role.rawPosition,
         tags: role.tags,
-        members: guild.roles.cache.get(role.id).members.size != 0 ? guild.roles.cache
+        members: guild.roles.cache.get(role.id).members.size > 0 ? guild.roles.cache
             .get(role.id)
             .members.map((member) => member.user.username)
             .join(", ")
         : "-",
-    })).slice(1).sort((a, b) => b.position - a.position);
+    }))
+    .slice(1)
+    .sort((a, b) => b.position - a.position);
 }
 
 const getUserRoleNames = (msg) => {
@@ -100,4 +110,4 @@ const getUserRoleNames = (msg) => {
     return userRoleNames;
 }
 
-module.exports = { handleRoleMessage, getServerRoles };
+module.exports = { handleRoleMessage, getGuildRoles };
