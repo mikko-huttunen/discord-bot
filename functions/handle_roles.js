@@ -17,7 +17,7 @@ const handleRoleMessage = async (msg) => {
 
     switch (msgToLowerCase) {
         case "!role list":
-            roleEmbed.setTitle("Roles");
+            roleEmbed.setTitle("Roolit");
             guildRoles.map((role) => roleEmbed.addFields({
                 name: role.name,
                 value: `${role.members}`,
