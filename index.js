@@ -26,7 +26,6 @@ client.on("messageCreate", async (msg) => {
     msgToLowerCase.startsWith("!help") ? helpers.handleHelp(msg) : false;
     msgToLowerCase.startsWith("!role") ? handleRoles.handleRoleMessage(msg) : false;
     msgToLowerCase.startsWith("!weekly") ? events.handleEvents(msg) : false;
-    msgToLowerCase.startsWith("!attendees") ? events.showParticipants(msg) : false;
     msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await imageSearch.handleSearch(msg) : false;
 });
 

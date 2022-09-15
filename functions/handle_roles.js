@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
-const botData = require("../data/bot_data");
+const { getBotRole } = require("../data/bot_data");
 
 const handleRoleMessage = async (msg) => {
     await msg.guild.members.fetch()
@@ -11,7 +11,7 @@ const handleRoleMessage = async (msg) => {
 
     const guildRoles = getGuildRoles(msg.guild);
     const role = guildRoles.find((role) => role.name.toLowerCase() === msgRole);
-    const botRole = botData.getBotRole();
+    const botRole = getBotRole();
 
     let roleEmbed = new EmbedBuilder().setColor(0xff0000);
 
@@ -95,7 +95,7 @@ const getGuildRoles = (guild) => {
             .join(", ")
         : "-",
     }))
-    .slice(1)
+    .slice(1) //Exclude @everyone role
     .sort((a, b) => b.position - a.position);
 }
 

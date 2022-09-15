@@ -31,7 +31,7 @@ const helper = (msg) => {
                 name: "!help weekly",
                 value: "Weekly komennot",
             }, {
-                name: "!image <hakusana>",
+                name: "!image <keyword> | !kuva <hakusana>",
                 value: "Satunnainen kuva annetulla hakusanalla",
             }
         ],

@@ -12,7 +12,7 @@ const greet = (msg) => {
 
     if (!msgBotName) return;
     
-    if (msgToLowerCase === greetingsFin.find(greet => greet === msgGreeting) + " " + botNames.find(botName => botName === msgBotName)) {
+    if (greetingsFin.some(greet => greet === msgGreeting) && botNames.find(botName => botName === msgBotName)) {
         const message = greetingsFin[Math.floor(Math.random() * greetingsFin.length)] +
             " " +
             msg.author.username +
@@ -22,7 +22,7 @@ const greet = (msg) => {
         msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
     }
 
-    if (msgToLowerCase === greetingsEn.find(greet => greet === msgGreeting) + " " + botNames.find(botName => botName === msgBotName)) {
+    if (greetingsEn.some(greet => greet === msgGreeting) && botNames.find(botName => botName === msgBotName)) {
         const message = greetingsEn[Math.floor(Math.random() * greetingsEn.length)] +
             " " +
             msg.author.username +

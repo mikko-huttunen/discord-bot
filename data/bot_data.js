@@ -4,23 +4,23 @@ const mongoose = require("mongoose");
 const database = process.env.DATABASE;
 
 const bot = {
+    botId: null,
     names: [],
     guild: null,
     role: null
 };
 
 const initialize = (client) => {
-    const handleRoles = require("../functions/handle_roles");
-
+    bot.botId = client.user.id;
     bot.names.push(
         "<@" + client.user.id + ">",
         client.user.username.toLowerCase(),
         client.user.username.split("Bot", 1)[0].toLowerCase()
     );
-    
+
     bot.guild = client.guilds.cache.get(process.env.GUILD_ID);
-    const roles = handleRoles.getGuildRoles(bot.guild);
-    bot.role = roles.find(role => role.members.includes(client.user.username) && role.tags.hasOwnProperty("botId"));
+    const roles = bot.guild.roles.cache;
+    bot.role = roles.find(role => role.tags.botId === bot.botId);
 
     console.log("Logged in as " + client.user.tag);
 

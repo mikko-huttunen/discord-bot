@@ -12,6 +12,10 @@ const handleEvents = (msg) => {
         } else participants = "-";
 
         switch(msgToLowerCase) {
+            case "!weekly players":
+                showParticipants(msg);
+                break;
+
             case "!weekly +":
                 addParticipant(msg);
                 break;
@@ -67,7 +71,7 @@ const addParticipant = async (msg) => {
     ).then(response => {
         if (response) {
             console.log(response);
-            msg.reply("Olet jo ilmoittaunut weeklyyn!");
+            msg.reply("Olet jo ilmoittautunut weeklyyn!");
         } else {
             msg.react("✅");
         }
