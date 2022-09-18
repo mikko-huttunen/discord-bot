@@ -36,9 +36,11 @@ const handleEvents = (msg) => {
 
 const getInfo = (msg) => {
     let eventEmbed = new EmbedBuilder().setColor(0xBF40BF);
+    const thumbnail = "https://i.imgur.com/WtLxcC7.png";
 
     eventEmbed
         .setTitle("Weekly")
+        .setThumbnail(thumbnail)
         .addFields({
             name: "Missä?",
             value: "Veturitallit Jyväskylä \nVeturitallinkatu 6 \nPääovesta sisään (soita ovikelloa)",
