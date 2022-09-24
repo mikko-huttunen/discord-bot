@@ -9,7 +9,7 @@ const handleEvents = (msg) => {
     getParticipants().then(data => {
         if (data.length) {
             participants = data.map(participant => participant.nickname ? participant.nickname : participant.user).join(", ") + " (Osallistu komennolla **!weekly +**)";
-        } else participants = "<:kitano:1022844320312725514> Ole ensimmäinen komennolla **!weekly +**"; //Hardcoded value
+        } else participants = "<:kitano:345334502576488448> Ole ensimmäinen komennolla **!weekly +**"; //Hardcoded value
 
         switch(msgToLowerCase) {
             case "!weekly players":
@@ -90,7 +90,7 @@ const removeParticipant = async (msg) => {
         if (response) {
             console.log(response);
             msg.react("✅");
-            msg.react("<:kitano:1022844320312725514>"); //Hardcoded value
+            msg.react("<:kitano:345334502576488448>"); //Hardcoded value
         } else {
             msg.reply("Et ole vielä ilmoittautunut weeklyyn!");
         }
