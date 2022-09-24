@@ -39,17 +39,17 @@ const handleRoleMessage = async (msg) => {
 
         case "!role + " + msgRole:
             if (!guildRoles.find(role => role.name.toLowerCase() === msgRole)) {
-                msg.reply("Syöttämääsi roolia ei ole olemassa!");
+                msg.reply("Roolia **" + msgRole + "** ei ole olemassa!");
                 break;
             }
 
             if (msg.member._roles.includes(role.id)) {
-                msg.reply("Sinulla on jo rooli " + role.name + "!")
+                msg.reply("Sinulla on jo rooli **" + role.name + "**!")
                 break;
             }
 
             if (role.position > botRole.position || role.name === botRole.name){
-                msg.reply("En voi lisätä roolia " + role.name + "...");
+                msg.reply("En voi lisätä roolia **" + role.name + "**...");
                 break;
             }
 
@@ -59,17 +59,17 @@ const handleRoleMessage = async (msg) => {
 
         case "!role - " + msgRole:
             if (!guildRoles.find((role) => role.name.toLowerCase() === msgRole)) {
-                msg.reply("Syöttämääsi roolia ei ole olemassa!");
+                msg.reply("Roolia **" + msgRole + "** ei ole olemassa!");
                 break;
             }
 
             if (!msg.member._roles.includes(role.id)) {
-                msg.reply("Sinulla ei ole roolia " + role.name + "!")
+                msg.reply("Sinulla ei ole roolia **" + role.name + "**!")
                 break;
             }
 
             if (role.position > botRole.position){
-                msg.reply("En voi poistaa roolia " + role.name + "...");
+                msg.reply("En voi poistaa roolia **" + role.name + "**...");
                 break;
             }
 

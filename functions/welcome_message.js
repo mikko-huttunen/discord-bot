@@ -18,7 +18,6 @@ const av = {
 
 const generateMessage = async (member) => {
     const username = member.user.username;
-    const discrim = "#" + member.user.discriminator;
     const avatarURL = member.user.avatarURL({
         extension: "png",
         forceStatic: true,
@@ -59,29 +58,27 @@ const generateMessage = async (member) => {
     ctx.textAlign = "center";
 
     // draw in Welcome
-    ctx.font = "80px Roboto";
+    ctx.font = "80px Futura";
     ctx.fillText("Tervetuloa", dim.width / 2, 190);
 
     // draw in the username
-    ctx.font = "70px Roboto";
+    ctx.font = "80px Futura";
     ctx.fillText(
-        username + discrim,
+        username,
         dim.width / 2,
-        dim.height - 210
+        dim.height - 190
     );
-
-    // draw in to the server
-    ctx.font = "60px Roboto";
-    ctx.fillText("serverille!", dim.width / 2, dim.height - 120);
 
     const attachment = new AttachmentBuilder(canvasPaper.toBuffer(), {
         name: "welcome.png",
     });
     
     member.guild.channels.cache.get(welcomeChannelId).send({
-        content: `Tervetuloa <@${member.id}>! Lisää paikkakuntarooli komennolla **!role add <rooli>**, tai katso weeklyn tiedot komennolla **!weekly**. Muita komentoja näet komennolla **!help**.`,
+        content: `Tervetuloa <@${member.id}>! \nLisää rooli komennolla **!role + <rooli>**, tai katso weeklyn tiedot komennolla **!weekly**. \nMuita komentoja näet komennolla **!commands**.`,
         files: [attachment],
     });
+
+    member.roles.add("1010965228093186149");
 };
 
 module.exports = { generateMessage };

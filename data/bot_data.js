@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const { ActivityType } = require("discord.js");
 const mongoose = require("mongoose");
 const database = process.env.DATABASE;
 
@@ -23,6 +24,14 @@ const initialize = (client) => {
     bot.role = roles.find(role => role.tags.botId === bot.botId);
 
     console.log("Logged in as " + client.user.tag);
+
+    client.user.setPresence({
+        status: "online",
+        activities: [{ 
+            name: "you 🐒", 
+            type: ActivityType.Watching
+        }],
+    });
 
     if (!database) return;
 

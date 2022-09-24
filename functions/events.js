@@ -8,8 +8,8 @@ const handleEvents = (msg) => {
     
     getParticipants().then(data => {
         if (data.length) {
-            participants = data.map(participant => participant.nickname ? participant.nickname : participant.user).join(", ");
-        } else participants = "-";
+            participants = data.map(participant => participant.nickname ? participant.nickname : participant.user).join(", ") + " (Osallistu komennolla **!weekly +**)";
+        } else participants = "<:kitano:1022844320312725514> Ole ensimmäinen komennolla **!weekly +**"; //Hardcoded value
 
         switch(msgToLowerCase) {
             case "!weekly players":
@@ -49,7 +49,7 @@ const getInfo = (msg) => {
             value: "Maanantaisin 16:00-20:00",
         }, {
             name: "Mitä?",
-            value: "Smash (Ultimate, Melee) \nGuilty Gear \nKing of Fighters \nStreet Fighter \nFlesh and Blood \nyms."
+            value: "Smash (Ultimate, Melee) \nGuilty Gear \nKing of Fighters \nStreet Fighter \nFlesh and Blood \nTCG \nyms."
         }, {
             name: "Muuta",
             value: "Paikan päällä kolme taulutelevisiota ja yksi putkitelevisio. \nPelien ja konsolien tuominen on kävijöiden vastuulla. \nLisätietoa **#jyväskylä**-kanavalla. \nLisätietoa weeklyn vastuuhenkilöiltä (**Rush, Duppaduulix, Mallu**)."
@@ -90,8 +90,9 @@ const removeParticipant = async (msg) => {
         if (response) {
             console.log(response);
             msg.react("✅");
+            msg.react("<:kitano:1022844320312725514>"); //Hardcoded value
         } else {
-            msg.reply("Et ole vielä ilmoittaunut weeklyyn!")
+            msg.reply("Et ole vielä ilmoittautunut weeklyyn!");
         }
     }).catch(err => {
         console.log(err);

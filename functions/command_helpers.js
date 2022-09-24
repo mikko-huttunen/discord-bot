@@ -1,17 +1,20 @@
-const handleHelp = (msg) => {
+const handleCommands = (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
 
     switch(msgToLowerCase) {
         case "!help":
-            helper(msg);
+        case "!commands":
+            commands(msg);
             break;
 
         case "!help role":
-            roleHelper(msg);
+        case "!commands role":
+            roleCommands(msg);
             break;
 
         case "!help weekly":
-            eventHelper(msg);
+        case "!commands weekly":
+            eventCommands(msg);
             break;
 
         default:
@@ -19,16 +22,16 @@ const handleHelp = (msg) => {
     }
 }
 
-const helper = (msg) => {
-    const helpEmbed = {
+const commands = (msg) => {
+    const commandEmbed = {
         color: 0xFFEA00,
         title: "Komennot",
         fields: [
             {
-                name: "!help role",
+                name: "!commands role",
                 value: "Rooli komennot",
             }, {
-                name: "!help weekly",
+                name: "!commands weekly",
                 value: "Weekly komennot",
             }, {
                 name: "!image <keyword> | !kuva <hakusana>",
@@ -37,10 +40,10 @@ const helper = (msg) => {
         ],
     };
 
-    msg.channel.send({ embeds: [helpEmbed] });
+    msg.channel.send({ embeds: [commandEmbed] });
 };
 
-const roleHelper = (msg) => {
+const roleCommands = (msg) => {
     const roleEmbed = {
         color: 0xff0000,
         title: "Rooli komennot",
@@ -64,7 +67,7 @@ const roleHelper = (msg) => {
     msg.channel.send({ embeds: [roleEmbed] });
 };
 
-const eventHelper = (msg) => {
+const eventCommands = (msg) => {
     const eventEmbed = {
         color: 0xBF40BF,
         title: "Weekly komennot",
@@ -88,4 +91,4 @@ const eventHelper = (msg) => {
     msg.channel.send({ embeds: [eventEmbed] });
 }
 
-module.exports = { handleHelp };
+module.exports = { handleCommands };
