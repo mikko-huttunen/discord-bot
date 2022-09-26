@@ -9,7 +9,7 @@ const handleEvents = (msg) => {
     getParticipants().then(data => {
         if (data.length) {
             participants = data.map(participant => participant.nickname ? participant.nickname : participant.user).join(", ") + " (Osallistu komennolla **!weekly +**)";
-        } else participants = "<:kitano:345334502576488448> Ole ensimmäinen komennolla **!weekly +**"; //Hardcoded value
+        } else participants = "<:kitano:345334502576488448>\nOle ensimmäinen komennolla **!weekly +**"; //Hardcoded value
 
         switch(msgToLowerCase) {
             case "!weekly players":
@@ -49,7 +49,7 @@ const getInfo = (msg) => {
             value: "Maanantaisin 16:00-20:00",
         }, {
             name: "Mitä?",
-            value: "Smash (Ultimate, Melee) \nGuilty Gear \nKing of Fighters \nStreet Fighter \nFlesh and Blood \nTCG \nyms."
+            value: "Smash (Ultimate, Melee) \nGuilty Gear \nKing of Fighters \nStreet Fighter \nFlesh and Blood TCG\nyms."
         }, {
             name: "Muuta",
             value: "Paikan päällä kolme taulutelevisiota ja yksi putkitelevisio. \nPelien ja konsolien tuominen on kävijöiden vastuulla. \nLisätietoa **#jyväskylä**-kanavalla. \nLisätietoa weeklyn vastuuhenkilöiltä (**Rush, Duppaduulix, Mallu**)."
