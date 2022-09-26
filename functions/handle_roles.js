@@ -1,7 +1,7 @@
-const { EmbedBuilder } = require("discord.js");
-const { getBotRole } = require("../data/bot_data");
+import { EmbedBuilder } from "@discordjs/builders";
+import { getBotRole } from "../data/bot_data.js";
 
-const handleRoleMessage = async (msg) => {
+export const handleRoleMessage = async (msg) => {
     await msg.guild.members.fetch()
         .then(console.log("Successfully fetched server members"))
         .catch(error => console.log(error));
@@ -17,16 +17,25 @@ const handleRoleMessage = async (msg) => {
 
     switch (msgToLowerCase) {
         case "!role list":
-            roleEmbed.setTitle("Roolit");
+            roleEmbed.setTitle("Roles");
             guildRoles.map((role) => roleEmbed.addFields({
                 name: role.name,
                 value: `${role.members}`,
             }));
 
-            msg.channel.send({ embeds: [roleEmbed] });
+            if (msg.author.bot) {
+                msg.edit({ 
+                    content: "",
+                    embeds: [roleEmbed] });
+            } else {
+                msg.channel.send({ embeds: [roleEmbed] });
+            }
+            
             break;
 
         case "!role me":
+            if (msg.author.bot) break;
+
             const userRoles = getUserRoleNames(msg);
             
             if (userRoles <= 0) {
@@ -38,6 +47,7 @@ const handleRoleMessage = async (msg) => {
             break;
 
         case "!role + " + msgRole:
+            if (msg.author.bot) break;
             if (!guildRoles.find(role => role.name.toLowerCase() === msgRole)) {
                 msg.reply("Roolia **" + msgRole + "** ei ole olemassa!");
                 break;
@@ -58,6 +68,7 @@ const handleRoleMessage = async (msg) => {
             break;
 
         case "!role - " + msgRole:
+            if (msg.author.bot) break;
             if (!guildRoles.find((role) => role.name.toLowerCase() === msgRole)) {
                 msg.reply("Roolia **" + msgRole + "** ei ole olemassa!");
                 break;
@@ -82,7 +93,7 @@ const handleRoleMessage = async (msg) => {
     }
 };
 
-const getGuildRoles = (guild) => {
+export const getGuildRoles = (guild) => {
     return guild.roles.cache.map(role => ({
         id: role.id,
         name: role.name,
@@ -109,5 +120,3 @@ const getUserRoleNames = (msg) => {
 
     return userRoleNames;
 }
-
-module.exports = { handleRoleMessage, getGuildRoles };

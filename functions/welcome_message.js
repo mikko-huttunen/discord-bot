@@ -1,5 +1,5 @@
-const canvas = require("canvas");
-const { AttachmentBuilder } = require("discord.js");
+import { createCanvas, loadImage } from "canvas";
+import { AttachmentBuilder } from "discord.js";
 
 const welcomeChannelId = "340856154353696770"; //Remember to change hardcoded value
 const background = "https://i.imgur.com/WtLxcC7.png";
@@ -16,7 +16,7 @@ const av = {
     y: 300,
 };
 
-const generateMessage = async (member) => {
+export const generateMessage = async (member) => {
     const username = member.user.username;
     const avatarURL = member.user.avatarURL({
         extension: "png",
@@ -24,18 +24,18 @@ const generateMessage = async (member) => {
         size: av.size,
     });
 
-    const canvasPaper = canvas.createCanvas(dim.width, dim.height);
+    const canvasPaper = createCanvas(dim.width, dim.height);
     const ctx = canvasPaper.getContext("2d");
 
     // draw in the background
-    const backimg = await canvas.loadImage(background);
+    const backimg = await loadImage(background);
     ctx.drawImage(backimg, 0, 0);
 
     // draw black tinted box
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(dim.margin, dim.margin, dim.width, dim.height);
 
-    const avimg = await canvas.loadImage(avatarURL);
+    const avimg = await loadImage(avatarURL);
     ctx.save();
 
     ctx.beginPath();
@@ -74,11 +74,9 @@ const generateMessage = async (member) => {
     });
     
     member.guild.channels.cache.get(welcomeChannelId).send({
-        content: `Tervetuloa <@${member.id}>! \nLisää rooli komennolla **!role + <rooli>**, tai katso weeklyn tiedot komennolla **!weekly**. \nMuita komentoja näet komennolla **!commands**.`,
+        content: `Tervetuloa <@${member.id}>!\nLisää rooli komennolla **!role + <rooli>**, tai katso weeklyn tiedot komennolla **!weekly**.\nMuita komentoja näet komennolla **!commands**.`,
         files: [attachment],
     });
 
-    member.roles.add("1010965228093186149");
+    member.roles.add("371642384989159434"); //Hardcoded value
 };
-
-module.exports = { generateMessage };

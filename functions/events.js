@@ -1,26 +1,29 @@
-const { EmbedBuilder } = require("discord.js");
-const participant = require("../schemas/participant_schema.ts");
+import { EmbedBuilder } from "@discordjs/builders";
+import { weeklyParticipants } from "../models/weekly_participant_schema.js";
 
 let participants;
 
-const handleEvents = (msg) => {
+export const handleEvents = (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
     
     getParticipants().then(data => {
         if (data.length) {
             participants = data.map(participant => participant.nickname ? participant.nickname : participant.user).join(", ") + " (Osallistu komennolla **!weekly +**)";
-        } else participants = "<:kitano:345334502576488448> Ole ensimmäinen komennolla **!weekly +**"; //Hardcoded value
+        } else participants = "Ole ensimmäinen komennolla **!weekly +**";
 
         switch(msgToLowerCase) {
             case "!weekly players":
+            case "!weekly osallistujat":
                 showParticipants(msg);
                 break;
 
             case "!weekly +":
+                if (msg.author.bot) break;
                 addParticipant(msg);
                 break;
 
             case "!weekly -":
+                if (msg.author.bot) break;
                 removeParticipant(msg);
                 break;
 
@@ -49,21 +52,27 @@ const getInfo = (msg) => {
             value: "Maanantaisin 16:00-20:00",
         }, {
             name: "Mitä?",
-            value: "Smash (Ultimate, Melee) \nGuilty Gear \nKing of Fighters \nStreet Fighter \nFlesh and Blood \nTCG \nyms."
+            value: "Smash (Ultimate, Melee) \nGuilty Gear \nKing of Fighters \nStreet Fighter \nFlesh and Blood TCG \nyms."
         }, {
             name: "Muuta",
-            value: "Paikan päällä kolme taulutelevisiota ja yksi putkitelevisio. \nPelien ja konsolien tuominen on kävijöiden vastuulla. \nLisätietoa **#jyväskylä**-kanavalla. \nLisätietoa weeklyn vastuuhenkilöiltä (**Rush, Duppaduulix, Mallu**)."
+            value: "Paikan päällä kolme taulutelevisiota ja yksi putkitelevisio. \nPelien ja konsolien tuominen on kävijöiden vastuulla. \nLisätietoa <#574509192862236673>-kanavalla. \nLisätietoa weeklyn vastuuhenkilöiltä (**Rush, Duppaduulix, Mallu**)."
         }, {
             name: "Osallistujat",
             value: `${participants}`
         }
     );
 
-    msg.channel.send({ embeds: [eventEmbed] });
+    if (msg.author.bot) {
+        msg.edit({ 
+            content: "",
+            embeds: [eventEmbed] });
+    } else {
+        msg.channel.send({ embeds: [eventEmbed] });
+    }
 };
 
 const addParticipant = async (msg) => {
-    await participant.findOneAndUpdate(
+    await weeklyParticipants.findOneAndUpdate(
         { user: msg.author.username + "#" + msg.author.discriminator },
         { $setOnInsert: { 
             user: msg.author.username + "#" + msg.author.discriminator,
@@ -84,7 +93,7 @@ const addParticipant = async (msg) => {
 };
 
 const removeParticipant = async (msg) => {
-    await participant.findOneAndDelete(
+    await weeklyParticipants.findOneAndDelete(
         { user: msg.author.username + "#" + msg.author.discriminator },
     ).then(response => {
         if (response) {
@@ -101,20 +110,22 @@ const removeParticipant = async (msg) => {
 };
 
 const getParticipants = async () => {
-    return await participant.find(
+    return await weeklyParticipants.find(
         {},
         { _id: 0, user: 1, nickname: 1}
     ).lean();
 };
 
-const showParticipants = async (msg) => {
+export const showParticipants = async (msg) => {
     await getParticipants().then(data => {
         if (data.length) {
             participants = data.map(participant => participant.nickname ? participant.nickname : participant.user).join(", ");
         } else participants = "-";
     });
 
-    msg.reply("Osallistujat: " + participants);
+    if (msg.author.bot) {
+        msg.edit("Osallistujat: " + participants);
+    } else {
+        msg.reply("Osallistujat: " + participants);
+    }
 };
-
-module.exports = { handleEvents, showParticipants };

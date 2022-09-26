@@ -1,13 +1,16 @@
-require("dotenv").config();
+import * as dotenv from "dotenv";
+dotenv.config();
 
-const { Client } = require("discord.js");
-const events = require("./functions/events");
-const greetings = require("./functions/greetings");
-const botData = require("./data/bot_data");
-const commandHelpers = require("./functions/command_helpers")
-const handleRoles = require("./functions/handle_roles");
-const welcomeMessage = require("./functions/welcome_message");
-const imageSearch = require("./functions/image_search");
+import { Client, PermissionsBitField } from "discord.js";
+import { handleEvents } from "./functions/events.js";
+import { greet } from "./functions/greetings.js";
+import { initialize, getBotNames } from "./data/bot_data.js";
+import { listCommands } from "./functions/list_commands.js";
+import { handleRoleMessage } from "./functions/handle_roles.js";
+import { generateMessage } from "./functions/welcome_message.js";
+import { handleSearch } from "./functions/image_search.js";
+import { checkForTimedMessages, handleTimedMessage } from "./functions/timed_message.js";
+
 let botNames;
 
 const client = new Client({
@@ -15,22 +18,24 @@ const client = new Client({
 });
 
 client.on("ready", () => {
-    botData.initialize(client);
-    botNames = botData.getBotNames();
+    initialize(client);
+    botNames = getBotNames();
+    checkForTimedMessages(client);
 });
 
 client.on("messageCreate", async (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
 
-    botNames.some(botName => msgToLowerCase.includes(botName)) ? greetings.greet(msg) : false;
-    msgToLowerCase.startsWith("!help") || msg.content.startsWith("!commands") ? commandHelpers.handleCommands(msg) : false;
-    msgToLowerCase.startsWith("!role") ? handleRoles.handleRoleMessage(msg) : false;
-    msgToLowerCase.startsWith("!weekly") ? events.handleEvents(msg) : false;
-    msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await imageSearch.handleSearch(msg) : false;
+    botNames.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
+    msgToLowerCase.startsWith("!help") || msg.content.startsWith("!commands") ? listCommands(msg) : false;
+    msgToLowerCase.startsWith("!role") ? handleRoleMessage(msg) : false;
+    msgToLowerCase.startsWith("!weekly") ? handleEvents(msg) : false;
+    msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await handleSearch(msg) : false;
+    msgToLowerCase.startsWith("!timed") ? handleTimedMessage(msg, client) : false;
 });
 
 client.on("guildMemberAdd", async (member) => {
-    await welcomeMessage.generateMessage(member);
+    await generateMessage(member);
 });
 
 client.login(process.env.TOKEN);
