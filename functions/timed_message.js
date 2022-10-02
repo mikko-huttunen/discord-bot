@@ -27,14 +27,14 @@ export const handleTimedMessage = (msg, client) => {
             }
 
             const msgDateTime = msgParameters[1];
-            const msgDateTimeFormatted = moment(msgDateTime, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mmZZ");
+            const msgDateTimeFormatted = moment(msgDateTime, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mmZ");
+            const msgDateTimeUtc = moment.utc(msgDateTimeFormatted);
             if (!moment(msgDateTimeFormatted, "YYYY/MM/DD").isValid()) {
                 msg.reply("Anna päivämäärä oikeassa muodossa: !timed + viesti | **dd.mm.yyyy _hh:mm_** | #kanava");
                 break;
             }
 
-            console.log(moment().format("YYYY-MM-DD HH:mm"));
-            const currentDateTime = moment().format("YYYY-MM-DD HH:mmZZ");
+            const currentDateTime = moment.utc().format("YYYY-MM-DD HH:mm");
             if (moment(msgDateTimeFormatted).isSameOrBefore(currentDateTime)) {
                 msg.reply("Antamasi päivämäärä tai kellonaika on jo mennyt!");
                 break;
@@ -70,7 +70,7 @@ export const handleTimedMessage = (msg, client) => {
                     return;
                 }
 
-                addTimedMessage(msg, id, msgAuthor, timedMsg, msgDateTimeFormatted, msgChannelId);
+                addTimedMessage(msg, id, msgAuthor, timedMsg, msgDateTimeUtc, msgChannelId);
                 return;
             });
 
