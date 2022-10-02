@@ -27,17 +27,17 @@ export const handleTimedMessage = (msg, client) => {
             }
 
             const msgDateTime = msgParameters[1];
-            const msgDateTimeFormatted = moment(msgDateTime, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mm");
-            if (!moment(msgDateTimeFormatted, "YYYY/MM/DD").isValid()) {
+            const msgDateTimeUtcFormatted = moment(msgDateTime, "DD/MM/YYYY HH:mm").utc().format("YYYY-MM-DD HH:mm");
+            if (!moment(msgDateTimeUtcFormatted, "YYYY/MM/DD").isValid()) {
                 msg.reply("Anna päivämäärä oikeassa muodossa: !timed + viesti | **dd.mm.yyyy _hh:mm_** | #kanava");
                 break;
             }
 
-            const currentDateTime = moment().format("YYYY-MM-DD HH:mm");
-            if (moment(msgDateTimeFormatted).isSameOrBefore(currentDateTime)) {
+            const currentDateTimeUtc = moment.utc().format("YYYY-MM-DD HH:mm");
+            if (moment(msgDateTimeUtcFormatted).isSameOrBefore(currentDateTimeUtc)) {
                 msg.reply("Antamasi päivämäärä tai kellonaika on jo mennyt!");
                 break;
-            } else if (moment(msgDateTimeFormatted).isAfter(moment(currentDateTime).add(6, "months"))) {
+            } else if (moment(msgDateTimeUtcFormatted).isAfter(moment(currentDateTimeUtc).add(6, "months"))) {
                 msg.reply("Ajastettua viestiä ei voi asettaa yli puolen vuoden päähän!");
                 break;
             }
@@ -69,7 +69,7 @@ export const handleTimedMessage = (msg, client) => {
                     return;
                 }
 
-                addTimedMessage(msg, id, msgAuthor, timedMsg, moment(msgDateTimeFormatted).format(), msgChannelId);
+                addTimedMessage(msg, id, msgAuthor, timedMsg, msgDateTimeUtcFormatted, msgChannelId);
                 return;
             });
 
@@ -128,7 +128,7 @@ const addTimedMessage = async (msg, id, user, content, date, channelId) => {
         id,
         user,
         message: content,
-        date,
+        date: moment.utc(date),
         channelId
     })
     .save()
@@ -171,7 +171,7 @@ const getTimedMessages = async (msg) => {
 export const checkForTimedMessages = async (client) => {
     const query = {
         date: {
-            $lte: moment.utc()
+            $lte: moment.utc().format()
         }
     }
     
@@ -199,6 +199,13 @@ export const checkForTimedMessages = async (client) => {
         console.log(err);
     });
 
-    await timedMessage.deleteMany(query);
+    await timedMessage.deleteMany(query)
+    .then(response => {
+        console.log(response)
+    })
+    .catch(err => {
+        console.log(err);
+    });
+
     setTimeout( function(){ checkForTimedMessages(client); }, 60 * 1000);
 }

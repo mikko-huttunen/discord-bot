@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import { Client, PermissionsBitField } from "discord.js";
+import { Client } from "discord.js";
 import { handleEvents } from "./functions/events.js";
 import { greet } from "./functions/greetings.js";
 import { initialize, getBotNames } from "./data/bot_data.js";
