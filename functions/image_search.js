@@ -1,11 +1,13 @@
-require("dotenv").config();
-const imageSearch = require("image-search-google");
+import * as dotenv from "dotenv";
+dotenv.config();
+
+import imageSearch from "image-search-google";
 
 const client = new imageSearch(process.env.SE_ID, process.env.GOOGLE_API_KEY);
 const imageFormats = [".gif", ".jpeg", ".jpg", ".png"];
 let validImages = [];
 
-const handleSearch = async (msg) => {
+export const handleSearch = async (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
     const keyword = msgToLowerCase.slice(msgToLowerCase.indexOf(" ") + 1);
 
@@ -13,6 +15,7 @@ const handleSearch = async (msg) => {
         await client.search(keyword)
         .then(response => {
             if (response.length > 0) {
+                console.log(response);
                 response.forEach(image => {
                     var fileExt = image.url.substring(image.url.lastIndexOf("."));
                     if (imageFormats.some((format) => format === fileExt)) {
@@ -20,22 +23,32 @@ const handleSearch = async (msg) => {
                     }
                 });
 
-                console.log(validImages);
-
                 const imageUrl = validImages[Math.floor(Math.random() * validImages.length)];
                 validImages = [];
                 console.log("keyword: " + keyword + ", imageUrl: " + imageUrl);
 
                 const fileExt = imageUrl.substring(imageUrl.lastIndexOf("."));
 
-                msg.reply({
-                    files: [{
-                        attachment: imageUrl,
-                        name: "image" + fileExt
-                    }]
-                });
+                if (imageFormats.some((format) => format === fileExt)) {
+                    if (msg.author.bot) {
+                        msg.edit({ 
+                            content: "",
+                            files: [{
+                                attachment: imageUrl,
+                                name: "image" + fileExt
+                            }] 
+                        });
+                    } else {
+                        msg.reply({
+                            files: [{
+                                attachment: imageUrl,
+                                name: "image" + fileExt
+                            }]
+                        });
+                    }
+                } else msg.reply("Sori nyt ei pysty...");
             } else {
-                console.log("keyword: " + keyword, "No results");
+                console.log("keyword: " + keyword, "No results, posting monkey!");
                 client.search("monkey")
                 .then(response => {
                     if (response.length > 0) {
@@ -52,26 +65,34 @@ const handleSearch = async (msg) => {
 
                         const fileExt = imageUrl.substring(imageUrl.lastIndexOf("."));
 
-                        msg.reply({
-                            content: "En löytänyt kuvaa antamallasi hakusanalla... \nSaat kuitenkin lohdutukseksi tämän",
-                            files: [{
-                                attachment: imageUrl,
-                                name: "image" + fileExt
-                            }]
-                        });
-                    }
+                        if (msg.author.bot) {
+                            msg.edit({ 
+                                content: "En löytänyt kuvaa antamallasi hakusanalla...\nSaat kuitenkin lohdutukseksi tämän",
+                                files: [{
+                                    attachment: imageUrl,
+                                    name: "image" + fileExt
+                                }]
+                            });
+                        } else {
+                            msg.reply({
+                                content: "En löytänyt kuvaa antamallasi hakusanalla...\nSaat kuitenkin lohdutukseksi tämän",
+                                files: [{
+                                    attachment: imageUrl,
+                                    name: "image" + fileExt
+                                }]
+                            });
+                        }
+                    } else msg.reply("Sori nyt ei pysty...");
                 })
-                .catch(error => {
-                    console.log(error);
+                .catch(err => {
+                    console.log(err);
                     msg.reply("Jotain meni pieleen...");
                 });
             }
         })
-        .catch(error => {
-            console.log(error);
+        .catch(err => {
+            console.log(err);
             msg.reply("Sori nyt ei pysty...");
         });
     }
 }
-
-module.exports = { handleSearch };

@@ -1,7 +1,8 @@
-require("dotenv").config();
+import * as dotenv from "dotenv";
+dotenv.config();
 
-const { ActivityType } = require("discord.js");
-const mongoose = require("mongoose");
+import { ActivityType } from "discord.js";
+import mongoose from "mongoose";
 const database = process.env.DATABASE;
 
 const bot = {
@@ -11,7 +12,7 @@ const bot = {
     role: null
 };
 
-const initialize = (client) => {
+export const initialize = (client) => {
     bot.botId = client.user.id;
     bot.names.push(
         "<@" + client.user.id + ">",
@@ -45,12 +46,14 @@ const initialize = (client) => {
     })
 } 
 
-const getBotNames = () => {
+export const getBotNames = () => {
     return bot.names;
 };
 
-const getBotRole = () => {
-    return bot.role;
+export const getBotGuild = () => {
+    return bot.guild;
 }
 
-module.exports = { initialize, getBotNames, getBotRole };
+export const getBotRole = () => {
+    return bot.role;
+}

@@ -1,14 +1,16 @@
-const botData = require("../data/bot_data");
-const emotes = require("../data/emotes")
+import { getBotNames } from "../data/bot_data.js";
+import { getRandomCustomEmote } from "../data/emotes.js";
 
 const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere", "päivää"];
 const greetingsEn = ["hi", "greetings", "hello", "hey", "yo"];
 
-const greet = (msg) => {
+export const greet = (msg) => {
+    if (msg.author.bot) return;
+    
     const msgToLowerCase = msg.content.toLowerCase();
     const msgGreeting = msgToLowerCase.split(" ")[0];
     const msgBotName = msgToLowerCase.split(" ")[1];
-    const botNames = botData.getBotNames();
+    const botNames = getBotNames();
 
     if (!msgBotName) return;
     
@@ -17,7 +19,7 @@ const greet = (msg) => {
             " " +
             msg.author.username +
             "!" +
-            emotes.getRandomCustomEmote(msg);
+            getRandomCustomEmote(msg);
 
         msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
     }
@@ -27,10 +29,8 @@ const greet = (msg) => {
             " " +
             msg.author.username +
             "!" +
-            emotes.getRandomCustomEmote(msg);
+            getRandomCustomEmote(msg);
 
         msg.reply(message.charAt(0).toUpperCase() + message.slice(1));
     }
 };
-
-module.exports = { greet };
