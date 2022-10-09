@@ -77,7 +77,7 @@ export const setBotPresence = (client) => {
 
     if (
         client.user.presence.activities.length <= 0 ||
-        currentTime.minute() === 15 ||
+        currentTime.hour() === 0 ||
         currentTime.hour() === 3 || 
         currentTime.hour() === 6 ||
         currentTime.hour() === 9 ||
