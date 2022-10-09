@@ -201,7 +201,9 @@ export const checkForTimedMessages = async (client) => {
 
     await timedMessage.deleteMany(query)
     .then(response => {
-        console.log(response)
+        if (response.length > 0) {
+            console.log(response)
+        }
     })
     .catch(err => {
         console.log(err);
