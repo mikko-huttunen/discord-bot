@@ -1,6 +1,5 @@
 import * as dotenv from "dotenv";
 dotenv.config();
-import moment from "moment";
 
 import { ActivityType } from "discord.js";
 import mongoose from "mongoose";
@@ -40,7 +39,6 @@ export const initialize = (client) => {
 } 
 
 export const setBotPresence = (client) => {
-    const currentTime = moment();
     const activities = [
         {
             name: "Super Monkey Ball",
@@ -75,31 +73,19 @@ export const setBotPresence = (client) => {
         },
     ]
 
-    if (
-        client.user.presence.activities.length <= 0 ||
-        currentTime.hour() === 0 ||
-        currentTime.hour() === 3 || 
-        currentTime.hour() === 6 ||
-        currentTime.hour() === 9 ||
-        currentTime.hour() === 12 || 
-        currentTime.hour() === 15 || 
-        currentTime.hour() === 18 || 
-        currentTime.hour() === 21
-    ) {
-        const activity = activities[Math.floor(Math.random() * activities.length)]
+    const activity = activities[Math.floor(Math.random() * activities.length)]
 
-        client.user.setPresence({
-            status: "online",
-            activities: [{
-                name: activity.name,
-                type: activity.type
-            }],
-        });
+    client.user.setPresence({
+        status: "online",
+        activities: [{
+            name: activity.name,
+            type: activity.type
+        }],
+    });
 
-        console.log("Bot activity changed:", client.user.presence.activities[0].type, client.user.presence.activities[0].name)
-    }
+    console.log("Bot activity changed:", client.user.presence.activities[0].type, client.user.presence.activities[0].name)
 
-    setTimeout( function(){ setBotPresence(client); }, 60 * 1000);
+    setTimeout( function(){ setBotPresence(client); }, 1000 * 60 * 60);
 }
 
 export const getBotNames = () => {
