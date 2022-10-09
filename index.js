@@ -4,7 +4,7 @@ dotenv.config();
 import { Client } from "discord.js";
 import { handleEvents } from "./functions/events.js";
 import { greet } from "./functions/greetings.js";
-import { initialize, getBotNames } from "./data/bot_data.js";
+import { initialize, getBotNames, setBotPresence } from "./data/bot_data.js";
 import { listCommands } from "./functions/list_commands.js";
 import { handleRoleMessage } from "./functions/handle_roles.js";
 import { generateMessage } from "./functions/welcome_message.js";
@@ -20,6 +20,7 @@ const client = new Client({
 client.on("ready", () => {
     initialize(client);
     botNames = getBotNames();
+    setBotPresence(client);
     checkForTimedMessages(client);
 });
 
