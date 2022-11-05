@@ -58,11 +58,11 @@ export const generateMessage = async (member) => {
     ctx.textAlign = "center";
 
     // draw in Welcome
-    ctx.font = "80px Futura";
+    ctx.font = "80px Roboto";
     ctx.fillText("Tervetuloa", dim.width / 2, 190);
 
     // draw in the username
-    ctx.font = "80px Futura";
+    ctx.font = "80px Roboto";
     ctx.fillText(
         username,
         dim.width / 2,
