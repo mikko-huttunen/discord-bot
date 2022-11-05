@@ -14,7 +14,7 @@ export const handleTimedMessage = (msg, client) => {
 
             const msgParameters = msg.content.substring(msgToLowerCase.indexOf("+") + 2).split("|");
             if (!msgParameters[0] || msgParameters.length > 3) {
-                msg.reply("Syötä ajastetun viestin tiedot muodossa: **!timed + viesti | dd.mm.yyyy _hh:mm_ | #kanava**");
+                msg.reply("Syötä ajastetun viestin tiedot muodossa: **!timed + viesti | dd.mm.yyyy _hh:mm_ _(-d/-w/-m/-y)_ | #kanava**");
                 break;
             };
             const timedMsg = msgParameters[0];
@@ -22,18 +22,20 @@ export const handleTimedMessage = (msg, client) => {
             const id = Math.random().toString(16).slice(9);
 
             if (!msgParameters[1]) {
-                msg.reply("Päivämäärä puuttuu! !timed + viesti | **dd.mm.yyyy _hh:mm_** | #kanava");
+                msg.reply("Päivämäärä puuttuu! !timed + viesti | **dd.mm.yyyy _hh:mm_** _(-d/-w/-m/-y)_ | #kanava");
                 break;
             }
 
             const msgDateTime = msgParameters[1];
             const msgDateTimeFormatted = moment(msgDateTime, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mm");
+            const repeat = msgDateTime.split("-")[1] ? msgDateTime.split("-")[1].trim() : "";
+
             if (!moment(msgDateTimeFormatted, "YYYY/MM/DD").isValid()) {
                 msg.reply("Anna päivämäärä oikeassa muodossa: !timed + viesti | **dd.mm.yyyy _hh:mm_** | #kanava");
                 break;
             }
 
-            const currentDateTime = moment.utc().format("YYYY-MM-DD HH:mm");
+            const currentDateTime = moment().format("YYYY-MM-DD HH:mm");
             if (moment(msgDateTimeFormatted).isSameOrBefore(currentDateTime)) {
                 msg.reply("Antamasi päivämäärä tai kellonaika on jo mennyt!");
                 break;
@@ -42,8 +44,17 @@ export const handleTimedMessage = (msg, client) => {
                 break;
             }
 
+            if (repeat !== "" && repeat !== "d" && repeat !== "w" && repeat !== "m" && repeat !== "y") {
+                msg.reply("Antamasi viestin toisto on virheellinen! Hyväksyttyjä muotoja ovat:\n" +
+                "-d = Toista joka päivä\n" +
+                "-w = Toista joka viikko\n" +
+                "-m = Toista joka kuukausi\n" +
+                "-y = Toista joka vuosi");
+                break;
+            }
+
             if (!msgParameters[2]) {
-                msg.reply("Tekstikanava ei voi olla tyhjä! !timed + viesti | dd.mm.yyyy _hh:mm_ | **#kanava**");
+                msg.reply("Tekstikanava ei voi olla tyhjä! !timed + viesti | dd.mm.yyyy _hh:mm_ _(-d/-w/-m/-y)_ | **#kanava**");
                 break;
             }
 
@@ -69,7 +80,7 @@ export const handleTimedMessage = (msg, client) => {
                     return;
                 }
 
-                addTimedMessage(msg, id, msgAuthor, timedMsg, msgDateTimeFormatted, msgChannelId);
+                addTimedMessage(msg, id, msgAuthor, timedMsg, msgDateTimeFormatted, repeat, msgChannelId);
                 return;
             });
 
@@ -118,17 +129,18 @@ export const handleTimedMessage = (msg, client) => {
 
         default:
             if (msg.author.bot) break;
-            msg.reply("Syötä ajastetun viestin tiedot muodossa: **!timed + viesti | dd.mm.yyyy _hh:mm_ | #kanava**");
+            msg.reply("Syötä ajastetun viestin tiedot muodossa: **!timed + viesti | dd.mm.yyyy _hh:mm_ _(-d/-w/-m/-y)_ | #kanava**");
             break;
     }
 }
 
-const addTimedMessage = async (msg, id, user, content, date, channelId) => {
+const addTimedMessage = async (msg, id, user, content, date, repeat, channelId) => {
     await new timedMessage({ 
         id,
         user,
         message: content,
         date,
+        repeat,
         channelId
     })
     .save()
@@ -142,11 +154,24 @@ const addTimedMessage = async (msg, id, user, content, date, channelId) => {
     });
 };
 
-const deleteTimedMessage = async (msg, id, user) => {
-    await timedMessage.findOneAndDelete({ 
-        id: id,
-        user: user
+const updateTimedMessage = async (id, newDate) => {
+    await timedMessage.findOneAndUpdate(
+        { id: id },
+        { date: newDate },
+        { returnDocument: "after" }
+    )
+    .then(response => {
+        console.log("Timed message updated: " + response);
     })
+    .catch(err => {
+        console.log(err);
+    });
+}
+
+const deleteTimedMessage = async (msg, id, user) => {
+    await timedMessage.findOneAndDelete(
+        { id: id, user: user }
+    )
     .then(response => {
         if (response) {
             console.log("Timed message deleted: " + response);
@@ -154,7 +179,8 @@ const deleteTimedMessage = async (msg, id, user) => {
         } else {
             msg.reply("Et voi poistaa ajastettua viestiä **" + id + "**, tai antamasi id on väärä!");
         }
-    }).catch(err => {
+    })
+    .catch(err => {
         console.log(err);
         msg.reply("Sori nyt ei pysty...");
     });
@@ -169,6 +195,9 @@ const getTimedMessages = async (msg) => {
 }
 
 export const checkForTimedMessages = async (client) => {
+    let doesRepeat;
+    let newDate;
+    let msgId;
     const query = {
         date: {
             $lte: moment.utc()
@@ -177,21 +206,32 @@ export const checkForTimedMessages = async (client) => {
     
     await timedMessage.find(query)
     .then(response => {
-        if (response.length > 0) {
-            console.log("Timed message posted: " + response);
-        }
-
         response.forEach(post => {
-            const { message, channelId } = post;
+            const { id, message, date, repeat, channelId } = post;
+            msgId = id;
+            doesRepeat = repeat ? repeat : false;
             const guild = getBotGuild();
             const channel = client.channels.cache.get(channelId);
 
             if (!channel) return;
 
-            if(guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
+            if (guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
                 channel.send(message);
+                console.log("Timed message posted: " + post);
             } else {
                 return;
+            }
+
+            if (repeat) {
+                if (repeat === "d") {
+                    newDate = moment(date).add(1, "d");
+                } else if (repeat === "w") {
+                    newDate = moment(date). add(1, "w");
+                } else if (repeat === "m") {
+                    newDate = moment(date). add(1, "M");
+                } else if (repeat === "y") {
+                    newDate = moment(date). add(1, "y");
+                }
             }
         });
     })
@@ -199,13 +239,19 @@ export const checkForTimedMessages = async (client) => {
         console.log(err);
     });
 
-    await timedMessage.deleteMany(query)
-    .then(response => {
-        console.log(response)
-    })
-    .catch(err => {
-        console.log(err);
-    });
+    if (doesRepeat) {
+        await updateTimedMessage(msgId, newDate);
+    } else if (doesRepeat === false) {
+        await timedMessage.deleteMany(query)
+        .then(response => {
+            if (response.deletedCount > 0) {
+                console.log("deleted message");
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        });
+    }
 
     setTimeout( function(){ checkForTimedMessages(client); }, 60 * 1000);
 }
