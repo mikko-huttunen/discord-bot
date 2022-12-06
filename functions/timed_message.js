@@ -27,7 +27,7 @@ export const handleTimedMessage = (msg, client) => {
             }
 
             const msgDateTime = msgParameters[1];
-            const msgDateTimeFormatted = moment(msgDateTime, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mm");
+            const msgDateTimeFormatted = moment(msgDateTime, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mm").utc();
             const repeat = msgDateTime.split("-")[1] ? msgDateTime.split("-")[1].trim() : "";
 
             if (!moment(msgDateTimeFormatted, "YYYY/MM/DD").isValid()) {
