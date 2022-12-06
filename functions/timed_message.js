@@ -28,21 +28,18 @@ export const handleTimedMessage = (msg, client) => {
 
             const msgDateTime = msgParameters[1];
             const msgDateTimeFormatted = moment(msgDateTime, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mm");
-            const msgDateTimeUtc = moment(msgDateTimeFormatted).utc().format('YYYY-MM-DD HH:mm');
-            console.log("msgDateTimeUtc: " + msgDateTimeUtc);
             const repeat = msgDateTime.split("-")[1] ? msgDateTime.split("-")[1].trim() : "";
 
-            if (!moment(msgDateTimeUtc, "YYYY/MM/DD").isValid()) {
+            if (!moment(msgDateTimeFormatted, "YYYY/MM/DD").isValid()) {
                 msg.reply("Anna päivämäärä oikeassa muodossa: !timed + viesti | **dd.mm.yyyy _hh:mm_** | #kanava");
                 break;
             }
 
             const currentDateTime = moment.utc().format("YYYY-MM-DD HH:mm");
-            console.log("currentDateTime: " + currentDateTime);
-            if (moment(msgDateTimeUtc).isSameOrBefore(currentDateTime)) {
+            if (moment(msgDateTimeFormatted).isSameOrBefore(currentDateTime)) {
                 msg.reply("Antamasi päivämäärä tai kellonaika on jo mennyt!");
                 break;
-            } else if (moment(msgDateTimeUtc).isAfter(moment(currentDateTime).add(6, "months"))) {
+            } else if (moment(msgDateTimeFormatted).isAfter(moment(currentDateTime).add(6, "months"))) {
                 msg.reply("Ajastettua viestiä ei voi asettaa yli puolen vuoden päähän!");
                 break;
             }
@@ -83,7 +80,7 @@ export const handleTimedMessage = (msg, client) => {
                     return;
                 }
 
-                addTimedMessage(msg, id, msgAuthor, timedMsg, msgDateTimeUtc, repeat, msgChannelId);
+                addTimedMessage(msg, id, msgAuthor, timedMsg, msgDateTimeFormatted, repeat, msgChannelId);
                 return;
             });
 
@@ -138,7 +135,6 @@ export const handleTimedMessage = (msg, client) => {
 }
 
 const addTimedMessage = async (msg, id, user, content, date, repeat, channelId) => {
-    console.log("addMessageDate: " + date);
     await new timedMessage({ 
         id,
         user,
