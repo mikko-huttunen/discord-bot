@@ -28,6 +28,7 @@ export const handleTimedMessage = (msg, client) => {
 
             const msgDateTime = msgParameters[1];
             const msgDateTimeFormatted = moment.utc(msgDateTime, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mm");
+            console.log("msgDateTimeFormatted: " + msgDateTimeFormatted);
             const repeat = msgDateTime.split("-")[1] ? msgDateTime.split("-")[1].trim() : "";
 
             if (!moment(msgDateTimeFormatted, "YYYY/MM/DD").isValid()) {
@@ -36,6 +37,7 @@ export const handleTimedMessage = (msg, client) => {
             }
 
             const currentDateTime = moment.utc().format("YYYY-MM-DD HH:mm");
+            console.log("currentDateTime: " + currentDateTime);
             if (moment(msgDateTimeFormatted).isSameOrBefore(currentDateTime)) {
                 msg.reply("Antamasi päivämäärä tai kellonaika on jo mennyt!");
                 break;
@@ -135,6 +137,7 @@ export const handleTimedMessage = (msg, client) => {
 }
 
 const addTimedMessage = async (msg, id, user, content, date, repeat, channelId) => {
+    console.log("addMessageDate: " + date);
     await new timedMessage({ 
         id,
         user,
