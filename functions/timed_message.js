@@ -35,7 +35,7 @@ export const handleTimedMessage = (msg, client) => {
                 break;
             }
 
-            const currentDateTime = moment.utc().format("YYYY-MM-DD HH:mm");
+            const currentDateTime = moment().format("YYYY-MM-DD HH:mm");
             if (moment(msgDateTimeFormatted).isSameOrBefore(currentDateTime)) {
                 msg.reply("Antamasi päivämäärä tai kellonaika on jo mennyt!");
                 break;
