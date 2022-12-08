@@ -233,25 +233,25 @@ export const checkForTimedMessages = async (client) => {
                     newDate = moment(date). add(1, "y");
                 }
             }
+
+            if (doesRepeat) {
+                updateTimedMessage(msgId, newDate);
+            } else if (doesRepeat === false) {
+                timedMessage.deleteMany(query)
+                .then(response => {
+                    if (response.deletedCount > 0) {
+                    console.log("deleted message");
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+            }
         });
     })
     .catch(err => {
         console.log(err);
     });
-
-    if (doesRepeat) {
-        await updateTimedMessage(msgId, newDate);
-    } else if (doesRepeat === false) {
-        await timedMessage.deleteMany(query)
-        .then(response => {
-            if (response.deletedCount > 0) {
-                console.log("deleted message");
-            }
-        })
-        .catch(err => {
-            console.log(err);
-        });
-    }
 
     setTimeout( function(){ checkForTimedMessages(client); }, 60 * 1000);
 }
