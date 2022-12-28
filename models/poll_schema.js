@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 
 const pollSchema = new mongoose.Schema({
-    id: { type: String, required: true },
+    pollId: { type: String, required: true },
     msgId: { type: String, required: true },
-    user: { type: String, required: true },
+    author: { type: String, required: true },
     topic: { type: String, required: true },
-    options: { type: [String], required: true },
     date: { type: Date, required: true},
     channelId: { type: String, required: false },
-    responses: {
+    options: { type: [String], required: true },
+    votes: {
         number: { type: Number, required: true },
         entry: [{
             user: { type: String, required: true },
