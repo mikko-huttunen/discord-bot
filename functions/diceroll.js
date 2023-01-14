@@ -58,7 +58,7 @@ export const handleDiceRoll = (msg) => {
 
                         diceRollEmbed.fields.push({
                             name: "Dice:",
-                            value: chunk.join("\n")
+                            value: chunk.join(",\n")
                         }, {
                             name: "Stats:",
                             value: Object.entries(calcResults).map(value => value.join(": ")).join("\n")
@@ -110,7 +110,7 @@ export const handleDiceRoll = (msg) => {
 
                     diceRollEmbed.fields.push({
                         name: "Dice:",
-                        value: chunk.join("\n")
+                        value: chunk.join(",\n")
                     }, {
                         name: "Stats:",
                         value: Object.entries(calcResults).map(value => value.join(": ")).join("\n")

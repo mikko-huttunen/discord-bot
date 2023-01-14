@@ -94,5 +94,7 @@ export const handleSearch = async (msg) => {
             console.log(err);
             msg.reply("Sori nyt ei pysty...");
         });
+    } else {
+        msg.reply("Anna hakusana esim. !kuva monke");
     }
 }
