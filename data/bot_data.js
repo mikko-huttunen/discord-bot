@@ -12,7 +12,7 @@ const bot = {
     role: null
 };
 
-export const initialize = (client) => {
+export const initialize = async (client) => {
     bot.botId = client.user.id;
     bot.names.push(
         "<@" + client.user.id + ">",

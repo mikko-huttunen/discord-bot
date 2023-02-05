@@ -168,13 +168,7 @@ const getTimedMessages = async (msg) => {
     .lean();
 }
 
-export const checkForTimedMessages = async (client) => {
-    const query = {
-        date: {
-            $lte: moment.utc()
-        }
-    }
-    
+export const postTimedMessages = async (client, query) => {
     await timedMessage.find(query)
     .then(response => {
         if (response.length > 0) {
@@ -183,7 +177,7 @@ export const checkForTimedMessages = async (client) => {
 
         response.forEach(post => {
             const { message, channelId } = post;
-            const guild = getBotGuild();
+            const guild = getBotGuild;
             const channel = client.channels.cache.get(channelId);
 
             if (!channel) return;
@@ -208,6 +202,4 @@ export const checkForTimedMessages = async (client) => {
     .catch(err => {
         console.log(err);
     });
-
-    setTimeout( function(){ checkForTimedMessages(client); }, 60 * 1000);
 }
