@@ -3,7 +3,7 @@ import { getBotRole } from "../data/bot_data.js";
 
 export const handleRoleMessage = async (msg) => {
     await msg.guild.members.fetch()
-        .then(console.log("Successfully fetched server members"))
+        .then()
         .catch(error => console.log(error));
 
     const msgToLowerCase = msg.content.toLowerCase();

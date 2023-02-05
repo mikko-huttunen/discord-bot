@@ -4,3 +4,9 @@ export const getRandomCustomEmote = (msg) => {
     );
     return emojis[Math.floor(Math.random() * emojis.length)];
 };
+
+export const getNumberEmotes = () => {
+    return (
+        ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+    )
+}

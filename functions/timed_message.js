@@ -169,9 +169,10 @@ const updateTimedMessage = async (id, newDate) => {
 }
 
 const deleteTimedMessage = async (msg, id, user) => {
-    await timedMessage.findOneAndDelete(
-        { id: id, user: user }
-    )
+    await timedMessage.findOneAndDelete({ 
+        id: id, 
+        user: user 
+    })
     .then(response => {
         if (response) {
             console.log("Timed message deleted: " + response);
@@ -194,16 +195,11 @@ const getTimedMessages = async (msg) => {
     .lean();
 }
 
-export const checkForTimedMessages = async (client) => {
+export const postTimedMessages = async (client, query) => {
     let doesRepeat;
     let newDate;
     let msgId;
-    const query = {
-        date: {
-            $lte: moment.utc()
-        }
-    }
-    
+
     await timedMessage.find(query)
     .then(response => {
         response.forEach(post => {
@@ -238,7 +234,7 @@ export const checkForTimedMessages = async (client) => {
     .catch(err => {
         console.log(err);
     });
-
+    
     if (doesRepeat) {
         await updateTimedMessage(msgId, newDate);
     } else if (!doesRepeat) {
@@ -252,6 +248,4 @@ export const checkForTimedMessages = async (client) => {
             console.log(err);
         });
     }
-
-    setTimeout( function(){ checkForTimedMessages(client); }, 60 * 1000);
 }

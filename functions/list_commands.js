@@ -23,9 +23,18 @@ export const listCommands = (msg) => {
                     "**!timed + <message> | <dd.mm.yyyy hh:mm> | <#channel>**\nCreate new timed message\n" +
                     "**!timed - <id>**\nDelete timed message. Use !timed messages to find id\n" +
                     "**!timed messages**\nList of your timed messages\n"
-            },{
+            }, {
+                name: "Poll Commands",
+                value:
+                    "**!poll + <topic> | <dd.mm.yyyy hh:mm> | <#channel> | <option1> | <option2>...**\nCreate new timed message\n" +
+                    "**!poll - <id>**\nDelete poll. Use !poll list to find id\n" +
+                    "**!poll list**\nList of your polls\n"
+            }, {
                 name: "!image <keyword>",
                 value: "Get random picture based on given keyword",
+            }, {
+                name: "!video <keyword>",
+                value: "Get YouTube video based on given keyword",
             }
         ],
     };
