@@ -26,15 +26,17 @@ export const listCommands = (msg) => {
             }, {
                 name: "Poll Commands",
                 value:
-                    "**!poll + <topic> | <dd.mm.yyyy hh:mm> | <#channel> | <option1> | <option2>...**\nCreate new timed message\n" +
+                    "**!poll + <topic> | <dd.mm.yyyy hh:mm> | <#channel> | <option1> | <option2>...**\nCreate new poll\n" +
                     "**!poll - <id>**\nDelete poll. Use !poll list to find id\n" +
                     "**!poll list**\nList of your polls\n"
             }, {
-                name: "!image <keyword>",
-                value: "Get random picture based on given keyword",
+                name: "Games",
+                value: "**!roll <dice>d<sides> / !roll <dice>d / !roll <sides>**\nRoll a die or dice\n" +
+                    "**!cf**\nHeads or tails\n"
             }, {
-                name: "!video <keyword>",
-                value: "Get YouTube video based on given keyword",
+                name: "Media",
+                value: "**!image <keyword>**\nGet random picture based on given keyword\n" +
+                    "**!video <keyword>**\nGet YouTube video based on given keyword\n"
             }
         ],
     };

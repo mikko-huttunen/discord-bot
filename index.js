@@ -8,10 +8,13 @@ import { initialize, getBotNames, setBotPresence } from "./data/bot_data.js";
 import { listCommands } from "./functions/list_commands.js";
 import { handleRoleMessage } from "./functions/handle_roles.js";
 import { generateMessage } from "./functions/welcome_message.js";
-import { handleSearch } from "./functions/image_search.js";
+import { handleImageSearch } from "./functions/image_search.js";
 import { handleTimedMessage } from "./functions/timed_message.js";
 import { deletePollByMsg, getPollsByMsg, handlePoll, syncPollVotesOnStartUp } from "./functions/polls.js";
 import { addReaction, checkForTimedActions, checkReactions, reactions, removedReactions, removeReaction } from "./data/checks.js";
+import { handleVideoSearch } from "./functions/video_search.js";
+import { handleCoinFlip } from "./functions/coinflip.js";
+import { handleDiceRoll } from "./functions/diceroll.js";
 
 let botNames;
 
@@ -37,9 +40,12 @@ client.on("messageCreate", async (msg) => {
         msgToLowerCase.startsWith("!help") || msg.content.startsWith("!commands") ? listCommands(msg) : false;
         msgToLowerCase.startsWith("!role") ? handleRoleMessage(msg) : false;
         msgToLowerCase.startsWith("!weekly") ? handleEvents(msg) : false;
-        msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await handleSearch(msg) : false;
+        msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await handleImageSearch(msg) : false;
+        msgToLowerCase.startsWith("!video") || msg.content.startsWith("!video") ? handleVideoSearch(msg) : false;
         msgToLowerCase.startsWith("!timed") ? handleTimedMessage(msg, client) : false;
         msgToLowerCase.startsWith("!poll") ? handlePoll(msg, client) : false;
+        msgToLowerCase.startsWith("!cf") ? handleCoinFlip(msg) : false;
+        msgToLowerCase.startsWith("!roll") ? handleDiceRoll(msg) : false;
     }
 });
 

@@ -7,7 +7,7 @@ const client = new imageSearch(process.env.SE_ID, process.env.GOOGLE_API_KEY);
 const imageFormats = [".gif", ".jpeg", ".jpg", ".png"];
 let validImages = [];
 
-export const handleSearch = async (msg) => {
+export const handleImageSearch = async (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
     const keyword = msgToLowerCase.slice(msgToLowerCase.indexOf(" ") + 1);
 
