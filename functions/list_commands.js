@@ -26,7 +26,7 @@ export const listCommands = (interaction) => {
                 name: "Poll Commands",
                 value:
                     "**/listpolls**\nList of active polls\n" +
-                    "**/poll\nCreate new poll\n" +
+                    "**/poll**\nCreate new poll\n" +
                     "**/deletepoll**\nDelete poll\n"
             }, {
                 name: "Games",
