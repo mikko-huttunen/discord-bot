@@ -102,7 +102,7 @@ export const handleDiceRoll = (msg) => {
                 }
                 
                 if (!isNaN(diceCount) && !isNaN(sides)) {
-                    for (var i=0; i<diceCount; i++) {
+                    for (var j=0; j<diceCount; j++) {
                         results.push(Math.floor(Math.random() * sides + 1));
                     }
                     const calcResults = calculateDice(results);

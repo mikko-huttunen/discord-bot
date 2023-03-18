@@ -1,81 +1,67 @@
 import moment from "moment";
-import { getPolls, postPollResults, updateVotes } from "../functions/polls.js";
+import { handlePollReaction, postPollResults } from "../functions/polls.js";
 import { getNumberEmotes } from "./emotes.js";
 import { postTimedMessages } from "../functions/timed_message.js";
-
-export let reactions = [];
-export let removedReactions = [];
+import { PermissionsBitField } from "discord.js";
+import { getBotGuild } from "./bot_data.js";
+import { eventReminderPost, eventSummaryPost } from "../functions/events.js";
 
 export const checkForTimedActions = async (client) => {
-    const query = {
-        date: {
-            $lte: moment.utc()
-        }
-    }
+    await postTimedMessages(client);
+    await postPollResults(client);
+    await eventSummaryPost(client);
 
-    await postTimedMessages(client, query);
-    await postPollResults(client, query);
+    if (moment().format("HH:mm") === "00:00") {
+        await eventReminderPost(client);
+    }
 
     setTimeout( function(){ checkForTimedActions(client); }, 60 * 1000);
 }
 
-export const checkReactions = async () => {
-    //Create copies of reactions because original arrays needs to be cleared quickly to not miss any incoming reactions
-    const currReactions = reactions;
-    const currRemovedReactions = removedReactions;
-    reactions = [];
-    removedReactions = [];
+export const checkReaction = async (reaction, user) => {
+    const numberEmojis = getNumberEmotes();
 
-    if (currReactions.length || currRemovedReactions.length) {
-        const numberEmojis = getNumberEmotes();
-        let pollReactions = [];
-        let removedPollReactions = [];
+    if (numberEmojis.includes(reaction._emoji.name)) {
+        await handlePollReaction(reaction, user);
+    }
+}
 
-        currReactions.length ? pollReactions = currReactions.filter(reaction => numberEmojis.includes(reaction.reaction._emoji.name)) : false;
-        currRemovedReactions.length ? removedPollReactions = currRemovedReactions.filter(reaction => numberEmojis.includes(reaction.reaction._emoji.name)) : false;
+export const canSendMessageToChannel = async (channel) => {
+    const guild = getBotGuild();
 
-        if (pollReactions.length || removedPollReactions.length) await handlePollReactions(pollReactions, removedPollReactions);
+    if (!guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
+        return false;
     }
 
-    setTimeout( function(){ checkReactions(); }, 10 * 1000);
+    return true
 }
 
-const handlePollReactions = async (pollReactions, removedPollReactions) => {
-    await getPolls()
-    .then(polls => {
-        if (polls.length) {
-            polls.forEach(poll => {
-                pollReactions.length ? pollReactions.filter(reaction => reaction.reaction.message.id === poll.msgId) : false;
-                removedPollReactions.length ? removedPollReactions.filter(reaction => reaction.reaction.message.id === poll.msgId) : false;
-                
-                if (pollReactions.length || removedPollReactions.length) {
-                    updateVotes(pollReactions, removedPollReactions, poll);
-                }
-            });
-        }
-    });
-}
+export const isValidDateAndRepetition = (interaction, dateTime, repeat) => {
+    if (!moment(dateTime, "YYYY/MM/DD").isValid()) {
+        interaction.reply({ content: "Anna päivämäärä oikeassa muodossa: dd.mm.yyyy _hh:mm_", ephemeral: true });
+        return false;
+    }
 
-export const addReaction = (reaction, user) => {
-    let filteredReactions = []
-    removedReactions.forEach(r => {
-        if (r.user.id === user.id && r.reaction.message.id === reaction.message.id && r.reaction._emoji.name === reaction._emoji.name) {
-            return;
-        }
-        filteredReactions.push(r);
-    });
+    const currentDateTime = moment().format("YYYY-MM-DD HH:mm");
+    if (moment(dateTime).isSameOrBefore(currentDateTime)) {
+        interaction.reply({ content: "Antamasi päivämäärä tai kellonaika on jo mennyt!", ephemeral: true });
+        return false;
+    } else if (moment(dateTime).isAfter(moment(currentDateTime).add(1, "years"))) {
+        interaction.reply({ content: "Päivämäärää ei voi asettaa yli 1 vuoden päähän!", ephemeral: true });
+        return false;
+    }
 
-    removedReactions = filteredReactions;
-}
+    if (repeat !== "" && repeat !== "never" && repeat !== "daily" && repeat !== "weekly" && repeat !== "monthly" && repeat !== "yearly") {
+        interaction.reply({ 
+            content: "Antamasi viestin toisto on virheellinen! Hyväksyttyjä muotoja ovat:\n" +
+                "daily = Toista joka päivä\n" +
+                "weekly = Toista joka viikko\n" +
+                "monthly = Toista joka kuukausi\n" +
+                "yearly = Toista joka vuosi",
+            ephemeral: true
+        });
+        return false;
+    }
 
-export const removeReaction = (reaction, user) => {
-    let filteredReactions = []
-    reactions.forEach(r => {
-        if (r.user.id === user.id && r.reaction.message.id === reaction.message.id && r.reaction._emoji.name === reaction._emoji.name) {
-            return;
-        }
-        filteredReactions.push(r);
-    });
-
-    reactions = filteredReactions;
+    return true;
 }

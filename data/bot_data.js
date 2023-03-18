@@ -1,19 +1,33 @@
+import { Collection, REST, Routes } from "discord.js";
 import * as dotenv from "dotenv";
-dotenv.config();
-
 import { ActivityType } from "discord.js";
 import mongoose from "mongoose";
+import * as commandData from "../commands/commands.js";
+dotenv.config();
+
 const database = process.env.DATABASE;
 
 const bot = {
-    botId: null,
+    id: null,
     names: [],
     guild: null,
     role: null
 };
 
 export const initialize = async (client) => {
-    bot.botId = client.user.id;
+    setBotData(client);
+    createCommands(client);
+
+    if (!database) {
+        console.log("No database set!");
+        return;
+    }
+
+    setDatabase();
+}
+
+const setBotData = (client) => {
+    bot.id = client.user.id;
     bot.names.push(
         "<@" + client.user.id + ">",
         client.user.username.toLowerCase(),
@@ -22,12 +36,12 @@ export const initialize = async (client) => {
 
     bot.guild = client.guilds.cache.get(process.env.GUILD_ID);
     const roles = bot.guild.roles.cache;
-    bot.role = roles.find(role => role.tags.botId === bot.botId);
-
+    bot.role = roles.find(role => role.tags.botId === bot.id);
     console.log("Logged in as " + client.user.tag);
+}
 
-    if (!database) return;
-
+const setDatabase = () => {
+    mongoose.set('strictQuery', true);
     mongoose.connect(database, {
         useNewUrlParser: true,
         useUnifiedTopology: true
@@ -36,7 +50,7 @@ export const initialize = async (client) => {
     }).catch((err) => {
         console.log(err);
     })
-} 
+}
 
 export const setBotPresence = (client) => {
     const activities = [
@@ -86,6 +100,32 @@ export const setBotPresence = (client) => {
     console.log("Bot activity changed:", client.user.presence.activities[0].type, client.user.presence.activities[0].name)
 
     setTimeout( function(){ setBotPresence(client); }, 1000 * 60 * 60);
+}
+
+const createCommands = async (client) => {
+    client.commands = new Collection();
+    let commandList = [];
+
+    Object.entries(commandData).forEach(command => {
+        Object.entries(command[1]).forEach(cmd => {
+            if ("data" in cmd[1] && "execute" in cmd[1]) {
+                client.commands.set(cmd[1].data.name, cmd[1]);
+                commandList.push(cmd[1].data);
+            } else {
+                console.log("The command at" + cmd[1] + "is missing a required data or execute property.");
+            }
+        })
+    });
+
+    const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+
+    await rest.put(Routes.applicationGuildCommands(getBotId(), getBotGuild().id), { body: commandList })
+        .then(() => console.log("Successfully registered application commands!"))
+        .catch(console.error);
+}
+
+export const getBotId = () => {
+    return bot.id;
 }
 
 export const getBotNames = () => {

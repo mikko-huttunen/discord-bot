@@ -1,4 +1,4 @@
-export const listCommands = (msg) => {
+export const listCommands = (interaction) => {
     const commandEmbed = {
         color: 0xFFEA00,
         title: "Commands",
@@ -6,29 +6,28 @@ export const listCommands = (msg) => {
             {
                 name: "Role Commands",
                 value: 
-                    "**!role me**\nList of your roles\n" + 
-                    "**!role list**\nList of all roles and users\n" +
-                    "**!role + <role name>**\nAdd role to yourself\n" +
-                    "**!role - <role name>**\nRemove role from yourself\n"
+                    "**/myroles**\nList of your roles\n" + 
+                    "**/roles**\nList of all roles and members\n" +
+                    "**/addrole**\nAdd role to yourself\n" +
+                    "**/removerole**\nRemove role from yourself\n"
             }, {
-                name: "Weekly Commands",
+                name: "Event Commands",
                 value: 
-                    "**!weekly**\nWeekly event information\n" +
-                    "**!weekly players**\nList of weekly event participants\n" +
-                    "**!weekly +**\nRegister for the weekly event\n" +
-                    "**!weekly -**\nCancel registration for the weekly event\n"
+                    "**/listevents**\nList of active events\n" +
+                    "**/event**\nCreate new event\n" +
+                    "**/deleteevent**\nDelete event\n"
             }, {
                 name: "Timed Message Commands",
                 value:
-                    "**!timed + <message> | <dd.mm.yyyy hh:mm> | <#channel>**\nCreate new timed message\n" +
-                    "**!timed - <id>**\nDelete timed message. Use !timed messages to find id\n" +
-                    "**!timed messages**\nList of your timed messages\n"
+                    "**/listtimedmessages**\nList of your timed messages\n" +
+                    "**/timedmessage**\nCreate new timed message\n" +
+                    "**/deletetimedmessage**\nDelete timed message\n"
             }, {
                 name: "Poll Commands",
                 value:
-                    "**!poll + <topic> | <dd.mm.yyyy hh:mm> | <#channel> | <option1> | <option2>...**\nCreate new poll\n" +
-                    "**!poll - <id>**\nDelete poll. Use !poll list to find id\n" +
-                    "**!poll list**\nList of your polls\n"
+                    "**/listpolls**\nList of active polls\n" +
+                    "**/poll\nCreate new poll\n" +
+                    "**/deletepoll**\nDelete poll\n"
             }, {
                 name: "Games",
                 value: "**!roll <dice>d<sides> / !roll <dice>d / !roll <sides>**\nRoll a die or dice\n" +
@@ -41,11 +40,5 @@ export const listCommands = (msg) => {
         ],
     };
 
-    if (msg.author.bot) {
-        msg.edit({ 
-            content: "",
-            embeds: [commandEmbed] });
-    } else {
-        msg.channel.send({ embeds: [commandEmbed] });
-    }
+    interaction.reply({ embeds: [commandEmbed], ephemeral: true });
 }
