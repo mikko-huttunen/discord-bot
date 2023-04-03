@@ -1,5 +1,5 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { handleTimedMessage } from "../functions/timed_message.js";
+import { handleTimedMessage } from "../functions/timed_messages/timed_message.js";
 
 export const listTimedMessagesCommand = {
     data: new SlashCommandBuilder()

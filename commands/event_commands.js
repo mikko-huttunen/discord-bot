@@ -1,5 +1,5 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { handleEvent } from "../functions/events.js";
+import { handleEvent } from "../functions/events/events.js";
 
 export const listEventsCommand = {
     data: new SlashCommandBuilder()
@@ -29,10 +29,10 @@ export const deleteEventCommand = {
         .setName("deleteevent")
         .setDescription("Delete event")
         .addStringOption(option =>
-                option.setName("id")
-                    .setDescription("ID of the event to delete")
-                    .setMaxLength(6)
-                    .setRequired(true)),
+            option.setName("id")
+                .setDescription("ID of the event to delete")
+                .setMaxLength(6)
+                .setRequired(true)),
     execute: async (interaction) => {
         handleEvent(interaction);
     },

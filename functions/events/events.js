@@ -2,9 +2,9 @@ import { ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder } from 
 import { ButtonStyle, TextInputStyle } from "discord.js";
 import _ from "lodash";
 import moment from "moment";
-import { getBotGuild } from "../data/bot_data.js";
-import { canSendMessageToChannel, isValidDateAndRepetition } from "../data/checks.js";
-import { event } from "../models/event_schema.js";
+import { bot } from "../../bot/bot.js";
+import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
+import { createEvent, deleteEventById, getEventByMsg, getEvents, getEventsByQuery, getEventsByUser, updateEventAttendees, updateEventData } from "./data/services/event_service.js";
 
 let channel;
 
@@ -13,17 +13,20 @@ const eventEmbed = {
     fields: []
 };
 
-export const handleEvent = async (interaction) => {
-    switch(interaction.commandName) {
+export const handleEvent = (interaction) => {
+    switch (interaction.commandName) {
         case "event": {
             channel = interaction.options.getChannel("channel");
 
-            if (!await canSendMessageToChannel(channel)) {
-                interaction.reply({ content: "En voi luoda tapahtumaa kanavalle <#" + channel.id + ">", ephemeral: true });
+            if (!canSendMessageToChannel(channel)) {
+                interaction.reply({
+                    content: "En voi luoda tapahtumaa kanavalle <#" + channel.id + ">",
+                    ephemeral: true 
+                });
                 break;
             }
 
-            if (!await canCreateNewEvent(interaction.user)) {
+            if (!canCreateNewEvent(interaction)) {
                 interaction.reply({
                     content: "Sinulla voi olla maksimissaan 5 aktiivista tapahtumaa!\n" +
                         "Voit katsoa tapahtumasi komennolla **/listevents**, ja poistaa niitä komennolla **/deleteevents**.",
@@ -40,7 +43,7 @@ export const handleEvent = async (interaction) => {
             const id = interaction.options.getString("id");
             const author = interaction.user.id;
 
-            await deleteEvent(interaction, id, author);
+            deleteEventById(id, author, interaction);
             break;
         }
 
@@ -51,22 +54,21 @@ export const handleEvent = async (interaction) => {
             eventEmbed.fields = []
             eventEmbed.footer = {};
 
-            getEvents()
-                .then(events => {
-                    if (events.length > 0) {
-                        const eventsSorted = events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
-                        eventsSorted.forEach(field => eventEmbed.fields.push({
-                            name: "ID: " + field.eventId,
-                            value: "Name: " + field.name +
-                                "\nDate: " + moment(field.dateTime).format("DD.MM.YYYY HH:mm") + 
-                                "\nChannel: <#" + field.channelId + ">"
-                        }));
+            getEvents().then(events => {
+                if (events.length > 0) {
+                    const eventsSorted = events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+                    eventsSorted.forEach(field => eventEmbed.fields.push({
+                        name: "ID: " + field.eventId,
+                        value: "Name: " + field.name +
+                            "\nDate: " + moment(field.dateTime).format("DD.MM.YYYY HH:mm") + 
+                            "\nChannel: <#" + field.channelId + ">"
+                    }));
 
-                        interaction.reply({ embeds: [eventEmbed], ephemeral: true });
-                    } else {
-                        interaction.reply({ content: "Ei aktiivisia tapahtumia...", ephemeral: true });
-                    }
-                });
+                    interaction.reply({ embeds: [eventEmbed], ephemeral: true });
+                } else {
+                    interaction.reply({ content: "Ei aktiivisia tapahtumia...", ephemeral: true });
+                }
+            });
 
             break;
         }
@@ -77,14 +79,14 @@ export const handleEvent = async (interaction) => {
     }
 };
 
-const canCreateNewEvent = async (user) => {
-    return getEventsByUser(user)
-        .then(events => {
-            if (events.length >= 5) {
-                return false;
-            }
+const canCreateNewEvent = async (interaction) => {
+    return getEventsByUser(interaction).then(events => {
+        console.log(events);
+        if (events.length >= 5) {
+            return false;
+        }
 
-            return true;
+        return true;
     });
 };
 
@@ -160,9 +162,7 @@ export const validateEvent = async (interaction) => {
 
     if (!isValidDateAndRepetition(interaction, dateTime, repeat)) return;
 
-    const id = Math.random().toString(16).slice(9);
-
-    createNewEvent(interaction, id, author, name, description, dateTime, repeat, thumbnail);
+    createNewEvent(interaction, author, name, description, dateTime, repeat, thumbnail);
 };
 
 const isValidImageURL = (interaction, thumbnail) => {
@@ -189,7 +189,7 @@ const isValidImageURL = (interaction, thumbnail) => {
 };
 
 const createEventMsg = async (eventId, author, name, description, date, thumbnail, channelToSend) => {
-    const authorData = await getBotGuild().members.fetch(author);
+    const authorData = await bot.guild.members.fetch(author);
     eventEmbed.author = {
         name: authorData.nickname ? authorData.nickname : authorData.user.username,
         icon_url: authorData.user.avatarURL()
@@ -228,65 +228,19 @@ const createEventMsg = async (eventId, author, name, description, date, thumbnai
     return eventMsg;
 }
 
-const createNewEvent = async (interaction, eventId, author, name, description, dateTime, repeat, thumbnail) => {
-    if (!canSendMessageToChannel(channel)) {
-        interaction.reply({ content: "Cannot publish event to channel " + channel, ephemeral: true });
-        return;
-    }
+const createNewEvent = async (interaction, author, name, description, dateTime, repeat, thumbnail) => {
+    const id = Math.random().toString(16).slice(9);
+    const eventMsg = await createEventMsg(id, author, name, description, dateTime, thumbnail);
 
-    const eventMsg = await createEventMsg(eventId, author, name, description, dateTime, thumbnail);
-
-    const eventData = { 
-        eventId,
-        msgId: eventMsg.id,
-        author,
-        name,
-        description,
-        dateTime,
-        repeat,
-        thumbnail,
-        channelId: channel.id,
-        attendees: {
-            number: 0,
-            entries: []
-        }
-    };
-
-    await new event(eventData)
-    .save()
-    .then(response => {
-        console.log("Event created: " + response);
-        interaction.reply({ content: "New event created successfully!", ephemeral: true });
-    })
-    .catch(err => {
-        console.log(err);
-        interaction.reply({ content: "Something went wrong! :(", ephemeral: true });
-    });
-};
-
-const updateEventAttendees = async (eventData, entries) => {
-    await event.findOneAndUpdate(
-        { eventId: eventData.eventId },
-        { 
-            "attendees.number": entries.length,
-            "attendees.entries": entries
-        }
-    ).then(response => {
-        if (response) {
-            console.log("Event " + eventData.eventId + " attendees updated:");
-            console.log(response);
-        }
-    }).catch(err => {
-        console.log(err);
-    });
+    createEvent(interaction, id, eventMsg.id, author, name, description, dateTime, repeat, thumbnail, channel.id);
 };
 
 const updateEventMsg = async (eventData, entries) => {
-    const eventChannel = getBotGuild().channels.cache.get(eventData.channelId);
+    const eventChannel = bot.guild.channels.cache.get(eventData.channelId);
     const msg = await eventChannel.messages.fetch(eventData.msgId);
 
     
-    const authorData = await getBotGuild().members.fetch(eventData.author);
+    const authorData = await bot.guild.members.fetch(eventData.author);
 
     eventEmbed.author = {
         name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -314,109 +268,8 @@ const updateEventMsg = async (eventData, entries) => {
     msg.edit({ embeds: [eventEmbed] });
 };
 
-const updateEventData = async (eventId, msgId, newDate = null) => {
-    //Event reminder update
-    if (!newDate) {
-        await event.findOneAndUpdate(
-            { eventId },
-            { msgId },
-            { returnDocument: "after" }
-        )
-        .then(console.log("Event " + eventId + " msgId updated"))
-        .catch(err => {
-            console.log(err);
-        });
-    }
-    
-    //Event repost update
-    if (newDate) {
-        await event.findOneAndUpdate(
-            { eventId },
-            {
-                msgId,
-                dateTime: newDate,
-                "attendees.number": 0,
-                "attendees.entries": []
-            },
-            { returnDocument: "after" }
-        )
-        .then(console.log("Event " + eventId + " msgId and date updated"))
-        .catch(err => {
-            console.log(err);
-        });
-    }
-
-    return;
-};
-
-const getEvents = async () => {
-    return await event.find(
-        {},
-        {}
-    )
-    .lean();
-};
-
-const getEventsByUser = async (user) => {
-    return await event.find(
-        { user: user.username + "#" + user.discriminator },
-        {}
-    )
-    .lean();
-};
-
-export const getEventsByMsg = async (msg) => {
-    return await event.findOne(
-        { msgId: msg.id },
-        {}
-    )
-    .lean();
-};
-
-const deleteEvent = async (interaction, id, author) => {
-    await event.findOneAndDelete({ 
-        eventId: id, 
-        author 
-    })
-    .then(async (response) => {
-        if (response) {
-            try {
-                const channel = getBotGuild().channels.cache.get(response.channelId);
-                const eventMsg = await channel.messages.fetch(response.msgId);
-                eventMsg.delete();
-            } catch (error) {
-                console.error(error);
-            }
-            
-            console.log("Event deleted: " + response);
-            interaction.reply({ content: "Event deleted successfully!", ephemeral: true });
-        } else {
-            interaction.reply({ content: "Et voi poistaa tapahtumaa **" + id + "**, tai antamasi id on väärä!", ephemeral: true });
-        }
-    })
-    .catch(err => {
-        console.log(err);
-        interaction.reply({ content: "Something went wrong! :(", ephemeral: true });
-    });
-};
-
-export const deleteEventByMsg = async (msgId) => {
-    await event.findOneAndDelete({ 
-        msgId,
-        repeat: ""
-    })
-    .then(response => {
-        if (response) {
-            console.log("Event deleted:");
-            console.log(response);
-        }
-    }).catch(err => {
-        console.log(err);
-    });
-};
-
 export const handleJoinEvent = async (interaction) => {
-    const eventData = await getEventsByMsg(interaction.message);
+    const eventData = await getEventByMsg(interaction.message);
     const user = {
         id: interaction.user.id,
         name: interaction.member.nickname ? interaction.member.nickname : interaction.user.username
@@ -446,7 +299,7 @@ export const handleJoinEvent = async (interaction) => {
     return;
 };
 
-export const eventReminderPost = async (client) => {
+export const eventReminderPost = async () => {
     const start = moment().utc().startOf("day");
     const end = moment().utc().endOf("day");
 
@@ -456,11 +309,11 @@ export const eventReminderPost = async (client) => {
         }
     }
 
-    const activeEvents = await event.find(query);
+    const activeEvents = await getEventsByQuery(query);
 
     for (const eventData of activeEvents) {
         const { eventId, msgId, author, name, description, thumbnail, dateTime, channelId, attendees } = eventData;
-        const channelToSend = await client.channels.cache.get(channelId);
+        const channelToSend = await bot.client.channels.cache.get(channelId);
 
         if (!channelToSend) {
             console.log("No channel to post event reminder of " + eventId);
@@ -468,7 +321,7 @@ export const eventReminderPost = async (client) => {
         }
 
         if (canSendMessageToChannel(channelToSend)) {
-            const authorData = await getBotGuild().members.fetch(author);
+            const authorData = await bot.guild.members.fetch(author);
 
             eventEmbed.author = {
                 name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -525,9 +378,8 @@ export const eventSummaryPost = async (client) => {
         }
     };
 
-    await event.find(query)
-    .then(async (response) => {
-        if (response.length > 0) {
+    getEventsByQuery(query).then(async (response) => {
+        if (response?.length > 0) {
             response.forEach(async (eventData) => {
                 const { eventId, msgId, author, name, description, thumbnail, dateTime, repeat, channelId, attendees } = eventData;
                 const channelToSend = await client.channels.cache.get(channelId);
@@ -538,7 +390,7 @@ export const eventSummaryPost = async (client) => {
                 }
 
                 if (canSendMessageToChannel(channelToSend)) {
-                    const authorData = await getBotGuild().members.fetch(author);
+                    const authorData = await bot.guild.members.fetch(author);
 
                     eventEmbed.author = {
                         name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -592,16 +444,7 @@ export const eventSummaryPost = async (client) => {
                         const newEventMsg = await createEventMsg(eventId, author, name, description, newDate, thumbnail, channelToSend);
                         await updateEventData(eventId, newEventMsg.id, newDate);
                     } else {
-                        await event.findOneAndDelete({ eventId })
-                        .then(response => {
-                            if (response) {
-                                console.log("Event " + eventId + " deleted:");
-                                console.log(response);
-                            }
-                        })
-                        .catch(err => {
-                            console.log(err);
-                        });
+                        await deleteEventById(eventId, author);
                     }
                 } else {
                     console.log("Cannot send event summary of " + eventId + " to channel: " + channelId);
@@ -609,8 +452,5 @@ export const eventSummaryPost = async (client) => {
                 }
             });
         }
-    })
-    .catch(err => {
-        console.log(err);
     });
 };

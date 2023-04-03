@@ -1,10 +1,10 @@
-import moment from "moment";
-import { handlePollReaction, postPollResults } from "../functions/polls.js";
-import { getNumberEmotes } from "./emotes.js";
-import { postTimedMessages } from "../functions/timed_message.js";
 import { PermissionsBitField } from "discord.js";
-import { getBotGuild } from "./bot_data.js";
-import { eventReminderPost, eventSummaryPost } from "../functions/events.js";
+import moment from "moment";
+import { bot } from "../../bot/bot.js";
+import { eventReminderPost, eventSummaryPost } from "../events/events.js";
+import { handlePollReaction, postPollResults } from "../polls/polls.js";
+import { postTimedMessages } from "../timed_messages/timed_message.js";
+import { getNumberEmotes } from "./emotes.js";
 
 export const checkForTimedActions = async (client) => {
     await postTimedMessages(client);
@@ -27,9 +27,7 @@ export const checkReaction = async (reaction, user) => {
 }
 
 export const canSendMessageToChannel = async (channel) => {
-    const guild = getBotGuild();
-
-    if (!guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
+    if (!bot.guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
         return false;
     }
 

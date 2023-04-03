@@ -1,5 +1,5 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { handlePoll } from "../functions/polls.js";
+import { handlePoll } from "../functions/polls/polls.js";
 
 export const listPollsCommand = {
     data: new SlashCommandBuilder()

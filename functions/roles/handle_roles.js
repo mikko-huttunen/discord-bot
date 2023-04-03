@@ -1,5 +1,5 @@
 import { EmbedBuilder } from "@discordjs/builders";
-import { getBotRole } from "../data/bot_data.js";
+import { bot } from "../../bot/bot.js";
 
 export const handleRoleCommand = async (interaction) => {
     await interaction.guild.members.fetch()
@@ -7,7 +7,6 @@ export const handleRoleCommand = async (interaction) => {
         .catch(error => console.log(error));
 
     const guildRoles = getGuildRoles(interaction.guild);
-    const botRole = getBotRole();
 
     let roleEmbed = new EmbedBuilder().setColor(0xff0000);
 
@@ -49,7 +48,7 @@ export const handleRoleCommand = async (interaction) => {
                 break;
             }
 
-            if (roleToAdd.rawPosition > botRole.position || roleToAdd.name === botRole.name){
+            if (roleToAdd.rawPosition > bot.role.position || roleToAdd.name === bot.role.name) {
                 interaction.reply({ content: "En voi lisätä roolia **" + roleToAdd.name + "**...", ephemeral: true });
                 break;
             }
@@ -73,7 +72,7 @@ export const handleRoleCommand = async (interaction) => {
                 break;
             }
 
-            if (roleToRemove.rawPosition > botRole.position || roleToRemove.name === botRole.name){
+            if (roleToRemove.rawPosition > bot.role.position || roleToRemove.name === bot.role.name) {
                 interaction.reply({ content: "En voi poistaa roolia **" + roleToRemove.name + "**...", ephemeral: true });
                 break;
             }

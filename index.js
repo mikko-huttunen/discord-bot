@@ -2,19 +2,21 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import { Client, Events, Partials } from "discord.js";
-import { greet } from "./functions/greetings.js";
-import { initialize, getBotNames, setBotPresence } from "./data/bot_data.js";
-import { generateMessage } from "./functions/welcome_message.js";
-import { handleImageSearch } from "./functions/image_search.js";
-import { validateTimedMessage } from "./functions/timed_message.js";
-import { deletePollByMsg, getPollsByMsg, syncPollVotes } from "./functions/polls.js";
-import { checkForTimedActions, checkReaction } from "./data/checks.js";
-import { handleVideoSearch } from "./functions/video_search.js";
-import { handleCoinFlip } from "./functions/coinflip.js";
-import { handleDiceRoll } from "./functions/diceroll.js";
-import { deleteEventByMsg, getEventsByMsg, handleJoinEvent, validateEvent } from "./functions/events.js";
-
-let botNames;
+import { bot, initializeBot } from "./bot/bot.js";
+import { setBotPresence } from "./bot/presence.js";
+import { syncPollVotes } from "./functions/polls/polls.js";
+import { checkForTimedActions, checkReaction } from "./functions/helpers/checks.js";
+import { validateTimedMessage } from "./functions/timed_messages/timed_message.js";
+import { handleJoinEvent, validateEvent } from "./functions/events/events.js";
+import { greet } from "./functions/misc/greetings.js";
+import { handleImageSearch } from "./functions/media/image_search.js";
+import { handleVideoSearch } from "./functions/media/video_search.js";
+import { handleCoinFlip } from "./functions/games/coinflip.js";
+import { handleDiceRoll } from "./functions/games/diceroll.js";
+import { deletePollByMsg, getPollByMsg } from "./functions/polls/data/services/poll_service.js";
+import { deleteEventByMsg, getEventByMsg } from "./functions/events/data/services/event_service.js";
+import { generateMessage } from "./functions/misc/welcome_message.js";
+import { setDatabase } from "./bot/database.js";
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers",
@@ -23,8 +25,8 @@ const client = new Client({
 });
 
 client.on("ready", async () => {
-    await initialize(client);
-    botNames = getBotNames();
+    await initializeBot(client);
+    await setDatabase();
     setBotPresence(client);
     await syncPollVotes(client);
     await checkForTimedActions(client);
@@ -67,7 +69,7 @@ client.on(Events.InteractionCreate, async interaction => {
 client.on("messageCreate", async (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
 
-    botNames.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
+    bot.names.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
     if (msgToLowerCase.startsWith("!")) {
         msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await handleImageSearch(msg) : false;
         msgToLowerCase.startsWith("!video") || msg.content.startsWith("!video") ? handleVideoSearch(msg) : false;
@@ -77,17 +79,22 @@ client.on("messageCreate", async (msg) => {
 });
 
 client.on("messageDelete", async (msg) => {
-    const wasPoll = await getPollsByMsg(msg);
-    const wasEvent = await getEventsByMsg(msg);
+    const wasPoll = await getPollByMsg(msg);
+    const wasEvent = await getEventByMsg(msg);
 
     if (wasPoll) {
         deletePollByMsg(msg.id);
     }
 
     if (wasEvent) {
-        deleteEventByMsg(msg.id);
+        deleteEventByMsg(msg.id).then(response => {
+            console.log("Event deleted:");
+            console.log(response);
+        }).catch(err => {
+            console.error(err);
+        });
     }
-})
+});
 
 client.on("messageReactionAdd", async (reaction, user) => {
     let reactionData = reaction;
