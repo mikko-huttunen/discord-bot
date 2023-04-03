@@ -11,7 +11,7 @@ export const checkForTimedActions = async (client) => {
     await postPollResults(client);
     await eventSummaryPost(client);
 
-    if (moment().format("HH:mm") === "00:00") {
+    if (moment().format("HH:mm") === "12:00") {
         await eventReminderPost(client);
     }
 
