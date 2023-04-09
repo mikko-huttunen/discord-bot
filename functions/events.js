@@ -447,8 +447,8 @@ export const handleJoinEvent = async (interaction) => {
 };
 
 export const eventReminderPost = async (client) => {
-    const start = moment().utc().startOf("day");
-    const end = moment().utc().endOf("day");
+    const start = moment().startOf("day");
+    const end = moment().endOf("day");
 
     const query = {
         dateTime: {
@@ -464,7 +464,7 @@ export const eventReminderPost = async (client) => {
 
         if (!channelToSend) {
             console.log("No channel to post event reminder of " + eventId);
-            return;
+            continue;
         }
 
         if (canSendMessageToChannel(channelToSend)) {
