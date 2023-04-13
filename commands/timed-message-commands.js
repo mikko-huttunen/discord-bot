@@ -1,5 +1,6 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
 import { handleTimedMessage } from "../functions/timed_messages/timed_message.js";
+import { CHANNEL, ID } from "../variables/constants.js";
 
 export const listTimedMessagesCommand = {
     data: new SlashCommandBuilder()
@@ -15,7 +16,7 @@ export const timedMessageCommand = {
 		.setName("timedmessage")
 		.setDescription("Create new timed message")
         .addChannelOption(option =>
-            option.setName("channel")
+            option.setName(CHANNEL)
                 .setDescription("Channel to send message to")
                 .addChannelTypes(ChannelType.GuildText)
                 .setRequired(true)),
@@ -29,7 +30,7 @@ export const deleteTimedMessageCommand = {
         .setName("deletetimedmessage")
         .setDescription("Delete timed message")
         .addStringOption(option =>
-                option.setName("id")
+                option.setName(ID)
                     .setDescription("ID of the timed message to delete")
                     .setMaxLength(6)
                     .setRequired(true)),

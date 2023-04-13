@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
-import { handleRoleCommand } from "../functions/roles/handle_roles.js";
+import { handleRoleCommand } from "../functions/roles/roles.js";
+import { ROLE } from "../variables/constants.js";
 
 export const rolesCommand = {
     data: new SlashCommandBuilder()
@@ -24,7 +25,7 @@ export const addRoleCommand = {
 		.setName("addrole")
 		.setDescription("Add role to yourself")
         .addRoleOption(option =>
-            option.setName("role")
+            option.setName(ROLE)
                 .setDescription("Role to add")
                 .setRequired(true)),
 	execute: async (interaction) => {
@@ -37,7 +38,7 @@ export const removeRoleCommand = {
 		.setName("removerole")
 		.setDescription("Remove role from yourself")
         .addRoleOption(option =>
-            option.setName("role")
+            option.setName(ROLE)
                 .setDescription("Role to remove")
                 .setRequired(true)),
 	execute: async (interaction) => {

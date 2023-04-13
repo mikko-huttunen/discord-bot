@@ -2,26 +2,24 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/bui
 import { TextInputStyle } from "discord.js";
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
-import { createTimedMessage, deleteTimedMessageById, getTimedMessagesByQuery, getTimedMessagesByUser, updateTimedMessage } from "./data/services/timed_message_service.js";
+import { createTimedMessage, deleteTimedMessageById, getTimedMessagesByQuery, getTimedMessagesByUser, updateTimedMessage } from "./services/timed_message_service.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, FETCH_ERR, ID, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_RESULTS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { getChannelName } from "../helpers/helpers.js";
 
 let channel;
 
 export const handleTimedMessage = async (interaction) => {
     switch (interaction.commandName) {
         case "timedmessage": {
-            channel = interaction.options.getChannel("channel");
+            channel = interaction.options.getChannel(CHANNEL);
 
-            if (!await canSendMessageToChannel(channel)) {
-                interaction.reply({ content: "En voi lähettää viestejä kanavalle <#" + channel.id + ">", ephemeral: true });
+            if (!await canCreateNewTimedMessage(interaction)) {
+                interaction.reply({ content: MAX_TIMED_MESSAGES, ephemeral: true });
                 break;
             }
 
-            if (!await canCreateNewTimedMessage(interaction)) {
-                interaction.reply({
-                    content: "Sinulla voi olla maksimissaan 5 ajastettua viestiä!\n" +
-                        "Voit katsoa viestisi komennolla **/listtimedmessages**, ja poistaa niitä komennolla **/deletetimedmessage**.",
-                    ephemeral: true,
-                });
+            if (!await canSendMessageToChannel(channel)) {
+                interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(channel.id), ephemeral: true });
                 break;
             }
 
@@ -30,10 +28,10 @@ export const handleTimedMessage = async (interaction) => {
         }
 
         case "deletetimedmessage": {
-            const id = interaction.options.getString("id");
-            const author = interaction.user.username + "#" + interaction.user.discriminator;
+            const id = interaction.options.getString(ID);
+            const author = interaction.user.id;
 
-            deleteTimedMessageById(interaction, id, author);
+            deleteTimedMessageById(id, author, interaction);
             break;
         }
 
@@ -44,20 +42,23 @@ export const handleTimedMessage = async (interaction) => {
                 fields: []
             };
 
-            getTimedMessagesByUser(interaction).then(posts => {
+            getTimedMessagesByUser(interaction.user)
+            .then(posts => {
                 if (posts.length > 0) {
                     const postsSorted = posts.sort((a, b) => a.date.getTime() - b.date.getTime());
                     postsSorted.forEach(field => timedMessagesEmbed.fields.push({
                         name: "ID: " + field.id,
                         value: "Message: " + field.message +
-                            "\nDate: " + moment(field.date).format("DD.MM.YYYY HH:mm") + 
-                            "\nChannel: <#" + field.channelId + ">"
+                            "\nDate: " + moment(field.date).format(DAY_MONTH_YEAR_24) + 
+                            "\nChannel: " + getChannelName(field.channelId)
                     }));
 
                     interaction.reply({ embeds: [timedMessagesEmbed], ephemeral: true });
                 } else {
-                    interaction.reply({ content: "Sinulla ei ole ajastettuja viestejä...", ephemeral: true });
+                    interaction.reply({ content: NO_RESULTS, ephemeral: true });
                 }
+            }).catch(err => {
+                console.error(FETCH_ERR, err);
             });
 
             break;
@@ -71,7 +72,7 @@ export const handleTimedMessage = async (interaction) => {
 
 const timedMessageModal = (interaction) => {
     const modal = new ModalBuilder()
-        .setCustomId("timed-message-modal")
+        .setCustomId(TIMED_MESSAGE_MODAL)
         .setTitle("New Timed Message");
 
     const messageInput = new TextInputBuilder()
@@ -105,12 +106,14 @@ const timedMessageModal = (interaction) => {
 };
 
 const canCreateNewTimedMessage = async (interaction) => {
-    return getTimedMessagesByUser(interaction).then(posts => {
+    return getTimedMessagesByUser(interaction.user).then(posts => {
         if (posts.length >= 5) {
             return false;
         }
 
         return true;
+    }).catch(err => {
+        console.error(FETCH_ERR, err);
     });
 };
 
@@ -118,7 +121,7 @@ export const validateTimedMessage = async (interaction) => {
     const author = interaction.user.id;
     const message = interaction.fields.getTextInputValue("messageInput");
 	const date = interaction.fields.getTextInputValue("dateInput");
-    const dateTime = moment(date, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mm");
+    const dateTime = moment(date, DAY_MONTH_YEAR_24).format(ISO_8601_24);
     const repeat = interaction.fields.getTextInputValue("repeatInput").toLowerCase();
 
     if (!isValidDateAndRepetition(interaction, dateTime, repeat)) return;
@@ -131,52 +134,46 @@ export const postTimedMessages = async (client) => {
         date: {
             $lte: moment.utc()
         }
-    }
+    };
 
-    await getTimedMessagesByQuery(query).then(response => {
-        if (response?.length > 0) {
-            response.forEach(async (post) => {
-                const { id, author, message, date, repeat, channelId } = post;
-                const channelToSend = await client.channels.cache.get(channelId);
-
-                if (!channelToSend) {
-                    console.log("No channel to send timed message " + id);
-                    return;
-                }
-
-                if (canSendMessageToChannel(channelToSend)) {
-                    channelToSend.send(message);
-                    console.log("Timed message posted: " + post);
-                } else {
-                    console.log("No channel to post: " + post);
-                    return;
-                }
-
-                if (repeat) {
-                    let newDate;
-                    
-                    if (repeat === "daily") {
-                        newDate = moment(date).add(1, "d");
-                    } else if (repeat === "weekly") {
-                        newDate = moment(date). add(1, "w");
-                    } else if (repeat === "monthly") {
-                        newDate = moment(date). add(1, "M");
-                    } else if (repeat === "yearly") {
-                        newDate = moment(date). add(1, "y");
-                    }
-
-                    await updateTimedMessage(id, newDate);
-                } else {
-                    await deleteTimedMessageById(id, author).then(response => {
-                        if (response.deletedCount > 0) {
-                            console.log("Deleted timed message");
-                        }
-                    })
-                    .catch(err => {
-                        console.log(err);
-                    });
-                }
-            });
-        }
+    const timedMessagesToPost = await getTimedMessagesByQuery(query)
+    .catch(err => {
+        console.error(FETCH_ERR, err);
     });
+
+    for (const timedMessageData of timedMessagesToPost) {
+        const { id, author, message, date, repeat, channelId } = timedMessageData;
+        const channelToSend = await client.channels.cache.get(channelId);
+
+        if (!channelToSend) {
+            console.log(NO_CHANNEL + id);
+            continue;
+        }
+
+        if (canSendMessageToChannel(channelToSend)) {
+            channelToSend.send(message);
+            console.log("Timed message posted", JSON.stringify(timedMessageData));
+        } else {
+            console.log("Cannot send timed message " + id + " to channel: " + channelId);
+            continue;
+        }
+
+        if (repeat) {
+            let newDate;
+            
+            if (repeat === DAILY) {
+                newDate = moment(date).add(1, "d");
+            } else if (repeat === WEEKLY) {
+                newDate = moment(date). add(1, "w");
+            } else if (repeat === MONTHLY) {
+                newDate = moment(date). add(1, "M");
+            } else if (repeat === YEARLY) {
+                newDate = moment(date). add(1, "y");
+            }
+
+            await updateTimedMessage(id, newDate);
+        } else {
+            await deleteTimedMessageById(id, author);
+        }
+    }
 };

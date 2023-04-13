@@ -4,14 +4,15 @@ import { bot } from "../../bot/bot.js";
 import { eventReminderPost, eventSummaryPost } from "../events/events.js";
 import { handlePollReaction, postPollResults } from "../polls/polls.js";
 import { postTimedMessages } from "../timed_messages/timed_message.js";
-import { getNumberEmotes } from "./emotes.js";
+import { DAILY, DISTANT_DATE, EXPIRED_DATE, INVALID_DATE, INVALID_REPEAT, ISO_8601_24, MONTHLY, NEVER, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { getNumberEmojis } from "./helpers.js";
 
 export const checkForTimedActions = async (client) => {
     await postTimedMessages(client);
     await postPollResults(client);
     await eventSummaryPost(client);
 
-    if (moment().format("HH:mm") === "00:00") {
+    if (moment().format("HH:mm") === "00:00" || moment().format("HH:mm") === "12:00") {
         await eventReminderPost(client);
     }
 
@@ -19,7 +20,7 @@ export const checkForTimedActions = async (client) => {
 }
 
 export const checkReaction = async (reaction, user) => {
-    const numberEmojis = getNumberEmotes();
+    const numberEmojis = getNumberEmojis();
 
     if (numberEmojis.includes(reaction._emoji.name)) {
         await handlePollReaction(reaction, user);
@@ -36,28 +37,21 @@ export const canSendMessageToChannel = async (channel) => {
 
 export const isValidDateAndRepetition = (interaction, dateTime, repeat) => {
     if (!moment(dateTime, "YYYY/MM/DD").isValid()) {
-        interaction.reply({ content: "Anna päivämäärä oikeassa muodossa: dd.mm.yyyy _hh:mm_", ephemeral: true });
+        interaction.reply({ content: INVALID_DATE, ephemeral: true });
         return false;
     }
 
-    const currentDateTime = moment().format("YYYY-MM-DD HH:mm");
+    const currentDateTime = moment().format(ISO_8601_24);
     if (moment(dateTime).isSameOrBefore(currentDateTime)) {
-        interaction.reply({ content: "Antamasi päivämäärä tai kellonaika on jo mennyt!", ephemeral: true });
+        interaction.reply({ content: EXPIRED_DATE, ephemeral: true });
         return false;
     } else if (moment(dateTime).isAfter(moment(currentDateTime).add(1, "years"))) {
-        interaction.reply({ content: "Päivämäärää ei voi asettaa yli 1 vuoden päähän!", ephemeral: true });
+        interaction.reply({ content: DISTANT_DATE, ephemeral: true });
         return false;
     }
 
-    if (repeat !== "" && repeat !== "never" && repeat !== "daily" && repeat !== "weekly" && repeat !== "monthly" && repeat !== "yearly") {
-        interaction.reply({ 
-            content: "Antamasi viestin toisto on virheellinen! Hyväksyttyjä muotoja ovat:\n" +
-                "daily = Toista joka päivä\n" +
-                "weekly = Toista joka viikko\n" +
-                "monthly = Toista joka kuukausi\n" +
-                "yearly = Toista joka vuosi",
-            ephemeral: true
-        });
+    if (repeat !== "" && repeat !== NEVER && repeat !== DAILY && repeat !== WEEKLY && repeat !== MONTHLY && repeat !== YEARLY) {
+        interaction.reply({ content: INVALID_REPEAT, ephemeral: true });
         return false;
     }
 

@@ -1,6 +1,6 @@
 import { ActivityType } from "discord.js";
 
-export const setBotPresence = (client) => {
+export const setBotPresence = async (client) => {
     const activities = [
         {
             name: "Super Monkey Ball",

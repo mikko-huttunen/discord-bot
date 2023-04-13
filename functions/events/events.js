@@ -3,8 +3,10 @@ import { ButtonStyle, TextInputStyle } from "discord.js";
 import _ from "lodash";
 import moment from "moment";
 import { bot } from "../../bot/bot.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, EVENT_BUTTON, EVENT_MODAL, FAILURE, FETCH_ERR, ID, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RESULTS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { generateId, getChannelName } from "../helpers/helpers.js";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
-import { createEvent, deleteEventById, getEventByMsg, getEvents, getEventsByQuery, getEventsByUser, updateEventAttendees, updateEventData } from "./data/services/event_service.js";
+import { createEvent, deleteEventById, getEventByMsg, getEvents, getEventsByQuery, getEventsByUser, updateEventAttendees, updateEventData } from "./services/event_service.js";
 
 let channel;
 
@@ -13,24 +15,23 @@ const eventEmbed = {
     fields: []
 };
 
-export const handleEvent = (interaction) => {
+export const handleEvent = async (interaction) => {
     switch (interaction.commandName) {
         case "event": {
-            channel = interaction.options.getChannel("channel");
+            channel = interaction.options.getChannel(CHANNEL);
 
-            if (!canSendMessageToChannel(channel)) {
+            if (!await canCreateNewEvent(interaction.user)) {
                 interaction.reply({
-                    content: "En voi luoda tapahtumaa kanavalle <#" + channel.id + ">",
-                    ephemeral: true 
+                    content: MAX_EVENTS,
+                    ephemeral: true,
                 });
                 break;
             }
-
-            if (!canCreateNewEvent(interaction)) {
+            
+            if (!await canSendMessageToChannel(channel)) {
                 interaction.reply({
-                    content: "Sinulla voi olla maksimissaan 5 aktiivista tapahtumaa!\n" +
-                        "Voit katsoa tapahtumasi komennolla **/listevents**, ja poistaa niitä komennolla **/deleteevents**.",
-                    ephemeral: true,
+                    content: SEND_PERMISSION_ERR + getChannelName(channel.id),
+                    ephemeral: true 
                 });
                 break;
             }
@@ -40,7 +41,7 @@ export const handleEvent = (interaction) => {
         }
 
         case "deleteevent": {
-            const id = interaction.options.getString("id");
+            const id = interaction.options.getString(ID);
             const author = interaction.user.id;
 
             deleteEventById(id, author, interaction);
@@ -54,20 +55,24 @@ export const handleEvent = (interaction) => {
             eventEmbed.fields = []
             eventEmbed.footer = {};
 
-            getEvents().then(events => {
+            getEvents()
+            .then(events => {
                 if (events.length > 0) {
                     const eventsSorted = events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
                     eventsSorted.forEach(field => eventEmbed.fields.push({
                         name: "ID: " + field.eventId,
                         value: "Name: " + field.name +
-                            "\nDate: " + moment(field.dateTime).format("DD.MM.YYYY HH:mm") + 
-                            "\nChannel: <#" + field.channelId + ">"
+                            "\nDate: " + moment(field.dateTime).format(DAY_MONTH_YEAR_24) + 
+                            "\nChannel: " + getChannelName(field.channelId)
                     }));
 
                     interaction.reply({ embeds: [eventEmbed], ephemeral: true });
                 } else {
-                    interaction.reply({ content: "Ei aktiivisia tapahtumia...", ephemeral: true });
+                    interaction.reply({ content: NO_RESULTS, ephemeral: true });
                 }
+            }).catch(err => {
+                console.error(FETCH_ERR, err);
+                interaction.reply({ content: FAILURE, ephemeral: true });
             });
 
             break;
@@ -79,20 +84,21 @@ export const handleEvent = (interaction) => {
     }
 };
 
-const canCreateNewEvent = async (interaction) => {
-    return getEventsByUser(interaction).then(events => {
-        console.log(events);
+const canCreateNewEvent = async (user) => {
+    return getEventsByUser(user).then(events => {
         if (events.length >= 5) {
             return false;
         }
 
         return true;
+    }).catch(err => {
+        console.error(FETCH_ERR, err);
     });
 };
 
 const eventModal = (interaction) => {
     const modal = new ModalBuilder()
-        .setCustomId("event-modal")
+        .setCustomId(EVENT_MODAL)
         .setTitle("New Event");
 
     const nameInput = new TextInputBuilder()
@@ -152,7 +158,7 @@ export const validateEvent = async (interaction) => {
     const name = interaction.fields.getTextInputValue("nameInput");
     const description = interaction.fields.getTextInputValue("descriptionInput");
 	const date = interaction.fields.getTextInputValue("eventDateInput");
-    const dateTime = moment(date, "DD/MM/YYYY HH:mm").format("YYYY-MM-DD HH:mm");
+    const dateTime = moment(date, DAY_MONTH_YEAR_24).format(ISO_8601_24);
     const repeat = interaction.fields.getTextInputValue("repeatInput").toLowerCase();
     const thumbnail = interaction.fields.getTextInputValue("thumbnailInput");
     
@@ -171,17 +177,12 @@ const isValidImageURL = (interaction, thumbnail) => {
     try {
         url = new URL(thumbnail);
     } catch {
-        interaction.reply({ content: "Kuvan täytyy olla linkki!", ephemeral: true });
+        interaction.reply({ content: INVALID_LINK, ephemeral: true });
         return false;
     }
 
     if (url.protocol !== "http:" && url.protocol !== "https:") {
-        interaction.reply({ content: "Kuvan täytyy olla linkki!", ephemeral: true });
-        return false;
-    }
-
-    if (!thumbnail.toLowerCase().match(/\.(jpeg|jpg|gif|png)$/)) {
-        interaction.reply({ content: "Kuvan täytyy olla .jpeg, .jpg, .png tai .gif muodossa.", ephemeral: true });
+        interaction.reply({ content: INVALID_LINK, ephemeral: true });
         return false;
     }
     
@@ -193,13 +194,13 @@ const createEventMsg = async (eventId, author, name, description, date, thumbnai
     eventEmbed.author = {
         name: authorData.nickname ? authorData.nickname : authorData.user.username,
         icon_url: authorData.user.avatarURL()
-    },
+    };
     eventEmbed.title = name;
     thumbnail ? eventEmbed.thumbnail = { url: thumbnail } : eventEmbed.thumbnail = {};
     eventEmbed.fields = [];
     eventEmbed.fields.push({
         name: " ",
-        value: moment(date).format("DD.MM.YYYY HH:mm")
+        value: moment(date).format(DAY_MONTH_YEAR_24)
     });
     if (description) {
         eventEmbed.fields.push({
@@ -216,7 +217,7 @@ const createEventMsg = async (eventId, author, name, description, date, thumbnai
     const buttonRow = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
-                .setCustomId("event-button")
+                .setCustomId(EVENT_BUTTON)
                 .setLabel("Join/Leave")
                 .setStyle(ButtonStyle.Primary)
         );
@@ -229,17 +230,15 @@ const createEventMsg = async (eventId, author, name, description, date, thumbnai
 }
 
 const createNewEvent = async (interaction, author, name, description, dateTime, repeat, thumbnail) => {
-    const id = Math.random().toString(16).slice(9);
-    const eventMsg = await createEventMsg(id, author, name, description, dateTime, thumbnail);
+    const eventId = generateId();
+    const eventMsg = await createEventMsg(eventId, author, name, description, dateTime, thumbnail);
 
-    createEvent(interaction, id, eventMsg.id, author, name, description, dateTime, repeat, thumbnail, channel.id);
+    createEvent(interaction, eventId, eventMsg.id, author, name, description, dateTime, repeat, thumbnail, channel.id);
 };
 
 const updateEventMsg = async (eventData, entries) => {
     const eventChannel = bot.guild.channels.cache.get(eventData.channelId);
     const msg = await eventChannel.messages.fetch(eventData.msgId);
-
-    
     const authorData = await bot.guild.members.fetch(eventData.author);
 
     eventEmbed.author = {
@@ -251,7 +250,7 @@ const updateEventMsg = async (eventData, entries) => {
     eventEmbed.fields = [];
     eventEmbed.fields.push({
         name: " ",
-        value: moment(eventData.dateTime).format("DD.MM.YYYY HH:mm")
+        value: moment(eventData.dateTime).format(DAY_MONTH_YEAR_24)
     });
     if (eventData.description) {
         eventEmbed.fields.push({
@@ -261,7 +260,7 @@ const updateEventMsg = async (eventData, entries) => {
     }
     eventEmbed.fields.push({
         name: "Attendees (" + entries.length + "):",
-        value: entries.length > 0 ? entries.map(entry => entry.name).join(", ") : "-"
+        value: entries.length > 0 ? entries.map(entry => entry.name).join(", ") : EMPTY
     });
     eventEmbed.footer = ({ text: "ID: " + eventData.eventId });
 
@@ -269,11 +268,16 @@ const updateEventMsg = async (eventData, entries) => {
 };
 
 export const handleJoinEvent = async (interaction) => {
-    const eventData = await getEventByMsg(interaction.message);
+    const eventData = await getEventByMsg(interaction.message)
+    .catch(err => {
+        console.error(FETCH_ERR, err);
+        interaction.reply({ content: FAILURE, ephemeral: true });
+    });
+
     const user = {
         id: interaction.user.id,
         name: interaction.member.nickname ? interaction.member.nickname : interaction.user.username
-    }
+    };
 
     if (eventData) {
         let entries = eventData.attendees.entries;
@@ -300,24 +304,27 @@ export const handleJoinEvent = async (interaction) => {
 };
 
 export const eventReminderPost = async () => {
-    const start = moment().utc().startOf("day");
-    const end = moment().utc().endOf("day");
+    const start = moment().startOf("day");
+    const end = moment().endOf("day");
 
     const query = {
         dateTime: {
             "$gte": start, "$lte": end
         }
-    }
+    };
 
-    const activeEvents = await getEventsByQuery(query);
+    const activeEvents = await getEventsByQuery(query)
+    .catch(err => {
+        console.error(FETCH_ERR, err);
+    });
 
     for (const eventData of activeEvents) {
         const { eventId, msgId, author, name, description, thumbnail, dateTime, channelId, attendees } = eventData;
         const channelToSend = await bot.client.channels.cache.get(channelId);
 
         if (!channelToSend) {
-            console.log("No channel to post event reminder of " + eventId);
-            return;
+            console.log(NO_CHANNEL + eventId);
+            continue;
         }
 
         if (canSendMessageToChannel(channelToSend)) {
@@ -326,13 +333,13 @@ export const eventReminderPost = async () => {
             eventEmbed.author = {
                 name: authorData.nickname ? authorData.nickname : authorData.user.username,
                 icon_url: authorData.user.avatarURL()
-            },
+            };
             eventEmbed.title = name;
             thumbnail ? eventEmbed.thumbnail = { url: thumbnail } : eventEmbed.thumbnail = {};
             eventEmbed.fields = [];
             eventEmbed.fields.push({
                 name: " ",
-                value: moment(dateTime).format("DD.MM.YYYY HH:mm")
+                value: moment(dateTime).format(DAY_MONTH_YEAR_24)
             });
             if (description) {
                 eventEmbed.fields.push({
@@ -344,14 +351,14 @@ export const eventReminderPost = async () => {
                 name: "Attendees (" + attendees.number + "):",
                 value: attendees.entries.length > 0 ?
                     attendees.entries.map(entry => entry.name).join(", ") :
-                    "-"
+                    EMPTY
             });
             eventEmbed.footer = ({ text: "ID: " + eventId });
 
             const buttonRow = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
-                        .setCustomId("event-button")
+                        .setCustomId(EVENT_BUTTON)
                         .setLabel("Join/Leave")
                         .setStyle(ButtonStyle.Primary)
                 );
@@ -360,12 +367,11 @@ export const eventReminderPost = async () => {
                 const originalEventMsg = await channelToSend.messages.fetch(msgId);
                 originalEventMsg.delete();
             } catch (error) {
-                console.error(error);
+                console.error(MSG_DELETION_ERR, error);
             }
 
             const eventMsg = await channelToSend.send({ embeds: [eventEmbed], components: [buttonRow] });
-            console.log("Event reminder posted:");
-            console.log(eventData);
+            console.log("Event reminder posted", JSON.stringify(eventData));
             await updateEventData(eventId, eventMsg.id);
         }
     }
@@ -378,79 +384,80 @@ export const eventSummaryPost = async (client) => {
         }
     };
 
-    getEventsByQuery(query).then(async (response) => {
-        if (response?.length > 0) {
-            response.forEach(async (eventData) => {
-                const { eventId, msgId, author, name, description, thumbnail, dateTime, repeat, channelId, attendees } = eventData;
-                const channelToSend = await client.channels.cache.get(channelId);
-
-                if (!channelToSend) {
-                    console.log("No channel to send event summary of " + eventId);
-                    return;
-                }
-
-                if (canSendMessageToChannel(channelToSend)) {
-                    const authorData = await bot.guild.members.fetch(author);
-
-                    eventEmbed.author = {
-                        name: authorData.nickname ? authorData.nickname : authorData.user.username,
-                        icon_url: authorData.user.avatarURL()
-                    },
-                    eventEmbed.title = name + " started!";
-                    thumbnail ? eventEmbed.thumbnail = { url: thumbnail } : eventEmbed.thumbnail = {};
-                    eventEmbed.fields = [];
-                    eventEmbed.fields.push({
-                        name: " ",
-                        value: moment(dateTime).format("DD.MM.YYYY HH:mm")
-                    });
-                    if (description) {
-                        eventEmbed.fields.push({
-                            name: " ",
-                            value: description
-                        });
-                    }
-                    eventEmbed.fields.push({
-                        name: "Attendees (" + attendees.number + "):",
-                        value: attendees.entries.length > 0 ?
-                            attendees.entries.map(entry => entry.name).join(", ") :
-                            "-"
-                    });
-
-                    eventEmbed.footer = {};
-
-                    await channelToSend.send({ embeds: [eventEmbed] });
-                    console.log("Event summary posted: " + eventData);
-
-                    try {
-                        const eventMsg = await channelToSend.messages.fetch(msgId);
-                        eventMsg.delete();
-                    } catch (error) {
-                        console.error(error);
-                    }
-
-                    if (repeat) {
-                        let newDate;
-
-                        if (repeat === "daily") {
-                            newDate = moment(dateTime).add(1, "d");
-                        } else if (repeat === "weekly") {
-                            newDate = moment(dateTime). add(1, "w");
-                        } else if (repeat === "monthly") {
-                            newDate = moment(dateTime). add(1, "M");
-                        } else if (repeat === "yearly") {
-                            newDate = moment(dateTime). add(1, "y");
-                        }
-
-                        const newEventMsg = await createEventMsg(eventId, author, name, description, newDate, thumbnail, channelToSend);
-                        await updateEventData(eventId, newEventMsg.id, newDate);
-                    } else {
-                        await deleteEventById(eventId, author);
-                    }
-                } else {
-                    console.log("Cannot send event summary of " + eventId + " to channel: " + channelId);
-                    return;
-                }
-            });
-        }
+    const activeEvents = await getEventsByQuery(query)
+    .catch(err => {
+        console.error(FETCH_ERR, err);
     });
+
+    for (const eventData of activeEvents) {
+        const { eventId, msgId, author, name, description, thumbnail, dateTime, repeat, channelId, attendees } = eventData;
+        const channelToSend = await client.channels.cache.get(channelId);
+
+        if (!channelToSend) {
+            console.log(NO_CHANNEL + eventId);
+            continue;
+        }
+
+        if (canSendMessageToChannel(channelToSend)) {
+            const authorData = await bot.guild.members.fetch(author);
+
+            eventEmbed.author = {
+                name: authorData.nickname ? authorData.nickname : authorData.user.username,
+                icon_url: authorData.user.avatarURL()
+            },
+            eventEmbed.title = name + " started!";
+            thumbnail ? eventEmbed.thumbnail = { url: thumbnail } : eventEmbed.thumbnail = {};
+            eventEmbed.fields = [];
+            eventEmbed.fields.push({
+                name: " ",
+                value: moment(dateTime).format(DAY_MONTH_YEAR_24)
+            });
+            if (description) {
+                eventEmbed.fields.push({
+                    name: " ",
+                    value: description
+                });
+            }
+            eventEmbed.fields.push({
+                name: "Attendees (" + attendees.number + "):",
+                value: attendees.entries.length > 0 ?
+                    attendees.entries.map(entry => entry.name).join(", ") :
+                    EMPTY
+            });
+
+            eventEmbed.footer = {};
+
+            await channelToSend.send({ embeds: [eventEmbed] });
+            console.log("Event summary posted", JSON.stringify(eventData));
+
+            if (repeat) {
+                let newDate;
+
+                if (repeat === DAILY) {
+                    newDate = moment(dateTime).add(1, "d");
+                } else if (repeat === WEEKLY) {
+                    newDate = moment(dateTime). add(1, "w");
+                } else if (repeat === MONTHLY) {
+                    newDate = moment(dateTime). add(1, "M");
+                } else if (repeat === YEARLY) {
+                    newDate = moment(dateTime). add(1, "y");
+                }
+
+                try {
+                    const eventMsg = await channelToSend.messages.fetch(msgId);
+                    eventMsg.delete();
+                } catch (error) {
+                    console.error(MSG_DELETION_ERR, error);
+                }
+
+                const newEventMsg = await createEventMsg(eventId, author, name, description, newDate, thumbnail, channelToSend);
+                await updateEventData(eventId, newEventMsg.id, newDate);
+            } else {
+                await deleteEventById(eventId, author);
+            }
+        } else {
+            console.log("Cannot send event summary of " + eventId + " to channel: " + channelId);
+            continue;
+        }
+    }
 };

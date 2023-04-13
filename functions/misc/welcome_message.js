@@ -1,5 +1,6 @@
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder } from "discord.js";
+import { tagUsername } from "../helpers/helpers.js";
 
 const welcomeChannelId = "340856154353696770"; //Remember to change hardcoded value
 const background = "https://i.imgur.com/WtLxcC7.png";
@@ -59,7 +60,7 @@ export const generateMessage = async (member) => {
 
     // draw in Welcome
     ctx.font = "80px Roboto";
-    ctx.fillText("Tervetuloa", dim.width / 2, 190);
+    ctx.fillText("Welcome", dim.width / 2, 190);
 
     // draw in the username
     ctx.font = "80px Roboto";
@@ -74,7 +75,10 @@ export const generateMessage = async (member) => {
     });
     
     member.guild.channels.cache.get(welcomeChannelId).send({
-        content: `Tervetuloa <@${member.id}>!\nLisää rooli komennolla **!role + <rooli>**, tai katso weeklyn tiedot komennolla **!weekly**.\nMuita komentoja näet komennolla **!commands**.`,
+        content: `Welcome ${tagUsername(member.id)}!\n +
+            Add roles with **/addrole** command or check events using **/listevents** command!\n +
+            Use **/help** command to see other commands!\n +
+            Hope you will enjoy your time here!`,
         files: [attachment],
     });
 

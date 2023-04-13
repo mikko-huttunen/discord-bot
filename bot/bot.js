@@ -1,6 +1,7 @@
 import { Collection, REST, Routes } from "discord.js";
 import * as commandData from "../commands/commands.js";
 import * as dotenv from "dotenv";
+import { CMD_REGISTER_SUCCESS } from "../variables/constants.js";
 dotenv.config();
 
 export const bot = {
@@ -49,6 +50,6 @@ const createCommands = async (client) => {
     const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
     await rest.put(Routes.applicationGuildCommands(bot.id, bot.guild.id), { body: commandList })
-        .then(() => console.log("Successfully registered application commands!"))
+        .then(() => console.log(CMD_REGISTER_SUCCESS))
         .catch(console.error);
 };

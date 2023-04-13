@@ -1,5 +1,5 @@
 import { bot } from "../../bot/bot.js";
-import { getRandomCustomEmote } from "../helpers/emotes.js";
+import { getRandomCustomEmote } from "../helpers/helpers.js";
 
 const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere", "päivää"];
 const greetingsEn = ["hi", "greetings", "hello", "hey", "yo"];

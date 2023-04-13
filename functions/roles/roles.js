@@ -1,22 +1,27 @@
-import { EmbedBuilder } from "@discordjs/builders";
 import { bot } from "../../bot/bot.js";
+import { MEMBER_FETCH_ERR, NO_ROLES, ROLE } from "../../variables/constants.js";
 
 export const handleRoleCommand = async (interaction) => {
     await interaction.guild.members.fetch()
-        .then()
-        .catch(error => console.log(error));
+    .then()
+    .catch(err => console.log(MEMBER_FETCH_ERR, err));
 
     const guildRoles = getGuildRoles(interaction.guild);
 
-    let roleEmbed = new EmbedBuilder().setColor(0xff0000);
+    const roleEmbed = {
+        color: 0xff0000,
+        fields: []
+    };
 
     switch (interaction.commandName) {
         case "roles": {
-            roleEmbed.setTitle("Roles");
-            guildRoles.map((role) => roleEmbed.addFields({
-                name: role.name,
-                value: `${role.members}`,
-            }));
+            roleEmbed.title = "Roles";
+            guildRoles.map((role) => 
+                roleEmbed.fields.push({
+                    name: role.name,
+                    value: `${role.members}`
+                })
+            );
 
             interaction.reply({ embeds: [roleEmbed], ephemeral: true });
             break;
@@ -26,7 +31,7 @@ export const handleRoleCommand = async (interaction) => {
             const userRoles = getUserRoleNames(interaction);
 
             if (userRoles.length <= 0) {
-                interaction.reply({ content: "Sinulla ei ole rooleja...", ephemeral: true });
+                interaction.reply({ content: NO_ROLES, ephemeral: true });
                 break;
             }
             
@@ -36,49 +41,49 @@ export const handleRoleCommand = async (interaction) => {
 
         case "addrole": {
             const userRoles = Array.from(interaction.member.roles.cache.keys());
-            const roleToAdd = interaction.options.getRole("role");
+            const roleToAdd = interaction.options.getRole(ROLE);
 
             if (!guildRoles.find(role => role.name.toLowerCase() === roleToAdd.name.toLowerCase())) {
-                interaction.reply({ content: "Roolia **" + roleToAdd.name + "** ei ole olemassa!", ephemeral: true });
+                interaction.reply({ content: "Role **" + roleToAdd.name + "** doesn't exist!", ephemeral: true });
                 break;
             }
 
             if (userRoles.includes(roleToAdd.id)) {
-                interaction.reply({ content: "Sinulla on jo rooli **" + roleToAdd.name + "**!", ephemeral: true });
+                interaction.reply({ content: "You already have the role **" + roleToAdd.name + "**!", ephemeral: true });
                 break;
             }
 
             if (roleToAdd.rawPosition > bot.role.position || roleToAdd.name === bot.role.name) {
-                interaction.reply({ content: "En voi lisätä roolia **" + roleToAdd.name + "**...", ephemeral: true });
+                interaction.reply({ content: "Cannot add role **" + roleToAdd.name + "**...", ephemeral: true });
                 break;
             }
 
             interaction.member.roles.add(roleToAdd.id);
-            interaction.reply({ content: "Role " + roleToAdd.name + " add", ephemeral: true });
+            interaction.reply({ content: "Role " + roleToAdd.name + " added!", ephemeral: true });
             break;
         }
 
         case "removerole": {
             const userRoles = Array.from(interaction.member.roles.cache.keys());
-            const roleToRemove = interaction.options.getRole("role");
+            const roleToRemove = interaction.options.getRole(ROLE);
 
             if (!guildRoles.find(role => role.name.toLowerCase() === roleToRemove.name.toLowerCase())) {
-                interaction.reply({ content: "Roolia **" + roleToRemove.name + "** ei ole olemassa!", ephemeral: true });
+                interaction.reply({ content: "Role **" + roleToRemove.name + "** doesn't exist!", ephemeral: true });
                 break;
             }
 
             if (!userRoles.includes(roleToRemove.id)) {
-                interaction.reply({ content: "Sinulla ei ole roolia **" + roleToRemove.name + "**!", ephemeral: true });
+                interaction.reply({ content: "You don't have the role **" + roleToRemove.name + "**!", ephemeral: true });
                 break;
             }
 
             if (roleToRemove.rawPosition > bot.role.position || roleToRemove.name === bot.role.name) {
-                interaction.reply({ content: "En voi poistaa roolia **" + roleToRemove.name + "**...", ephemeral: true });
+                interaction.reply({ content: "Cannot remove role **" + roleToRemove.name + "**...", ephemeral: true });
                 break;
             }
 
             interaction.member.roles.remove(roleToRemove.id);
-            interaction.reply({ content: "Role " + roleToRemove.name + " removed", ephemeral: true });
+            interaction.reply({ content: "Role " + roleToRemove.name + " removed!", ephemeral: true });
             break;
         }
 
