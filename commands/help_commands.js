@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
-import { listCommands } from "../functions/list_commands.js";
+import { listCommands } from "../functions/misc/list_commands.js";
 
 export const helpCommand = {
     data: new SlashCommandBuilder()

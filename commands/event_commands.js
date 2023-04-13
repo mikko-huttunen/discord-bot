@@ -1,5 +1,6 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { handleEvent } from "../functions/events.js";
+import { handleEvent } from "../functions/events/events.js";
+import { CHANNEL, ID } from "../variables/constants.js";
 
 export const listEventsCommand = {
     data: new SlashCommandBuilder()
@@ -15,7 +16,7 @@ export const addEventCommand = {
 		.setName("event")
 		.setDescription("Create new event")
         .addChannelOption(option =>
-            option.setName("channel")
+            option.setName(CHANNEL)
                 .setDescription("Channel to publish event to")
                 .addChannelTypes(ChannelType.GuildText)
                 .setRequired(true)),
@@ -29,10 +30,10 @@ export const deleteEventCommand = {
         .setName("deleteevent")
         .setDescription("Delete event")
         .addStringOption(option =>
-                option.setName("id")
-                    .setDescription("ID of the event to delete")
-                    .setMaxLength(6)
-                    .setRequired(true)),
+            option.setName(ID)
+                .setDescription("ID of the event to delete")
+                .setMaxLength(6)
+                .setRequired(true)),
     execute: async (interaction) => {
         handleEvent(interaction);
     },

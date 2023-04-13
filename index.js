@@ -2,19 +2,22 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import { Client, Events, Partials } from "discord.js";
-import { greet } from "./functions/greetings.js";
-import { initialize, getBotNames, setBotPresence } from "./data/bot_data.js";
-import { generateMessage } from "./functions/welcome_message.js";
-import { handleImageSearch } from "./functions/image_search.js";
-import { validateTimedMessage } from "./functions/timed_message.js";
-import { deletePollByMsg, getPollsByMsg, syncPollVotes } from "./functions/polls.js";
-import { checkForTimedActions, checkReaction } from "./data/checks.js";
-import { handleVideoSearch } from "./functions/video_search.js";
-import { handleCoinFlip } from "./functions/coinflip.js";
-import { handleDiceRoll } from "./functions/diceroll.js";
-import { deleteEventByMsg, getEventsByMsg, handleJoinEvent, validateEvent } from "./functions/events.js";
-
-let botNames;
+import { bot, initializeBot } from "./bot/bot.js";
+import { setBotPresence } from "./bot/presence.js";
+import { syncPollVotes } from "./functions/polls/polls.js";
+import { canSendMessageToChannel, checkForTimedActions, checkReaction } from "./functions/helpers/checks.js";
+import { validateTimedMessage } from "./functions/timed_messages/timed_message.js";
+import { handleJoinEvent, validateEvent } from "./functions/events/events.js";
+import { greet } from "./functions/misc/greetings.js";
+import { handleImageSearch } from "./functions/media/image_search.js";
+import { handleVideoSearch } from "./functions/media/video_search.js";
+import { handleCoinFlip } from "./functions/games/coinflip.js";
+import { handleDiceRoll } from "./functions/games/diceroll.js";
+import { generateMessage } from "./functions/misc/welcome_message.js";
+import { setDatabase } from "./bot/database.js";
+import { deletePollByMsg, getPollByMsg } from "./functions/polls/services/poll_service.js";
+import { deleteEventByMsg, getEventByMsg } from "./functions/events/services/event_service.js";
+import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, TIMED_MESSAGE_MODAL, USER_FETCH_ERR } from "./variables/constants.js";
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers",
@@ -23,9 +26,9 @@ const client = new Client({
 });
 
 client.on("ready", async () => {
-    await initialize(client);
-    botNames = getBotNames();
-    setBotPresence(client);
+    await setDatabase();
+    await initializeBot(client);
+    await setBotPresence(client);
     await syncPollVotes(client);
     await checkForTimedActions(client);
 });
@@ -35,7 +38,7 @@ client.on(Events.InteractionCreate, async interaction => {
         const command = interaction.client.commands.get(interaction.commandName);
 
         if (!command) {
-            console.error("No command matching" + interaction.commandName + "was found.");
+            console.error("No command matching " + interaction.commandName + " was found.");
             return;
         }
 
@@ -43,22 +46,22 @@ client.on(Events.InteractionCreate, async interaction => {
             await command.execute(interaction);
         } catch (error) {
             console.error(error);
-            await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            await interaction.reply({ content: CMD_ERR, ephemeral: true });
         }
     }
 
     if (interaction.isModalSubmit()) {
-        if (interaction.customId === "timed-message-modal") {
+        if (interaction.customId === TIMED_MESSAGE_MODAL) {
             validateTimedMessage(interaction);
         }
         
-        if (interaction.customId === "event-modal") {
+        if (interaction.customId === EVENT_MODAL) {
             validateEvent(interaction);
         }
     }
 
     if (interaction.isButton()) {
-        if (interaction.customId === "event-button") {
+        if (interaction.customId === EVENT_BUTTON) {
             handleJoinEvent(interaction);
         }
     }
@@ -66,8 +69,11 @@ client.on(Events.InteractionCreate, async interaction => {
 
 client.on("messageCreate", async (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
+    const channel = bot.guild.channels.cache.get(msg.channelId);
 
-    botNames.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
+    if (!await canSendMessageToChannel(channel)) return;
+
+    bot.names.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
     if (msgToLowerCase.startsWith("!")) {
         msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await handleImageSearch(msg) : false;
         msgToLowerCase.startsWith("!video") || msg.content.startsWith("!video") ? handleVideoSearch(msg) : false;
@@ -77,8 +83,8 @@ client.on("messageCreate", async (msg) => {
 });
 
 client.on("messageDelete", async (msg) => {
-    const wasPoll = await getPollsByMsg(msg);
-    const wasEvent = await getEventsByMsg(msg);
+    const wasPoll = await getPollByMsg(msg);
+    const wasEvent = await getEventByMsg(msg);
 
     if (wasPoll) {
         deletePollByMsg(msg.id);
@@ -87,9 +93,11 @@ client.on("messageDelete", async (msg) => {
     if (wasEvent) {
         deleteEventByMsg(msg.id);
     }
-})
+});
 
 client.on("messageReactionAdd", async (reaction, user) => {
+    if (!reaction.message.author.bot) return;
+
     let reactionData = reaction;
     let userData = user;
     // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
@@ -98,7 +106,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
 			await reaction.fetch()
                 .then(r => reactionData = r);
 		} catch (error) {
-			console.error('Something went wrong when fetching the message:', error);
+			console.error(MSG_FETCH_ERR, error);
 			return;
 		}
 	}
@@ -108,7 +116,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
             await user.fetch()
                 .then(u => userData = u);
 		} catch (error) {
-			console.error('Something went wrong when fetching user:', error);
+			console.error(USER_FETCH_ERR, error);
 			return;
 		}
     }
@@ -118,7 +126,9 @@ client.on("messageReactionAdd", async (reaction, user) => {
     checkReaction(reactionData, userData);
 });
 
-client.on('messageReactionRemove', async (reaction, user) => {
+client.on("messageReactionRemove", async (reaction, user) => {
+    if (!reaction.message.author.bot) return;
+    
     let reactionData = reaction;
     let userData = user;
     // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
@@ -127,7 +137,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
 			await reaction.fetch()
                 .then(r => reactionData = r);
 		} catch (error) {
-			console.error('Something went wrong when fetching the message:', error);
+			console.error(MSG_FETCH_ERR, error);
 			return;
 		}
 	}
@@ -137,7 +147,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
             await user.fetch()
                 .then(u => userData = u);
 		} catch (error) {
-			console.error('Something went wrong when fetching user:', error);
+			console.error(USER_FETCH_ERR, error);
 			return;
 		}
     }
@@ -148,7 +158,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
 });
 
 client.on("guildMemberAdd", async (member) => {
-    await generateMessage(member);
+    generateMessage(member);
 });
 
 client.login(process.env.TOKEN);
