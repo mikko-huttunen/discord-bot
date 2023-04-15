@@ -1,100 +1,38 @@
-import * as dotenv from "dotenv";
-dotenv.config();
+import google from "googlethis"
+import { SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../../variables/constants.js";
+import { canSendMessageToChannel } from "../helpers/checks.js";
+import { getChannelName } from "../helpers/helpers.js";
 
-import imageSearch from "image-search-google";
-
-const client = new imageSearch(process.env.SE_ID, process.env.GOOGLE_API_KEY);
-const imageFormats = [".gif", ".jpeg", ".jpg", ".png"];
-let validImages = [];
-
-export const handleImageSearch = async (msg) => {
-    const msgToLowerCase = msg.content.toLowerCase();
-    const keyword = msgToLowerCase.slice(msgToLowerCase.indexOf(" ") + 1);
-
-    if (msgToLowerCase === "!image " + keyword || msgToLowerCase === "!kuva " + keyword) {
-        await client.search(keyword)
-        .then(response => {
-            if (response.length > 0) {
-                console.log(response);
-                response.forEach(image => {
-                    var fileExt = image.url.substring(image.url.lastIndexOf("."));
-                    if (imageFormats.some((format) => format === fileExt)) {
-                        validImages.push(image.url);
-                    }
-                });
-
-                const imageUrl = validImages[Math.floor(Math.random() * validImages.length)];
-                validImages = [];
-                console.log("keyword: " + keyword + ", imageUrl: " + imageUrl);
-
-                const fileExt = imageUrl.substring(imageUrl.lastIndexOf("."));
-
-                if (imageFormats.some((format) => format === fileExt)) {
-                    if (msg.author.bot) {
-                        msg.edit({ 
-                            content: "",
-                            files: [{
-                                attachment: imageUrl,
-                                name: "image" + fileExt
-                            }] 
-                        });
-                    } else {
-                        msg.reply({
-                            files: [{
-                                attachment: imageUrl,
-                                name: "image" + fileExt
-                            }]
-                        });
-                    }
-                } else msg.reply("Sori nyt ei pysty...");
-            } else {
-                console.log("keyword: " + keyword, "No results, posting monkey!");
-                client.search("monkey")
-                .then(response => {
-                    if (response.length > 0) {
-                        response.forEach(image => {
-                            var fileExt = image.url.substring(image.url.lastIndexOf("."));
-                            if (imageFormats.some((format) => format === fileExt)) {
-                                validImages.push(image.url);
-                            }
-                        });
-
-                        const imageUrl = validImages[Math.floor(Math.random() * validImages.length)];
-                        validImages = [];
-                        console.log("keyword: " + keyword + ", imageUrl: " + imageUrl);
-
-                        const fileExt = imageUrl.substring(imageUrl.lastIndexOf("."));
-
-                        if (msg.author.bot) {
-                            msg.edit({ 
-                                content: "En löytänyt kuvaa antamallasi hakusanalla...\nSaat kuitenkin lohdutukseksi tämän",
-                                files: [{
-                                    attachment: imageUrl,
-                                    name: "image" + fileExt
-                                }]
-                            });
-                        } else {
-                            msg.reply({
-                                content: "En löytänyt kuvaa antamallasi hakusanalla...\nSaat kuitenkin lohdutukseksi tämän",
-                                files: [{
-                                    attachment: imageUrl,
-                                    name: "image" + fileExt
-                                }]
-                            });
-                        }
-                    } else msg.reply("Sori nyt ei pysty...");
-                })
-                .catch(err => {
-                    console.log(err);
-                    msg.reply("Jotain meni pieleen...");
-                });
-            }
-        })
-        .catch(err => {
-            console.log(err);
-            msg.reply("Sori nyt ei pysty...");
-        });
-    } else {
-        msg.reply("Anna hakusana esim. !kuva monke");
+export const handleImageSearch = async (interaction) => {
+    const searchterms = interaction.options.getString("searchterms");
+    const options = {
+        page: 0, 
+        safe: true,
+        parse_ads: true,
+        additional_params: {
+            hl: "en",
+        }
     }
-}
+
+    try {
+        const channel = interaction.member.guild.channels.cache.get(interaction.channelId);
+        const searchResults = await google.image(searchterms, options);
+        const image = searchResults[Math.floor(Math.random() * searchResults.length)];
+
+        console.log(SEARCH_SUCCESS, JSON.stringify(image));
+        if (!await canSendMessageToChannel(channel)) {
+            interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId), ephemeral: true });
+            return;
+        }
+
+        interaction.reply({
+            content: "Search terms: " + searchterms,
+            files: [{
+                attachment: image.url,
+                name: image.id + ".png"
+            }]
+        });
+    } catch {
+        interaction.reply({ content: SEARCH_ERR, ephemeral: true });
+    }
+};

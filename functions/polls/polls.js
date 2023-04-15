@@ -4,7 +4,7 @@ import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/ch
 import { createPoll, deletePollById, deletePollByMsg, getPollByMsg, getPolls, getPollsByQuery, getPollsByUser, updatePollData, updatePollVotes } from "./services/poll_service.js";
 import { bot } from "../../bot/bot.js";
 import { generateId, getChannelName, getNumberEmojis, getUnicodeEmoji, getUserData } from "../helpers/helpers.js";
-import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, FAILURE, FETCH_ERR, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RESULTS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, FAILURE, FETCH_ERR, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../../variables/constants.js";
 
 const pollEmbed = {
     color: 0x32cd32,
@@ -71,7 +71,7 @@ export const handlePoll = async (interaction) => {
 
                     interaction.reply({ embeds: [pollEmbed], ephemeral: true });
                 } else {
-                    interaction.reply({ content: NO_RESULTS, ephemeral: true });
+                    interaction.reply({ content: NO_RECORDS, ephemeral: true });
                 }
             }).catch(err => {
                 console.error(FETCH_ERR, err);

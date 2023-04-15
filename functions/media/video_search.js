@@ -1,33 +1,39 @@
 import * as dotenv from "dotenv";
 import videoSearch from "youtube-search";
+import { NO_RESULTS, SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../../variables/constants.js";
+import { getChannelName } from "../helpers/helpers.js";
+import { canSendMessageToChannel } from "../helpers/checks.js";
 dotenv.config();
 
-const options = {
-  maxResults: 10,
-  key: process.env.YOUTUBE_API_KEY,
-  type: "video"
-};
+export const handleVideoSearch = async (interaction) => {
+    const searchterms = interaction.options.getString("searchterms");
+    const options = {
+        maxResults: 1,
+        key: process.env.YOUTUBE_API_KEY,
+        type: "video"
+    };
 
-export const handleVideoSearch = (msg) => {
-    const msgToLowerCase = msg.content.toLowerCase();
-    const keyword = msgToLowerCase.slice(msgToLowerCase.indexOf(" ") + 1);
-
-    if (msgToLowerCase === "!video " + keyword) {
-        videoSearch(keyword, options, function(err, results) {
-            if(err) {
-                msg.reply("Sori nyt ei pysty...");
-                return console.log(err);
-            }
-
-            if (results.length > 0) {
-                console.log("video search:");
-                console.log(results[0]);
-                msg.reply(results[0].link);
-            } else {
-                msg.reply("Antamallasi hakusanalla ei löytynyt videoita...\nhttps://www.youtube.com/watch?v=od_PmtmMDV0");
-            }
-        });
-    } else {
-        msg.reply("Anna hakusana esim. !video life could be dream");
+    const channel = interaction.member.guild.channels.cache.get(interaction.channelId);
+    
+    if (!await canSendMessageToChannel(channel)) {
+        interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId), ephemeral: true });
+        return;
     }
-}
+
+    await videoSearch(searchterms, options, async function(err, results) {
+        if (err) {
+            interaction.reply({ content: SEARCH_ERR, ephemeral: true });
+            return;
+        }
+
+        if (results.length <= 0) {
+            console.log(NO_RESULTS, searchterms);
+            interaction.reply({ content: NO_RESULTS + searchterms, ephemeral: true });
+            return;
+        }
+
+        const video = results[0];
+        console.log(SEARCH_SUCCESS, JSON.stringify(video));
+        await interaction.reply({ content: "Search terms: " + searchterms + "\nVideo: " + video.link, ephemeral: false });
+    });
+};

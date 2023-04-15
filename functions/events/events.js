@@ -1,9 +1,8 @@
 import { ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/builders";
 import { ButtonStyle, TextInputStyle } from "discord.js";
-import _ from "lodash";
 import moment from "moment";
 import { bot } from "../../bot/bot.js";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, EVENT_BUTTON, EVENT_MODAL, FAILURE, FETCH_ERR, ID, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RESULTS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, EVENT_BUTTON, EVENT_MODAL, FAILURE, FETCH_ERR, ID, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
 import { generateId, getChannelName } from "../helpers/helpers.js";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
 import { createEvent, deleteEventById, getEventByMsg, getEvents, getEventsByQuery, getEventsByUser, updateEventAttendees, updateEventData } from "./services/event_service.js";
@@ -68,7 +67,7 @@ export const handleEvent = async (interaction) => {
 
                     interaction.reply({ embeds: [eventEmbed], ephemeral: true });
                 } else {
-                    interaction.reply({ content: NO_RESULTS, ephemeral: true });
+                    interaction.reply({ content: NO_RECORDS, ephemeral: true });
                 }
             }).catch(err => {
                 console.error(FETCH_ERR, err);
@@ -289,9 +288,7 @@ export const handleJoinEvent = async (interaction) => {
         }
 
         if (isExistingEntry) {
-            entries = _.reject(entries, function(e) { 
-                return e.id === user.id && e.vote === user.vote;
-            });
+            entries = entries.filter(entry => entry.id !== user.id);
         }
 
         await updateEventAttendees(eventData, entries);

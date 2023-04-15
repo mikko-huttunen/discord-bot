@@ -13,7 +13,7 @@ export const NO_DB = "No database set!"
 export const CONNECTING_DB = "Connecting to database...";
 export const CONNECTED_DB = "Connected to database!";
 export const CONNECTION_FAILURE_DB = "Cannot connect to database!";
-export const NO_RESULTS = "Nothing to see here...";
+export const NO_RECORDS = "Nothing to see here...";
 export const SUCCESS = "Success! " + getUnicodeEmoji("1F44D");
 export const FAILURE = "Something went wrong! " + getUnicodeEmoji("1F648");
 export const CREATE_SUCCESS = "New entity created successfully!";
@@ -84,3 +84,8 @@ export const MEMBER_FETCH_ERR = "Error fetching guild members!";
 
 //Roles
 export const NO_ROLES = "You have no roles!";
+
+//Media
+export const SEARCH_SUCCESS = "Search success!";
+export const SEARCH_ERR = "Search failed. Please try again!";
+export const NO_RESULTS = "No results with search terms:";

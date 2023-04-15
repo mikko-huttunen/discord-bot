@@ -9,8 +9,6 @@ import { canSendMessageToChannel, checkForTimedActions, checkReaction } from "./
 import { validateTimedMessage } from "./functions/timed_messages/timed_message.js";
 import { handleJoinEvent, validateEvent } from "./functions/events/events.js";
 import { greet } from "./functions/misc/greetings.js";
-import { handleImageSearch } from "./functions/media/image_search.js";
-import { handleVideoSearch } from "./functions/media/video_search.js";
 import { handleCoinFlip } from "./functions/games/coinflip.js";
 import { handleDiceRoll } from "./functions/games/diceroll.js";
 import { generateMessage } from "./functions/misc/welcome_message.js";
@@ -75,8 +73,6 @@ client.on("messageCreate", async (msg) => {
 
     bot.names.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
     if (msgToLowerCase.startsWith("!")) {
-        msgToLowerCase.startsWith("!image") || msg.content.startsWith("!kuva") ? await handleImageSearch(msg) : false;
-        msgToLowerCase.startsWith("!video") || msg.content.startsWith("!video") ? handleVideoSearch(msg) : false;
         msgToLowerCase.startsWith("!cf") ? handleCoinFlip(msg) : false;
         msgToLowerCase.startsWith("!roll") ? handleDiceRoll(msg) : false;
     }

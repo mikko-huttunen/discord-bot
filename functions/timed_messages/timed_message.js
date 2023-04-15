@@ -3,7 +3,7 @@ import { TextInputStyle } from "discord.js";
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
 import { createTimedMessage, deleteTimedMessageById, getTimedMessagesByQuery, getTimedMessagesByUser, updateTimedMessage } from "./services/timed_message_service.js";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, FETCH_ERR, ID, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_RESULTS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, FETCH_ERR, ID, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../../variables/constants.js";
 import { getChannelName } from "../helpers/helpers.js";
 
 let channel;
@@ -55,7 +55,7 @@ export const handleTimedMessage = async (interaction) => {
 
                     interaction.reply({ embeds: [timedMessagesEmbed], ephemeral: true });
                 } else {
-                    interaction.reply({ content: NO_RESULTS, ephemeral: true });
+                    interaction.reply({ content: NO_RECORDS, ephemeral: true });
                 }
             }).catch(err => {
                 console.error(FETCH_ERR, err);
