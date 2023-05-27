@@ -9,8 +9,6 @@ import { canSendMessageToChannel, checkForTimedActions, checkReaction } from "./
 import { validateTimedMessage } from "./functions/timed_messages/timed_message.js";
 import { handleJoinEvent, validateEvent } from "./functions/events/events.js";
 import { greet } from "./functions/misc/greetings.js";
-import { handleCoinFlip } from "./functions/games/coinflip.js";
-import { handleDiceRoll } from "./functions/games/diceroll.js";
 import { generateMessage } from "./functions/misc/welcome_message.js";
 import { setDatabase } from "./bot/database.js";
 import { deletePollByMsg, getPollByMsg } from "./functions/polls/services/poll_service.js";
@@ -70,12 +68,7 @@ client.on("messageCreate", async (msg) => {
     const channel = bot.guild.channels.cache.get(msg.channelId);
 
     if (!await canSendMessageToChannel(channel)) return;
-
     bot.names.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
-    if (msgToLowerCase.startsWith("!")) {
-        msgToLowerCase.startsWith("!cf") ? handleCoinFlip(msg) : false;
-        msgToLowerCase.startsWith("!roll") ? handleDiceRoll(msg) : false;
-    }
 });
 
 client.on("messageDelete", async (msg) => {

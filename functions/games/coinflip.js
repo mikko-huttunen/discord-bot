@@ -4,7 +4,7 @@ const coinFlipEmbed = {
     color: 0xffa500
 };
 
-export const handleCoinFlip = (msg) => {
+export const handleCoinFlip = (interaction) => {
     const random = Math.floor(Math.random() * 2);
 
     random === 0 ? 
@@ -17,5 +17,5 @@ export const handleCoinFlip = (msg) => {
             icon_url: coinTails,
         }
 
-    msg.channel.send({ embeds: [coinFlipEmbed] });
+    interaction.reply({ embeds: [coinFlipEmbed] });
 }

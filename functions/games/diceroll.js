@@ -1,135 +1,74 @@
-export const handleDiceRoll = (msg) => {
+export const handleDiceRoll = (interaction) => {
     const diceRollEmbed = {
         color: 0xffa500,
         title: "🎲 Dice Roll 🎲",
         fields: []
     };
-    const msgToLowerCase = msg.content.toLowerCase();
-    const msgParams = msgToLowerCase.split(" ");
-
-    if (msgParams[0] !== "!roll") return;
-
-    if (msgParams.length > 2) {
-        msg.reply("Nopan arvot ovat virheellisiä! Anna nopan arvo esim. !roll 20 tai useampi noppa esim. !roll 2d10");
-        return;
-    }
-
-    const diceAttr = msgParams[1];
+    const dice = interaction.options.getInteger("dice");
+    const sides = interaction.options.getInteger("sides");
     let results = [];
 
-    if (diceAttr) {
-        if (diceAttr.split("d").length - 1 > 1) {
-            msg.reply("Nopan arvot ovat virheellisiä! Anna nopan arvo esim. !roll 20 tai useampi noppa esim. !roll 2d10");
-            return;
-        }
-
-        const dice = diceAttr.split("d")[0] ? diceAttr.split(/(?<=d)/)[0] : diceAttr;
-        const sides = diceAttr.split("d")[1] ? diceAttr.split("d")[1] : "";
-        const diceCount = dice.split("d")[0];
-
-        const regExp = /^\d+$/;
-        if (!regExp.test(diceAttr.split("d")[0])) {
-            msg.reply("Nopan arvot ovat virheellisiä! Anna nopan arvo esim. !roll 20 tai useampi noppa esim. !roll 2d10");
-            return;
-        }
-
-        if (diceCount > 99 || (sides && sides > 99)) {
-            msg.reply("Noppia ja silmälukuja voi olla maksimissaan 99!");
-            return;
-        } else if (diceCount <= 0 || sides && sides <= 1) {
-            msg.reply("Noppien ja silmälukujen täytyy olla suurempi kuin 1!");
-            return;
-        }
-
-        if (!dice && !sides) {
-            msg.reply("Anna nopan arvo esim. !roll 20 tai useampi noppa esim. !roll 2d10");
-            return;
-        }
-        
-        if (dice && !sides) {
-            if (dice.endsWith("d")) {
-                if (diceCount && !isNaN(diceCount)) {
-                    if (diceCount > 1) {
-                        for (var i=0; i<diceCount; i++) {
-                            results.push(Math.floor(Math.random() * 6 + 1));
-                        }
-                        const calcResults = calculateDice(results);
-                        const chunk = sliceArray(results, 10);
-
-                        diceRollEmbed.fields.push({
-                            name: "Dice:",
-                            value: chunk.join(",\n")
-                        }, {
-                            name: "Stats:",
-                            value: Object.entries(calcResults).map(value => value.join(": ")).join("\n")
-                        });
-
-                        msg.channel.send({ embeds: [diceRollEmbed] });
-                    } else {
-                        diceRollEmbed.fields.push({
-                            name: "Dice:",
-                            value: Math.floor(Math.random() * 6 + 1)
-                        });
-    
-                        msg.channel.send({ embeds: [diceRollEmbed] })
-                    }
-                } else {
-                    msg.reply("Nopan arvot ovat virheellisiä! Anna nopan arvo esim. !roll 20 tai useampi noppa esim. !roll 2d10");
-                    return;
-                }
-            }
-
-            if (!dice.endsWith("d") && isNaN(dice)) {
-                msg.reply("Nopan arvot ovat virheellisiä! Anna nopan arvo esim. !roll 20 tai useampi noppa esim. !roll 2d10");
-                return;
-            }
-            
-            if (!isNaN(dice)) {
-                diceRollEmbed.fields.push({
-                    name: "Dice:",
-                    value: Math.floor(Math.random() * dice + 1)
-                });
-
-                msg.channel.send({ embeds: [diceRollEmbed] })
-            }
-        }
-
-        if (dice && sides) {
-            if (dice.endsWith("d")) {
-                if (isNaN(diceCount) || isNaN(sides)) {
-                    msg.reply("Nopan arvot ovat virheellisiä! Anna nopan arvo esim. !roll 20 tai useampi noppa esim. !roll 2d10");
-                    return;
-                }
-                
-                if (!isNaN(diceCount) && !isNaN(sides)) {
-                    for (var j=0; j<diceCount; j++) {
-                        results.push(Math.floor(Math.random() * sides + 1));
-                    }
-                    const calcResults = calculateDice(results);
-                    const chunk = sliceArray(results, 10);
-
-                    diceRollEmbed.fields.push({
-                        name: "Dice:",
-                        value: chunk.join(",\n")
-                    }, {
-                        name: "Stats:",
-                        value: Object.entries(calcResults).map(value => value.join(": ")).join("\n")
-                    });
-
-                    msg.channel.send({ embeds: [diceRollEmbed] })
-                }
-            } else {
-                msg.reply("Nopan arvot ovat virheellisiä! Anna nopan arvo esim. !roll 20 tai useampi noppa esim. !roll 2d10");
-                return;
-            }
-        }
-    } else if (msgParams[0] === "!roll") {
+    if ((!dice || dice === 1) && !sides) {
         diceRollEmbed.fields.push({
-            name: "Dice:",
+            name: "Results:",
             value: Math.floor(Math.random() * 6 + 1)
         });
         
-        msg.channel.send({ embeds: [diceRollEmbed] })
+        interaction.reply({ embeds: [diceRollEmbed] });
+    }
+        
+    if (dice > 1 && !sides) {
+        for (var i=0; i<dice; i++) {
+            results.push(Math.floor(Math.random() * 6 + 1));
+        }
+        const calcResults = calculateDice(results);
+        const chunk = sliceArray(results, 10);
+
+        diceRollEmbed.fields.push({
+            name: "Roll:",
+            value: "Dice: " + dice
+        }, {
+            name: "Results:",
+            value: chunk.join(",\n")
+        }, {
+            name: "Stats:",
+            value: Object.entries(calcResults).map(value => value.join(": ")).join("\n")
+        });
+
+        interaction.reply({ embeds: [diceRollEmbed] });
+    }
+
+    if (!dice && sides) {
+        diceRollEmbed.fields.push({
+            name: "Roll:",
+            value: "Sides: " + sides
+        }, {
+            name: "Results:",
+            value: Math.floor(Math.random() * sides + 1)
+        });
+        
+        interaction.reply({ embeds: [diceRollEmbed] });
+    }
+
+    if (dice && sides) {
+        for (var j=0; j<dice; j++) {
+            results.push(Math.floor(Math.random() * sides + 1));
+        }
+        const calcResults = calculateDice(results);
+        const chunk = sliceArray(results, 10);
+
+        diceRollEmbed.fields.push({
+            name: "Roll:",
+            value: "Dice: " + dice + ", sides: " + sides
+        }, {
+            name: "Dice:",
+            value: chunk.join(",\n")
+        }, {
+            name: "Stats:",
+            value: Object.entries(calcResults).map(value => value.join(": ")).join("\n")
+        });
+
+        interaction.reply({ embeds: [diceRollEmbed] });
     }
 }
 

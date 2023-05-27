@@ -30,12 +30,12 @@ export const listCommands = (interaction) => {
                     "**/deletepoll**\nDelete poll\n"
             }, {
                 name: "Games",
-                value: "**!roll <dice>d<sides> / !roll <dice>d / !roll <sides>**\nRoll a die or dice\n" +
-                    "**!cf**\nHeads or tails\n"
+                value: "**/roll**\nRoll a die\n" +
+                    "**/coinflip**\nHeads or tails\n"
             }, {
                 name: "Media",
-                value: "**!image <keyword>**\nGet random picture based on given keyword\n" +
-                    "**!video <keyword>**\nGet YouTube video based on given keyword\n"
+                value: "**/image**\nGet random picture based on given keyword\n" +
+                    "**/video**\nGet YouTube video based on given keyword\n"
             }
         ],
     };
