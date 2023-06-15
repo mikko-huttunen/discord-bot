@@ -61,7 +61,7 @@ export const handleDiceRoll = (interaction) => {
             name: "Roll:",
             value: "Dice: " + dice + ", sides: " + sides
         }, {
-            name: "Dice:",
+            name: "Results:",
             value: chunk.join(",\n")
         }, {
             name: "Stats:",
