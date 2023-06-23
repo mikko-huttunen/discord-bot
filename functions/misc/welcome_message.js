@@ -75,10 +75,10 @@ export const generateMessage = async (member) => {
     });
     
     member.guild.channels.cache.get(welcomeChannelId).send({
-        content: `Welcome ${tagUsername(member.id)}!\n
-            Add roles with **/addrole** command or check events using **/listevents** command!\n
-            Use **/help** command to see other commands!\n
-            Hope you will enjoy your time here!`,
+        content: "Welcome " + tagUsername(member.id) + "!\n" +
+            "Add roles with **/addrole** command or check events using **/listevents** command!\n" +
+            "Use **/help** command to see other commands!\n" +
+            "Hope you will enjoy your time here!",
         files: [attachment],
     });
 
