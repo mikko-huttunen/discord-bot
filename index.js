@@ -14,6 +14,7 @@ import { setDatabase } from "./bot/database.js";
 import { deletePollByMsg, getPollByMsg } from "./functions/polls/services/poll_service.js";
 import { deleteEventByMsg, getEventByMsg } from "./functions/events/services/event_service.js";
 import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, TIMED_MESSAGE_MODAL, USER_FETCH_ERR } from "./variables/constants.js";
+import { getMemberData } from "./functions/helpers/helpers.js";
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers",
@@ -27,6 +28,7 @@ client.on("ready", async () => {
     await setBotPresence(client);
     await syncPollVotes(client);
     await checkForTimedActions(client);
+    console.log(client);
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -64,8 +66,10 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on("messageCreate", async (msg) => {
+    if (msg.author.bot) return;
+
     const msgToLowerCase = msg.content.toLowerCase();
-    const channel = bot.guild.channels.cache.get(msg.channelId);
+    const channel = client.channels.cache.get(msg.channelId);
 
     if (!await canSendMessageToChannel(channel)) return;
     bot.names.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
@@ -85,10 +89,9 @@ client.on("messageDelete", async (msg) => {
 });
 
 client.on("messageReactionAdd", async (reaction, user) => {
-    if (!reaction.message.author.bot) return;
-
     let reactionData = reaction;
     let userData = user;
+
     // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
     if (reaction.partial) {
 		try {
@@ -112,14 +115,15 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
     if (user.id === client.user.id || !reaction.message.author.bot) return;
 
+    const guild = client.guilds.cache.get(reactionData.message.guildId);
+    userData = await getMemberData(guild, userData.id);
     checkReaction(reactionData, userData);
 });
 
 client.on("messageReactionRemove", async (reaction, user) => {
-    if (!reaction.message.author.bot) return;
-    
     let reactionData = reaction;
     let userData = user;
+
     // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
     if (reaction.partial) {
 		try {
@@ -143,6 +147,8 @@ client.on("messageReactionRemove", async (reaction, user) => {
 
     if (userData.id === client.user.id || !reactionData.message.author.bot) return;
 
+    const guild = client.guilds.cache.get(reactionData.message.guildId);
+    userData = await getMemberData(guild, userData.id);
     checkReaction(reactionData, userData);
 });
 

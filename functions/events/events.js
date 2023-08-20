@@ -15,6 +15,7 @@ const eventEmbed = {
 };
 
 export const handleEvent = async (interaction) => {
+    console.log(interaction);
     switch (interaction.commandName) {
         case "event": {
             channel = interaction.options.getChannel(CHANNEL);
@@ -27,7 +28,7 @@ export const handleEvent = async (interaction) => {
                 break;
             }
             
-            if (!await canSendMessageToChannel(channel)) {
+            if (!await canSendMessageToChannel(interaction.member, channel)) {
                 interaction.reply({
                     content: SEND_PERMISSION_ERR + getChannelName(channel.id),
                     ephemeral: true 
@@ -188,8 +189,8 @@ const isValidImageURL = (interaction, thumbnail) => {
     return true;
 };
 
-const createEventMsg = async (eventId, author, name, description, date, thumbnail, channelToSend) => {
-    const authorData = await bot.guild.members.fetch(author);
+const createEventMsg = async (guild, eventId, author, name, description, date, thumbnail, channelToSend) => {
+    const authorData = await guild.members.fetch(author);
     eventEmbed.author = {
         name: authorData.nickname ? authorData.nickname : authorData.user.username,
         icon_url: authorData.user.avatarURL()
@@ -230,15 +231,16 @@ const createEventMsg = async (eventId, author, name, description, date, thumbnai
 
 const createNewEvent = async (interaction, author, name, description, dateTime, repeat, thumbnail) => {
     const eventId = generateId();
-    const eventMsg = await createEventMsg(eventId, author, name, description, dateTime, thumbnail);
+    const eventMsg = await createEventMsg(interaction.member.guild, eventId, author, name, description, dateTime, thumbnail);
 
     createEvent(interaction, eventId, eventMsg.id, author, name, description, dateTime, repeat, thumbnail, channel.id);
 };
 
-const updateEventMsg = async (eventData, entries) => {
-    const eventChannel = bot.guild.channels.cache.get(eventData.channelId);
+const updateEventMsg = async (interaction, eventData, entries) => {
+    const guild = interaction.member.guild;
+    const eventChannel = guild.channels.cache.get(eventData.channelId);
     const msg = await eventChannel.messages.fetch(eventData.msgId);
-    const authorData = await bot.guild.members.fetch(eventData.author);
+    const authorData = await guild.members.fetch(eventData.author);
 
     eventEmbed.author = {
         name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -292,7 +294,7 @@ export const handleJoinEvent = async (interaction) => {
         }
 
         await updateEventAttendees(eventData, entries);
-        await updateEventMsg(eventData, entries);
+        await updateEventMsg(interaction, eventData, entries);
 
         interaction.deferUpdate();
     }
@@ -300,7 +302,7 @@ export const handleJoinEvent = async (interaction) => {
     return;
 };
 
-export const eventReminderPost = async () => {
+export const eventReminderPost = async (client) => {
     const start = moment().startOf("day");
     const end = moment().endOf("day");
 
@@ -316,8 +318,9 @@ export const eventReminderPost = async () => {
     });
 
     for (const eventData of activeEvents) {
-        const { eventId, msgId, author, name, description, thumbnail, dateTime, channelId, attendees } = eventData;
-        const channelToSend = await bot.client.channels.cache.get(channelId);
+        const { eventId, msgId, author, name, description, thumbnail, dateTime, guildId, channelId, attendees } = eventData;
+        const guild = await client.guilds.cache.get(guildId);
+        const channelToSend = await guild.channels.cache.get(channelId);
 
         if (!channelToSend) {
             console.log(NO_CHANNEL + eventId);
@@ -325,7 +328,7 @@ export const eventReminderPost = async () => {
         }
 
         if (canSendMessageToChannel(channelToSend)) {
-            const authorData = await bot.guild.members.fetch(author);
+            const authorData = await guild.members.fetch(author);
 
             eventEmbed.author = {
                 name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -387,8 +390,9 @@ export const eventSummaryPost = async (client) => {
     });
 
     for (const eventData of activeEvents) {
-        const { eventId, msgId, author, name, description, thumbnail, dateTime, repeat, channelId, attendees } = eventData;
-        const channelToSend = await client.channels.cache.get(channelId);
+        const { eventId, msgId, author, name, description, thumbnail, dateTime, repeat, guildId, channelId, attendees } = eventData;
+        const guild = await client.guilds.cache.get(guildId);
+        const channelToSend = await guild.channels.cache.get(channelId);
 
         if (!channelToSend) {
             console.log(NO_CHANNEL + eventId);
@@ -396,7 +400,7 @@ export const eventSummaryPost = async (client) => {
         }
 
         if (canSendMessageToChannel(channelToSend)) {
-            const authorData = await bot.guild.members.fetch(author);
+            const authorData = await guild.members.fetch(author);
 
             eventEmbed.author = {
                 name: authorData.nickname ? authorData.nickname : authorData.user.username,

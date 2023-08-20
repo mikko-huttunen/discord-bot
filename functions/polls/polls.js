@@ -3,7 +3,7 @@ import _ from "lodash";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
 import { createPoll, deletePollById, deletePollByMsg, getPollByMsg, getPolls, getPollsByQuery, getPollsByUser, updatePollData, updatePollVotes } from "./services/poll_service.js";
 import { bot } from "../../bot/bot.js";
-import { generateId, getChannelName, getNumberEmojis, getUnicodeEmoji, getUserData } from "../helpers/helpers.js";
+import { generateId, getChannelName, getNumberEmojis, getUnicodeEmoji } from "../helpers/helpers.js";
 import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, FAILURE, FETCH_ERR, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../../variables/constants.js";
 
 const pollEmbed = {
@@ -152,10 +152,9 @@ export const handlePollReaction = async (reaction, user) => {
             vote: entry.vote
         }));
 
-        const userData = await getUserData(user.id);
         const entry = {
-            id: userData.user.id,
-            name: userData.nickname ? userData.nickname : userData.user.username,
+            id: user.user.id,
+            name: user.nickname ? user.nickname : user.user.username,
             vote
         };
 

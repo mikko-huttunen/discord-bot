@@ -42,7 +42,7 @@ export const handleTimedMessage = async (interaction) => {
                 fields: []
             };
 
-            getTimedMessagesByUser(interaction.user)
+            getTimedMessagesByUser(interaction.user, interaction.guildId)
             .then(posts => {
                 if (posts.length > 0) {
                     const postsSorted = posts.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -123,10 +123,11 @@ export const validateTimedMessage = async (interaction) => {
 	const date = interaction.fields.getTextInputValue("dateInput");
     const dateTime = moment(date, DAY_MONTH_YEAR_24).format(ISO_8601_24);
     const repeat = interaction.fields.getTextInputValue("repeatInput").toLowerCase();
+    const guildId = interaction.guildId;
 
     if (!isValidDateAndRepetition(interaction, dateTime, repeat)) return;
 
-    createTimedMessage(interaction, author, message, dateTime, repeat, channel);
+    createTimedMessage(interaction, author, message, dateTime, repeat, guildId, channel.id);
 };
 
 export const postTimedMessages = async (client) => {

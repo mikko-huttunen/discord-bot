@@ -6,6 +6,7 @@ const timedMessageSchema = new mongoose.Schema({
     message: { type: String, required: true },
     date: { type: Date, required: true },
     repeat: { type: String, required: false },
+    guildId: { type: String, required: true },
     channelId: { type: String, required: true }
 }, { autoCreate: false });
 

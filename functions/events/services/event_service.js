@@ -97,17 +97,15 @@ export const updateEventAttendees = async (eventData, entries) => {
 };
 
 export const deleteEventById = async (eventId, author, interaction) => {
-    let channel;
-    let msgId;
-
     event.findOneAndDelete({ 
         eventId, 
         author 
     })
     .then(async (response) => {
         if (response) {
-            channel = bot.guild.channels.cache.get(response.channelId);
-            msgId = response.msgId;
+            const guild = interaction.guilds.cache.get(response.guildId);
+            const channel = guild.channels.cache.get(response.channelId);
+            const msgId = response.msgId;
 
             try {
                 const eventMsg = await channel.messages.fetch(msgId);

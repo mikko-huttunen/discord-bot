@@ -5,11 +5,11 @@ import { CMD_REGISTER_SUCCESS } from "../variables/constants.js";
 dotenv.config();
 
 export const bot = {
-    client: null,
+    //client: null,
     id: null,
     names: [],
-    guild: null,
-    role: null,
+    //guild: null,
+    //role: null,
 };
 
 export const initializeBot = async (client) => {
@@ -18,7 +18,7 @@ export const initializeBot = async (client) => {
 };
 
 const setBotData = async (client) => {
-    bot.client = client;
+    //bot.client = client;
     bot.id = client.user.id;
     bot.names.push(
         "<@" + client.user.id + ">",
@@ -26,9 +26,9 @@ const setBotData = async (client) => {
         client.user.username.split("Bot", 1)[0].toLowerCase()
     );
 
-    bot.guild = client.guilds.cache.get(process.env.GUILD_ID);
-    const roles = bot.guild.roles.cache;
-    bot.role = roles.find(role => role.tags.botId === bot.id);
+    //bot.guild = client.guilds.cache.get(process.env.GUILD_ID);
+    //const roles = bot.guild.roles.cache;
+    //bot.role = roles.find(role => role.tags.botId === bot.id);
     console.log("Logged in as " + client.user.tag);
 };
 
@@ -48,8 +48,8 @@ const createCommands = async (client) => {
     });
 
     const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
-
-    await rest.put(Routes.applicationGuildCommands(bot.id, bot.guild.id), { body: commandList })
+    
+    await rest.put(Routes.applicationCommands(client.user.id), { body: commandList })
         .then(() => console.log(CMD_REGISTER_SUCCESS))
         .catch(console.error);
 };

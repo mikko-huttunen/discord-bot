@@ -2,7 +2,7 @@ import { CREATE_FAILURE, CREATE_SUCCESS, DELETE_ERR, FAILURE, SUCCESS, UPDATE_ER
 import { generateId } from "../../helpers/helpers.js";
 import { timedMessage } from "../models/timed_message_schema.js";
 
-export const createTimedMessage = (interaction, author, message, date, repeat, channel) => {
+export const createTimedMessage = (interaction, author, message, date, repeat, guildId, channelId) => {
     const id = generateId();
     const timedMessageData = {
         id,
@@ -10,7 +10,8 @@ export const createTimedMessage = (interaction, author, message, date, repeat, c
         message,
         date,
         repeat,
-        channelId: channel.id
+        guildId,
+        channelId
     };
 
     new timedMessage(timedMessageData)
@@ -25,8 +26,11 @@ export const createTimedMessage = (interaction, author, message, date, repeat, c
     });
 };
 
-export const getTimedMessagesByUser = async (user) => {
-    return timedMessage.find({ author: user.id }).lean();
+export const getTimedMessagesByUser = async (user, guildId) => {
+    return timedMessage.find({
+        author: user.id,
+        guildId
+    }).lean();
 };
 
 export const getTimedMessagesByQuery = async (query) => {

@@ -27,8 +27,8 @@ export const checkReaction = async (reaction, user) => {
     }
 }
 
-export const canSendMessageToChannel = async (channel) => {
-    if (!bot.guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
+export const canSendMessageToChannel = async (member, channel) => {
+    if (!member.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
         return false;
     }
 

@@ -9,6 +9,7 @@ const eventSchema = new mongoose.Schema({
     thumbnail: { type: String },
     dateTime: { type: Date, required: true },
     repeat: { type: String, required: false },
+    guildId: { type: String, required: true },
     channelId: { type: String, required: true },
     attendees: {
         number: { type: Number, required: true },
