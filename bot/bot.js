@@ -4,31 +4,18 @@ import * as dotenv from "dotenv";
 import { CMD_REGISTER_SUCCESS } from "../variables/constants.js";
 dotenv.config();
 
-export const bot = {
-    //client: null,
-    id: null,
-    names: [],
-    //guild: null,
-    //role: null,
-};
-
 export const initializeBot = async (client) => {
     await setBotData(client);
     await createCommands(client);
 };
 
 const setBotData = async (client) => {
-    //bot.client = client;
-    bot.id = client.user.id;
-    bot.names.push(
+    client.botNames = [
         "<@" + client.user.id + ">",
         client.user.username.toLowerCase(),
         client.user.username.split("Bot", 1)[0].toLowerCase()
-    );
-
-    //bot.guild = client.guilds.cache.get(process.env.GUILD_ID);
-    //const roles = bot.guild.roles.cache;
-    //bot.role = roles.find(role => role.tags.botId === bot.id);
+    ];
+    
     console.log("Logged in as " + client.user.tag);
 };
 

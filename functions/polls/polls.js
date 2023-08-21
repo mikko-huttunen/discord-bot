@@ -2,8 +2,7 @@ import moment from "moment";
 import _ from "lodash";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
 import { createPoll, deletePollById, deletePollByMsg, getPollByMsg, getPolls, getPollsByQuery, getPollsByUser, updatePollData, updatePollVotes } from "./services/poll_service.js";
-import { bot } from "../../bot/bot.js";
-import { generateId, getChannelName, getNumberEmojis, getUnicodeEmoji } from "../helpers/helpers.js";
+import { generateId, getChannelName, getMemberData, getNumberEmojis, getUnicodeEmoji } from "../helpers/helpers.js";
 import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, FAILURE, FETCH_ERR, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../../variables/constants.js";
 
 const pollEmbed = {
@@ -21,8 +20,8 @@ export const handlePoll = async (interaction) => {
             const date = interaction.options.getString(DATE);
             const dateTime = moment(date, DAY_MONTH_YEAR_24).format(ISO_8601_24);
             const repeat = interaction.options.getString(REPEAT).toLowerCase();
+            const guild = interaction.guild;
             const channel = interaction.options.getChannel(CHANNEL);
-            const channelId = channel.id;
             const options = interaction.options._hoistedOptions
                 .filter(option => option.name.includes("option"))
                 .map(option => option.value);
@@ -32,14 +31,14 @@ export const handlePoll = async (interaction) => {
                 break;
             }
 
-            if (!await canSendMessageToChannel(channel)) {
+            if (!await canSendMessageToChannel(guild, channel)) {
                 interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(channel.id), ephemeral: true });
                 break;
             }
 
             if (!isValidDateAndRepetition(interaction, dateTime, repeat)) return;
 
-            createNewPoll(interaction, author, topic, dateTime, repeat, channelId, options);
+            createNewPoll(interaction, author, topic, dateTime, repeat, guild, channel.id, options);
             break;
         }
 
@@ -99,8 +98,8 @@ const canCreateNewPoll = async (user) => {
     });
 };
 
-const createPollMsg = async (pollId, author, topic, dateTime, channelId, options) => {
-    const authorData = await bot.guild.members.fetch(author);
+const createPollMsg = async (pollId, author, topic, dateTime, guild, channelId, options) => {
+    const authorData = await guild.members.fetch(author);
     
     pollEmbed.author = {
         name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -118,17 +117,17 @@ const createPollMsg = async (pollId, author, topic, dateTime, channelId, options
     });
     pollEmbed.footer = ({ text: "Deadline: " + moment(dateTime).format(DAY_MONTH_YEAR_24) + "\nID: " + pollId});
 
-    const channel = bot.guild.channels.cache.get(channelId);
+    const channel = guild.channels.cache.get(channelId);
     const pollMsg = await channel.send({ embeds: [pollEmbed] });
 
     return pollMsg;
 }
 
-export const createNewPoll = async (interaction, author, topic, dateTime, repeat, channelId, options) => {
+export const createNewPoll = async (interaction, author, topic, dateTime, repeat, guild, channelId, options) => {
     const pollId = generateId();
-    const pollMsg = await createPollMsg(pollId, author, topic, dateTime, channelId, options);
+    const pollMsg = await createPollMsg(pollId, author, topic, dateTime, guild, channelId, options);
 
-    createPoll(interaction, pollId, pollMsg.id, author, topic, dateTime, repeat, channelId, options);
+    createPoll(interaction, pollId, pollMsg.id, author, topic, dateTime, repeat, guild.id, channelId, options);
 
     options.forEach((_option, index) => {
         pollMsg.react(numberEmojis[index]);
@@ -171,16 +170,16 @@ export const handlePollReaction = async (reaction, user) => {
         }
 
         await updatePollVotes(pollData, entries);
-        await updatePollMsg(pollData, entries);
+        await updatePollMsg(pollData, entries, user.guild);
     }
 
     return;
 };
 
-const updatePollMsg = async (pollData, entries) => {
-    const channel = bot.guild.channels.cache.get(pollData.channelId);
+const updatePollMsg = async (pollData, entries, guild) => {
+    const channel = guild.channels.cache.get(pollData.channelId);
     const msg = await channel.messages.fetch(pollData.msgId);
-    const authorData = await bot.guild.members.fetch(pollData.author);
+    const authorData = await guild.members.fetch(pollData.author);
     
     pollEmbed.author = {
         name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -216,15 +215,16 @@ export const postPollResults = async (client) => {
 
     if (activePolls.length > 0) {
         for (const pollData of activePolls) {
-            const { pollId, msgId, author, topic, date, repeat, channelId, options, votes } = pollData;
-            const channelToSend = await client.channels.cache.get(channelId);
+            const { pollId, msgId, author, topic, date, repeat, guildId, channelId, options, votes } = pollData;
+            const guild = await client.guilds.cache.get(guildId);
+            const channelToSend = await guild.channels.cache.get(channelId);
 
             if (!channelToSend) {
                 console.log(NO_CHANNEL + pollId);
                 continue;
             }
 
-            if (canSendMessageToChannel(channelToSend)) {
+            if (canSendMessageToChannel(guild, channelToSend)) {
                 const entries = options.map((option, index) => ({
                     option: "**" + option + ": " + votes.entries.filter(entry => entry.vote === index + 1).length + "**",
                     voters: votes.entries
@@ -234,7 +234,7 @@ export const postPollResults = async (client) => {
                 }))
                 .sort((a, b) => b.voters.length - a.voters.length);
                 
-                const authorData = await bot.guild.members.fetch(author);
+                const authorData = await guild.members.fetch(author);
 
                 pollEmbed.author = {
                     name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -297,8 +297,9 @@ export const syncPollVotes = async (client) => {
     for (const pollData of activePolls) {
         const numbers = numberEmojis.slice(0, pollData.options.length);
 
-        const channel = bot.guild.channels.cache.get(pollData.channelId);
-        const authorData = await bot.guild.members.fetch(pollData.author);
+        const guild = client.guilds.cache.get(pollData.guildId);
+        const channel = guild.channels.cache.get(pollData.channelId);
+        const authorData = await guild.members.fetch(pollData.author);
     
         pollEmbed.author = {
             name: authorData.nickname ? authorData.nickname : authorData.user.username,
@@ -317,7 +318,7 @@ export const syncPollVotes = async (client) => {
 
         if (pollMsg) {
             const reactions = pollMsg.reactions.cache.filter(reaction => numbers.includes(reaction._emoji.name)).map(reaction => reaction);
-            entries = await getEntries(client, reactions);
+            entries = await getEntries(client, reactions, guild);
 
             await updatePollVotes(pollData, entries);
             await updatePollMsg(pollData, entries);
@@ -327,13 +328,13 @@ export const syncPollVotes = async (client) => {
     }
 };
 
-const getEntries = async (client, reactions) => {
+const getEntries = async (client, reactions, guild) => {
     let entries = [];
 
     for (const reaction of reactions) {
         await reaction.users.fetch().then(users => {
             users.forEach(user => {
-                getUserData(user.id).then(userData => {
+                getMemberData(user.id, guild).then(userData => {
                     if (user.id !== client.user.id) {
                         const entry = {
                             id: userData.user.id,

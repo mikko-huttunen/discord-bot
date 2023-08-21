@@ -18,7 +18,7 @@ export const handleTimedMessage = async (interaction) => {
                 break;
             }
 
-            if (!await canSendMessageToChannel(channel)) {
+            if (!await canSendMessageToChannel(interaction.guild, channel)) {
                 interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(channel.id), ephemeral: true });
                 break;
             }
@@ -143,7 +143,8 @@ export const postTimedMessages = async (client) => {
     });
 
     for (const timedMessageData of timedMessagesToPost) {
-        const { id, author, message, date, repeat, channelId } = timedMessageData;
+        const { id, author, message, date, repeat, guildId, channelId } = timedMessageData;
+        const guild = await client.guilds.cache.get(guildId);
         const channelToSend = await client.channels.cache.get(channelId);
 
         if (!channelToSend) {
@@ -151,7 +152,7 @@ export const postTimedMessages = async (client) => {
             continue;
         }
 
-        if (canSendMessageToChannel(channelToSend)) {
+        if (canSendMessageToChannel(guild, channelToSend)) {
             channelToSend.send(message);
             console.log("Timed message posted", JSON.stringify(timedMessageData));
         } else {

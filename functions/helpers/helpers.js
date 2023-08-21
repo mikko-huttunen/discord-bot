@@ -1,6 +1,4 @@
-import { bot } from "../../bot/bot.js";
-
-export const getMemberData = async (guild, id) => {
+export const getMemberData = async (id, guild) => {
     return await guild.members.fetch(id);
 };
 

@@ -1,4 +1,3 @@
-import { bot } from "../../../bot/bot.js";
 import { CREATE_FAILURE, CREATE_SUCCESS, DELETE_ERR, FAILURE, MSG_DELETION_ERR, NEVER, SUCCESS, UPDATE_ERR } from "../../../variables/constants.js";
 import { poll } from "../models/poll_schema.js";
 
@@ -79,16 +78,14 @@ export const updatePollVotes = async (pollData, entries) => {
 };
 
 export const deletePollById = async (pollId, author, interaction) => {
-    let channel;
-    let msgId;
-
     poll.findOneAndDelete({ 
         pollId,
         author
     }).then(async (response) => {
         if (response) {
-            channel = bot.guild.channels.cache.get(response.channelId);
-            msgId = response.msgId;
+            const guild = interaction.guild;
+            const channel = guild.channels.cache.get(response.channelId);
+            const msgId = response.msgId;
 
             try {
                 const pollMsg = await channel.messages.fetch(msgId);

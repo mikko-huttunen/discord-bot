@@ -1,7 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/builders";
 import { ButtonStyle, TextInputStyle } from "discord.js";
 import moment from "moment";
-import { bot } from "../../bot/bot.js";
 import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, EVENT_BUTTON, EVENT_MODAL, FAILURE, FETCH_ERR, ID, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
 import { generateId, getChannelName } from "../helpers/helpers.js";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
@@ -15,7 +14,6 @@ const eventEmbed = {
 };
 
 export const handleEvent = async (interaction) => {
-    console.log(interaction);
     switch (interaction.commandName) {
         case "event": {
             channel = interaction.options.getChannel(CHANNEL);
@@ -28,7 +26,7 @@ export const handleEvent = async (interaction) => {
                 break;
             }
             
-            if (!await canSendMessageToChannel(interaction.member, channel)) {
+            if (!await canSendMessageToChannel(interaction.guild, channel)) {
                 interaction.reply({
                     content: SEND_PERMISSION_ERR + getChannelName(channel.id),
                     ephemeral: true 
@@ -327,7 +325,7 @@ export const eventReminderPost = async (client) => {
             continue;
         }
 
-        if (canSendMessageToChannel(channelToSend)) {
+        if (canSendMessageToChannel(guild, channelToSend)) {
             const authorData = await guild.members.fetch(author);
 
             eventEmbed.author = {
@@ -399,7 +397,7 @@ export const eventSummaryPost = async (client) => {
             continue;
         }
 
-        if (canSendMessageToChannel(channelToSend)) {
+        if (canSendMessageToChannel(guild, channelToSend)) {
             const authorData = await guild.members.fetch(author);
 
             eventEmbed.author = {

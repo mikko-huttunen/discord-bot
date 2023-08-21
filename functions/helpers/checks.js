@@ -1,6 +1,5 @@
 import { PermissionsBitField } from "discord.js";
 import moment from "moment";
-import { bot } from "../../bot/bot.js";
 import { eventReminderPost, eventSummaryPost } from "../events/events.js";
 import { handlePollReaction, postPollResults } from "../polls/polls.js";
 import { postTimedMessages } from "../timed_messages/timed_message.js";
@@ -27,8 +26,8 @@ export const checkReaction = async (reaction, user) => {
     }
 }
 
-export const canSendMessageToChannel = async (member, channel) => {
-    if (!member.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
+export const canSendMessageToChannel = async (guild, channel) => {
+    if (!guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
         return false;
     }
 

@@ -7,6 +7,7 @@ const pollSchema = new mongoose.Schema({
     topic: { type: String, required: true },
     date: { type: Date, required: true },
     repeat: { type: String, required: true },
+    guildId: { type: String, required: true },
     channelId: { type: String, required: false },
     options: { type: [String], required: true },
     votes: {

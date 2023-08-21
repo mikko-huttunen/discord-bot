@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import { Client, Events, Partials } from "discord.js";
-import { bot, initializeBot } from "./bot/bot.js";
+import { initializeBot } from "./bot/bot.js";
 import { setBotPresence } from "./bot/presence.js";
 import { syncPollVotes } from "./functions/polls/polls.js";
 import { canSendMessageToChannel, checkForTimedActions, checkReaction } from "./functions/helpers/checks.js";
@@ -69,10 +69,9 @@ client.on("messageCreate", async (msg) => {
     if (msg.author.bot) return;
 
     const msgToLowerCase = msg.content.toLowerCase();
-    const channel = client.channels.cache.get(msg.channelId);
 
-    if (!await canSendMessageToChannel(channel)) return;
-    bot.names.some(botName => msgToLowerCase.includes(botName)) ? greet(msg) : false;
+    if (!await canSendMessageToChannel(msg.guild, msg.channel)) return;
+    client.botNames.some(botName => msgToLowerCase.includes(botName)) ? greet(client, msg) : false;
 });
 
 client.on("messageDelete", async (msg) => {
@@ -115,8 +114,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
     if (user.id === client.user.id || !reaction.message.author.bot) return;
 
-    const guild = client.guilds.cache.get(reactionData.message.guildId);
-    userData = await getMemberData(guild, userData.id);
+    userData = await getMemberData(userData.id, reactionData.message.guild);
     checkReaction(reactionData, userData);
 });
 
@@ -147,8 +145,7 @@ client.on("messageReactionRemove", async (reaction, user) => {
 
     if (userData.id === client.user.id || !reactionData.message.author.bot) return;
 
-    const guild = client.guilds.cache.get(reactionData.message.guildId);
-    userData = await getMemberData(guild, userData.id);
+    userData = await getMemberData(userData.id, reactionData.message.guild);
     checkReaction(reactionData, userData);
 });
 

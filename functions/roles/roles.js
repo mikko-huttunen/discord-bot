@@ -1,4 +1,3 @@
-import { bot } from "../../bot/bot.js";
 import { MEMBER_FETCH_ERR, NO_ROLES, ROLE } from "../../variables/constants.js";
 
 export const handleRoleCommand = async (interaction) => {
@@ -6,7 +5,8 @@ export const handleRoleCommand = async (interaction) => {
     .then()
     .catch(err => console.log(MEMBER_FETCH_ERR, err));
 
-    const guildRoles = getGuildRoles(interaction.guild);
+    const guildRoles = await getGuildRoles(interaction.guild);
+    const botRole = guildRoles.find(role => role.tags?.botId);
 
     const roleEmbed = {
         color: 0xff0000,
@@ -53,7 +53,7 @@ export const handleRoleCommand = async (interaction) => {
                 break;
             }
 
-            if (roleToAdd.rawPosition > bot.role.position || roleToAdd.name === bot.role.name) {
+            if (roleToAdd.rawPosition > botRole.position || roleToAdd.name === botRole.name) {
                 interaction.reply({ content: "Cannot add role **" + roleToAdd.name + "**...", ephemeral: true });
                 break;
             }
@@ -77,7 +77,7 @@ export const handleRoleCommand = async (interaction) => {
                 break;
             }
 
-            if (roleToRemove.rawPosition > bot.role.position || roleToRemove.name === bot.role.name) {
+            if (roleToRemove.rawPosition > botRole.position || roleToRemove.name === botRole.name) {
                 interaction.reply({ content: "Cannot remove role **" + roleToRemove.name + "**...", ephemeral: true });
                 break;
             }

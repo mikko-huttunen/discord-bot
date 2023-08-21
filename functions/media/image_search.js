@@ -15,12 +15,11 @@ export const handleImageSearch = async (interaction) => {
     }
 
     try {
-        const channel = interaction.member.guild.channels.cache.get(interaction.channelId);
         const searchResults = await google.image(searchterms, options);
         const image = searchResults[Math.floor(Math.random() * searchResults.length)];
 
         console.log(SEARCH_SUCCESS, JSON.stringify(image));
-        if (!await canSendMessageToChannel(channel)) {
+        if (!await canSendMessageToChannel(interaction.guild, interaction.channel)) {
             interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId), ephemeral: true });
             return;
         }

@@ -1,4 +1,3 @@
-import { bot } from "../../../bot/bot.js";
 import { CREATE_FAILURE, CREATE_SUCCESS, DELETE_ERR, FAILURE, MSG_DELETION_ERR, SUCCESS, UPDATE_ERR } from "../../../variables/constants.js";
 import { event } from "../models/event_schema.js";
 
@@ -103,7 +102,7 @@ export const deleteEventById = async (eventId, author, interaction) => {
     })
     .then(async (response) => {
         if (response) {
-            const guild = interaction.guilds.cache.get(response.guildId);
+            const guild = interaction.guild;
             const channel = guild.channels.cache.get(response.channelId);
             const msgId = response.msgId;
 

@@ -12,10 +12,8 @@ export const handleVideoSearch = async (interaction) => {
         key: process.env.YOUTUBE_API_KEY,
         type: "video"
     };
-
-    const channel = interaction.member.guild.channels.cache.get(interaction.channelId);
     
-    if (!await canSendMessageToChannel(channel)) {
+    if (!await canSendMessageToChannel(interaction.guild, interaction.channel)) {
         interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId), ephemeral: true });
         return;
     }
