@@ -156,18 +156,18 @@ export const validateTimedMessage = async (interaction) => {
     const id = generateId();
     const author = interaction.user.id;
     const message = interaction.fields.getTextInputValue("messageInput");
-	const date = interaction.fields.getTextInputValue("dateInput");
-    const dateTime = moment(date, DAY_MONTH_YEAR_24).format(ISO_8601_24);
+	const inputDate = interaction.fields.getTextInputValue("dateInput");
+    const formattedDate = moment(inputDate, DAY_MONTH_YEAR_24).format(ISO_8601_24);
     const repeat = interaction.fields.getTextInputValue("repeatInput").toLowerCase();
     const guildId = interaction.guildId;
 
-    if (!isValidDateAndRepetition(interaction, dateTime, repeat)) return;
+    if (!isValidDateAndRepetition(interaction, formattedDate, repeat)) return;
 
     const timedMessageData = {
         id,
         author,
         message,
-        date,
+        date: formattedDate,
         repeat,
         guildId,
         channelId: channel.id
