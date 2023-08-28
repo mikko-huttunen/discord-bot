@@ -1,6 +1,6 @@
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder } from "discord.js";
-import { tagUsername } from "../helpers/helpers.js";
+import { tagUsername } from "./helpers/helpers.js";
 
 const welcomeChannelId = "340856154353696770"; //Remember to change hardcoded value
 const background = "https://i.imgur.com/WtLxcC7.png";

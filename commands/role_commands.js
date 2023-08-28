@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
-import { handleRoleCommand } from "../functions/roles/roles.js";
+import { handleRoleCommand } from "../functions/roles.js";
 import { ROLE } from "../variables/constants.js";
 
 export const rolesCommand = {

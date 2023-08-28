@@ -1,4 +1,4 @@
-import { MEMBER_FETCH_ERR, NO_ROLES, ROLE } from "../../variables/constants.js";
+import { MEMBER_FETCH_ERR, NO_ROLES, ROLE } from "../variables/constants.js";
 
 export const handleRoleCommand = async (interaction) => {
     await interaction.guild.members.fetch()

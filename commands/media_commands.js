@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
-import { handleImageSearch } from "../functions/media/image_search.js";
-import { handleVideoSearch } from "../functions/media/video_search.js";
+import { handleImageSearch } from "../functions/image_search.js";
+import { handleVideoSearch } from "../functions/video_search.js";
 
 export const pictureCommand = {
     data: new SlashCommandBuilder()

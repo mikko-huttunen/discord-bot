@@ -1,8 +1,8 @@
 import * as dotenv from "dotenv";
 import videoSearch from "youtube-search";
-import { NO_RESULTS, SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../../variables/constants.js";
-import { getChannelName } from "../helpers/helpers.js";
-import { canSendMessageToChannel } from "../helpers/checks.js";
+import { NO_RESULTS, SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../variables/constants.js";
+import { getChannelName } from "./helpers/helpers.js";
+import { canSendMessageToChannel } from "./helpers/checks.js";
 dotenv.config();
 
 export const handleVideoSearch = async (interaction) => {

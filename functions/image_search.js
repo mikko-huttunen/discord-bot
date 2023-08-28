@@ -1,7 +1,7 @@
 import google from "googlethis"
-import { SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../../variables/constants.js";
-import { canSendMessageToChannel } from "../helpers/checks.js";
-import { getChannelName } from "../helpers/helpers.js";
+import { SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../variables/constants.js";
+import { canSendMessageToChannel } from "./helpers/checks.js";
+import { getChannelName } from "./helpers/helpers.js";
 
 export const handleImageSearch = async (interaction) => {
     const searchterms = interaction.options.getString("searchterms");

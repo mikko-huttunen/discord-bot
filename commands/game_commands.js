@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
-import { handleCoinFlip } from "../functions/games/coinflip.js";
-import { handleDiceRoll } from "../functions/games/diceroll.js";
+import { handleCoinFlip } from "../functions/coinflip.js";
+import { handleDiceRoll } from "../functions/diceroll.js";
 
 export const coinFlipCommand = {
     data: new SlashCommandBuilder()

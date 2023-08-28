@@ -71,8 +71,7 @@ export const handleTimedMessage = async (interaction) => {
                 guildId: interaction.guild.id
             };
 
-            findDocuments(timedMessage, query)
-            .then(messages => {
+            findDocuments(timedMessage, query).then(messages => {
                 if (messages.length > 0) {
                     const messagesSorted = messages.sort((a, b) => a.date.getTime() - b.date.getTime());
                     messagesSorted.forEach(field => timedMessagesEmbed.fields.push({
@@ -88,6 +87,7 @@ export const handleTimedMessage = async (interaction) => {
                 }
             }).catch(err => {
                 console.error(FETCH_ERR, err);
+                interaction.reply({ content: ERROR_REPLY, ephemeral: true });
             });
 
             break;
