@@ -2,7 +2,7 @@ import { PermissionsBitField } from "discord.js";
 import moment from "moment";
 import { eventReminderPost, eventSummaryPost } from "../events/events.js";
 import { handlePollReaction, postPollResults } from "../polls/polls.js";
-import { postTimedMessages } from "../timed_messages/timed_message.js";
+import { postTimedMessages } from "../timed_message.js";
 import { DAILY, DISTANT_DATE, EXPIRED_DATE, INVALID_DATE, INVALID_REPEAT, ISO_8601_24, MONTHLY, NEVER, WEEKLY, YEARLY } from "../../variables/constants.js";
 import { getNumberEmojis } from "./helpers.js";
 

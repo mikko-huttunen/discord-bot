@@ -1,5 +1,5 @@
-import { CREATE_FAILURE, CREATE_SUCCESS, DELETE_ERR, FAILURE, MSG_DELETION_ERR, NEVER, SUCCESS, UPDATE_ERR } from "../../../variables/constants.js";
-import { poll } from "../models/poll_schema.js";
+import { INSERT_SUCCESS, DELETE_ERR, INSERT_FAILURE, MSG_DELETION_ERR, NEVER, UPDATE_ERR, ERROR_REPLY } from "../../../variables/constants.js";
+import { poll } from "../../../database/schemas/poll_schema.js";
 
 export const createPoll = (interaction, pollId, msgId, author, topic, date, repeat, channelId, options) => {
     const pollData = {
@@ -20,12 +20,12 @@ export const createPoll = (interaction, pollId, msgId, author, topic, date, repe
     new poll(pollData)
     .save()
     .then(response => {
-        console.log(CREATE_SUCCESS, JSON.stringify(response));
-        interaction.reply({ content: SUCCESS, ephemeral: true });
+        console.log(INSERT_SUCCESS, JSON.stringify(response));
+        interaction.reply({ content: "Successfully created new poll!", ephemeral: true });
     })
     .catch(err => {
-        console.error(CREATE_FAILURE, err);
-        interaction.reply({ content: FAILURE, ephemeral: true });
+        console.error(INSERT_FAILURE, err);
+        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
         return;
     });
 };
@@ -95,13 +95,13 @@ export const deletePollById = async (pollId, author, interaction) => {
             }
 
             console.log("Poll " + pollId + " deleted");
-            interaction?.reply({ content: SUCCESS, ephemeral: true });
+            interaction?.reply({ content: "Successfully deleted poll!", ephemeral: true });
         } else {
             interaction?.reply({ content: "Cannot delete poll **" + pollId + "**, or given ID is wrong!", ephemeral: true });
         }
     }).catch(err => {
         console.error(DELETE_ERR, err);
-        interaction?.reply({ content: FAILURE, ephemeral: true });
+        interaction?.reply({ content: ERROR_REPLY, ephemeral: true });
     });
 };
 

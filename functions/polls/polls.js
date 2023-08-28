@@ -3,7 +3,7 @@ import _ from "lodash";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
 import { createPoll, deletePollById, deletePollByMsg, getPollByMsg, getPolls, getPollsByQuery, getPollsByUser, updatePollData, updatePollVotes } from "./services/poll_service.js";
 import { generateId, getChannelName, getMemberData, getNumberEmojis, getUnicodeEmoji } from "../helpers/helpers.js";
-import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, FAILURE, FETCH_ERR, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, ERROR_REPLY, FETCH_ERR, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../../variables/constants.js";
 
 const pollEmbed = {
     color: 0x32cd32,
@@ -74,7 +74,7 @@ export const handlePoll = async (interaction) => {
                 }
             }).catch(err => {
                 console.error(FETCH_ERR, err);
-                interaction.reply({ content: FAILURE, ephemeral: true });
+                interaction.reply({ content: ERROR_REPLY, ephemeral: true });
             });
 
             break;

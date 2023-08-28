@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/builders";
 import { ButtonStyle, TextInputStyle } from "discord.js";
 import moment from "moment";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, EVENT_BUTTON, EVENT_MODAL, FAILURE, FETCH_ERR, ID, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, FETCH_ERR, ID, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
 import { generateId, getChannelName } from "../helpers/helpers.js";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
 import { createEvent, deleteEventById, getEventByMsg, getEvents, getEventsByQuery, getEventsByUser, updateEventAttendees, updateEventData } from "./services/event_service.js";
@@ -70,7 +70,7 @@ export const handleEvent = async (interaction) => {
                 }
             }).catch(err => {
                 console.error(FETCH_ERR, err);
-                interaction.reply({ content: FAILURE, ephemeral: true });
+                interaction.reply({ content: ERROR_REPLY, ephemeral: true });
             });
 
             break;
@@ -270,7 +270,7 @@ export const handleJoinEvent = async (interaction) => {
     const eventData = await getEventByMsg(interaction.message)
     .catch(err => {
         console.error(FETCH_ERR, err);
-        interaction.reply({ content: FAILURE, ephemeral: true });
+        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
     });
 
     const user = {

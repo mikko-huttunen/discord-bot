@@ -1,5 +1,5 @@
-import { CREATE_FAILURE, CREATE_SUCCESS, DELETE_ERR, FAILURE, MSG_DELETION_ERR, SUCCESS, UPDATE_ERR } from "../../../variables/constants.js";
-import { event } from "../models/event_schema.js";
+import { INSERT_SUCCESS, INSERT_FAILURE, DELETE_ERR, MSG_DELETION_ERR, UPDATE_ERR, ERROR_REPLY } from "../../../variables/constants.js";
+import { event } from "../../../database/schemas/event_schema.js";
 
 export const createEvent = (interaction, eventId, msgId, author, name, description, dateTime, repeat, thumbnail, channelId) => {
     const eventData = { 
@@ -21,12 +21,12 @@ export const createEvent = (interaction, eventId, msgId, author, name, descripti
     new event(eventData)
     .save()
     .then(response => {
-        console.log(CREATE_SUCCESS, JSON.stringify(response));
-        interaction.reply({ content: SUCCESS, ephemeral: true });
+        console.log(INSERT_SUCCESS, JSON.stringify(response));
+        interaction.reply({ content: "Successfully created new event!", ephemeral: true });
     })
     .catch(err => {
-        console.error(CREATE_FAILURE, err);
-        interaction.reply({ content: FAILURE, ephemeral: true });
+        console.error(INSERT_FAILURE, err);
+        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
     });
 };
 
@@ -114,7 +114,7 @@ export const deleteEventById = async (eventId, author, interaction) => {
             }
 
             console.log("Event " + response.eventId + " deleted");
-            interaction?.reply({ content: SUCCESS, ephemeral: true });
+            interaction?.reply({ content: "Successfully deleted event!", ephemeral: true });
         } else {
             interaction?.reply({ 
                 content: "Cannot delete event **" + eventId + "**, or given ID is invalid!",
@@ -123,7 +123,7 @@ export const deleteEventById = async (eventId, author, interaction) => {
         }
     }).catch(err => {
         console.error(DELETE_ERR, err);
-        interaction?.reply({ content: FAILURE, ephemeral: true });
+        interaction?.reply({ content: ERROR_REPLY, ephemeral: true });
     });
 };
 

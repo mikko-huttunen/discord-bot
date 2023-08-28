@@ -14,12 +14,13 @@ export const CONNECTING_DB = "Connecting to database...";
 export const CONNECTED_DB = "Connected to database!";
 export const CONNECTION_FAILURE_DB = "Cannot connect to database!";
 export const NO_RECORDS = "Nothing to see here...";
-export const SUCCESS = "Success! " + getUnicodeEmoji("1F44D");
-export const FAILURE = "Something went wrong! " + getUnicodeEmoji("1F648");
-export const CREATE_SUCCESS = "New entity created successfully!";
-export const CREATE_FAILURE = "Failed to create new entity!";
+export const ERROR_REPLY = "Something went wrong! " + getUnicodeEmoji("1F648");
+export const INSERT_SUCCESS = "New entity inserted successfully!";
+export const INSERT_FAILURE = "Failed to insert new entity!";
 export const FETCH_ERR = "Error fetching data from database!";
+export const UPDATE_SUCCESS = "Entity updated successfully!";
 export const UPDATE_ERR = "Error updating entity!";
+export const DELETE_SUCCESS = "Entity deleted successfully!";
 export const DELETE_ERR = "Error deleting entity!";
 
 //Parameters
