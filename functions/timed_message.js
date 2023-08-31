@@ -2,7 +2,7 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/bui
 import { TextInputStyle } from "discord.js";
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, FETCH_ERR, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../variables/constants.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../variables/constants.js";
 import { generateId, getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
 import { deleteDocument, findDocuments, insertDocument, updateDocument } from "../database/database_service.js";
 import { timedMessage } from "../database/schemas/timed_message_schema.js";
@@ -85,9 +85,6 @@ export const handleTimedMessage = async (interaction) => {
                 } else {
                     interaction.reply({ content: NO_RECORDS, ephemeral: true });
                 }
-            }).catch(err => {
-                console.error(FETCH_ERR, err);
-                interaction.reply({ content: ERROR_REPLY, ephemeral: true });
             });
 
             break;
@@ -147,8 +144,6 @@ const canCreateNewTimedMessage = async (interaction) => {
         }
 
         return true;
-    }).catch(err => {
-        console.error(FETCH_ERR, err);
     });
 };
 
@@ -194,10 +189,7 @@ export const postTimedMessages = async (client) => {
         }
     };
 
-    const timedMessagesToPost = await findDocuments(timedMessage, findQuery)
-    .catch(err => {
-        console.error(FETCH_ERR, err);
-    });
+    const timedMessagesToPost = await findDocuments(timedMessage, findQuery);
 
     for (const timedMessageData of timedMessagesToPost) {
         const { id, author, message, date, repeat, guildId, channelId } = timedMessageData;

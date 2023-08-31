@@ -46,40 +46,40 @@ export const getEventsByQuery = async (query) => {
     return event.find(query).lean();
 };
 
-export const updateEventData = async (eventId, msgId, newDate) => {
-    //Event reminder update
-    if (!newDate) {
-        event.findOneAndUpdate(
-            { eventId },
-            { msgId },
-            { returnDocument: "after" }
-        )
-        .then(console.log("Event " + eventId + " msgId updated"))
-        .catch(err => {
-            console.error(UPDATE_ERR, err);
-        });
-    }
+// export const updateEventData = async (eventId, msgId, newDate) => {
+//     //Event reminder update
+//     if (!newDate) {
+//         event.findOneAndUpdate(
+//             { eventId },
+//             { msgId },
+//             { returnDocument: "after" }
+//         )
+//         .then(console.log("Event " + eventId + " msgId updated"))
+//         .catch(err => {
+//             console.error(UPDATE_ERR, err);
+//         });
+//     }
     
-    //Event repost update
-    if (newDate) {
-        event.findOneAndUpdate(
-            { eventId },
-            {
-                msgId,
-                dateTime: newDate,
-                "attendees.number": 0,
-                "attendees.entries": []
-            },
-            { returnDocument: "after" }
-        )
-        .then(console.log("Event " + eventId + " msgId and date updated"))
-        .catch(err => {
-            console.error(UPDATE_ERR, err);
-        });
-    }
+//     //Event repost update
+//     if (newDate) {
+//         event.findOneAndUpdate(
+//             { eventId },
+//             {
+//                 msgId,
+//                 dateTime: newDate,
+//                 "attendees.number": 0,
+//                 "attendees.entries": []
+//             },
+//             { returnDocument: "after" }
+//         )
+//         .then(console.log("Event " + eventId + " msgId and date updated"))
+//         .catch(err => {
+//             console.error(UPDATE_ERR, err);
+//         });
+//     }
 
-    return;
-};
+//     return;
+// };
 
 export const updateEventAttendees = async (eventData, entries) => {
     event.findOneAndUpdate(

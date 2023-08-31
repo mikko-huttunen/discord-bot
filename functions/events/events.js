@@ -1,10 +1,11 @@
 import { ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/builders";
 import { ButtonStyle, TextInputStyle } from "discord.js";
 import moment from "moment";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, FETCH_ERR, ID, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
-import { generateId, getChannelName } from "../helpers/helpers.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, EMPTY, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, FETCH_ERR, ID, INSERT_FAILURE, INSERT_SUCCESS, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { generateId, getChannelName, getUnicodeEmoji } from "../helpers/helpers.js";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
-import { createEvent, deleteEventById, getEventByMsg, getEvents, getEventsByQuery, getEventsByUser, updateEventAttendees, updateEventData } from "./services/event_service.js";
+import { deleteDocument, findDocuments, insertDocument, updateDocument } from "../../database/database_service.js";
+import { event } from "../../database/schemas/event_schema.js";
 
 let channel;
 
@@ -42,7 +43,36 @@ export const handleEvent = async (interaction) => {
             const id = interaction.options.getString(ID);
             const author = interaction.user.id;
 
-            deleteEventById(id, author, interaction);
+            const query = {
+                eventId: id,
+                author
+            };
+
+            deleteDocument(event, query).then(async (response) => {
+                if (response) {
+                    const guild = interaction.guild;
+                    const channel = guild.channels.cache.get(response.channelId);
+                    const msgId = response.msgId;
+        
+                    try {
+                        const eventMsg = await channel.messages.fetch(msgId);
+                        eventMsg.delete();
+                    } catch (err) {
+                        console.error(MSG_DELETION_ERR, err);
+                    }
+        
+                    console.log(DELETE_SUCCESS, JSON.stringify(response));
+                    interaction.reply({ content: "Successfully deleted event!", ephemeral: true });
+                } else {
+                    interaction.reply({ 
+                        content: "Cannot delete event **" + id + "**, or given ID is invalid!",
+                        ephemeral: true
+                    });
+                }
+            }).catch(err => {
+                console.error(DELETE_ERR, err);
+                interaction?.reply({ content: ERROR_REPLY, ephemeral: true });
+            });
             break;
         }
 
@@ -53,8 +83,11 @@ export const handleEvent = async (interaction) => {
             eventEmbed.fields = []
             eventEmbed.footer = {};
 
-            getEvents()
-            .then(events => {
+            const query = {
+                guildId: interaction.guild.id
+            };
+
+            findDocuments(event, query).then(events => {
                 if (events.length > 0) {
                     const eventsSorted = events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
                     eventsSorted.forEach(field => eventEmbed.fields.push({
@@ -82,15 +115,18 @@ export const handleEvent = async (interaction) => {
     }
 };
 
-const canCreateNewEvent = async (user) => {
-    return getEventsByUser(user).then(events => {
+const canCreateNewEvent = async (author, guildId) => {
+    const query = {
+        author,
+        guildId
+    };
+
+    return findDocuments(event, query).then(events => {
         if (events.length >= 5) {
             return false;
         }
 
         return true;
-    }).catch(err => {
-        console.error(FETCH_ERR, err);
     });
 };
 
@@ -227,11 +263,33 @@ const createEventMsg = async (guild, eventId, author, name, description, date, t
     return eventMsg;
 }
 
-const createNewEvent = async (interaction, author, name, description, dateTime, repeat, thumbnail) => {
+const createNewEvent = async (interaction, author, eventName, description, dateTime, repeat, thumbnail, guild) => {
     const eventId = generateId();
-    const eventMsg = await createEventMsg(interaction.member.guild, eventId, author, name, description, dateTime, thumbnail);
+    const eventMsg = await createEventMsg(interaction.member.guild, eventId, author, eventName, description, dateTime, thumbnail);
+    const eventData = {
+        eventId,
+        msgId: eventMsg.id,
+        author,
+        eventName,
+        description,
+        dateTime,
+        repeat,
+        thumbnail,
+        guildId: guild.id,
+        channelId: channel.id
+    };
 
-    createEvent(interaction, eventId, eventMsg.id, author, name, description, dateTime, repeat, thumbnail, channel.id);
+    insertDocument(event, eventData).then(response => {
+        console.log(INSERT_SUCCESS, JSON.stringify(response));
+        interaction.reply({ 
+            content: "New event created successfully! " + getUnicodeEmoji("1F44D"),
+            ephemeral: true
+        });
+    })
+    .catch(err => {
+        console.error(INSERT_FAILURE, err);
+        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
+    });
 };
 
 const updateEventMsg = async (interaction, eventData, entries) => {
@@ -267,11 +325,11 @@ const updateEventMsg = async (interaction, eventData, entries) => {
 };
 
 export const handleJoinEvent = async (interaction) => {
-    const eventData = await getEventByMsg(interaction.message)
-    .catch(err => {
-        console.error(FETCH_ERR, err);
-        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
-    });
+    const query = {
+        msgId: interaction.message.id
+    };
+
+    const eventData = await findDocuments(event, query);
 
     const user = {
         id: interaction.user.id,
@@ -291,7 +349,11 @@ export const handleJoinEvent = async (interaction) => {
             entries = entries.filter(entry => entry.id !== user.id);
         }
 
-        await updateEventAttendees(eventData, entries);
+        const filter = { eventId: eventData.eventId };
+        const update = { attendees: entries.length };
+
+        //TODO: Delete attendees from collection
+        await updateDocument(event, filter, update);
         await updateEventMsg(interaction, eventData, entries);
 
         interaction.deferUpdate();
@@ -310,10 +372,7 @@ export const eventReminderPost = async (client) => {
         }
     };
 
-    const activeEvents = await getEventsByQuery(query)
-    .catch(err => {
-        console.error(FETCH_ERR, err);
-    });
+    const activeEvents = await findDocuments(query);
 
     for (const eventData of activeEvents) {
         const { eventId, msgId, author, name, description, thumbnail, dateTime, guildId, channelId, attendees } = eventData;
@@ -370,22 +429,40 @@ export const eventReminderPost = async (client) => {
 
             const eventMsg = await channelToSend.send({ embeds: [eventEmbed], components: [buttonRow] });
             console.log("Event reminder posted", JSON.stringify(eventData));
+
             await updateEventData(eventId, eventMsg.id);
         }
     }
 };
 
+const updateEventData = async (eventId, msgId, newDate) => {
+    //Event reminder update
+    if (!newDate) {
+        updateDocument(eventId, msgId);
+    }
+    
+    //Event repost update
+    if (newDate) {
+        const update = {
+            msgId,
+            dateTime: newDate,
+            attendees: 0
+        };
+
+        updateDocument(eventId, update);
+    }
+
+    return;
+};
+
 export const eventSummaryPost = async (client) => {
-    const query = {
+    const findQuery = {
         dateTime: {
             $lte: moment.utc()
         }
     };
 
-    const activeEvents = await getEventsByQuery(query)
-    .catch(err => {
-        console.error(FETCH_ERR, err);
-    });
+    const activeEvents = await findDocuments(event, findQuery);
 
     for (const eventData of activeEvents) {
         const { eventId, msgId, author, name, description, thumbnail, dateTime, repeat, guildId, channelId, attendees } = eventData;
@@ -452,7 +529,22 @@ export const eventSummaryPost = async (client) => {
                 const newEventMsg = await createEventMsg(eventId, author, name, description, newDate, thumbnail, channelToSend);
                 await updateEventData(eventId, newEventMsg.id, newDate);
             } else {
-                await deleteEventById(eventId, author);
+                const deleteQuery = {
+                    eventId,
+                    author
+                };
+                
+                deleteDocument(event, deleteQuery).then(async (response) => {
+                    try {
+                        const eventMsg = await channelToSend.messages.fetch(msgId);
+                        eventMsg.delete();
+                        console.log(DELETE_SUCCESS, JSON.stringify(response));
+                    } catch (err) {
+                        console.error(MSG_DELETION_ERR, err);
+                    }
+                }).catch(err => {
+                    console.error(DELETE_ERR, err);
+                });
             }
         } else {
             console.log("Cannot send event summary of " + eventId + " to channel: " + channelId);

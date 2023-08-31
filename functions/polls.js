@@ -2,7 +2,7 @@ import moment from "moment";
 import _ from "lodash";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { generateId, getChannelName, getMemberData, getNumberEmojis, getUnicodeEmoji } from "./helpers/helpers.js";
-import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, FETCH_ERR, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
+import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
 import { deleteDocument, findDocuments, insertDocument, updateDocument } from "../database/database_service.js";
 import { poll } from "../database/schemas/poll_schema.js";
 
@@ -108,9 +108,6 @@ export const handlePoll = async (interaction) => {
                 } else {
                     interaction.reply({ content: NO_RECORDS, ephemeral: true });
                 }
-            }).catch(err => {
-                console.error(FETCH_ERR, err);
-                interaction.reply({ content: ERROR_REPLY, ephemeral: true });
             });
 
             break;
@@ -134,8 +131,6 @@ const canCreateNewPoll = async (author, guildId) => {
         }
 
         return true;
-    }).catch(err => {
-        console.error(FETCH_ERR, err);
     });
 };
 
@@ -167,7 +162,6 @@ const createPollMsg = async (pollId, author, topic, dateTime, guild, channelId, 
 export const createNewPoll = async (interaction, author, topic, dateTime, repeat, guild, channelId, options) => {
     const pollId = generateId();
     const pollMsg = await createPollMsg(pollId, author, topic, dateTime, guild, channelId, options);
-
     const pollData = {
         pollId,
         msgId: pollMsg.id,
@@ -235,15 +229,11 @@ export const handlePollReaction = async (reaction, user) => {
             });
         }
 
-        const filter = {
-            pollId: pollData.pollId
-        };
-        const update = {
-            votes: entries.length
-        };
+        const filter = { pollId: pollData.pollId };
+        const update = { votes: entries.length };
         
         //TODO: Delete votes from collection
-        updateDocument(poll, filter, update);
+        await updateDocument(poll, filter, update);
         await updatePollMsg(pollData, entries, user.guild);
     }
 
@@ -369,8 +359,8 @@ export const postPollResults = async (client) => {
                             const pollMsg = await channelToSend.messages.fetch(msgId);
                             pollMsg.delete();
                             console.log(DELETE_SUCCESS, JSON.stringify(response));
-                        } catch (error) {
-                            console.error(MSG_DELETION_ERR, error);
+                        } catch (err) {
+                            console.error(MSG_DELETION_ERR, err);
                         }
                     }).catch(err => {
                         console.error(DELETE_ERR, err);
