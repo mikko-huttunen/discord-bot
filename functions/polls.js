@@ -3,7 +3,7 @@ import _ from "lodash";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { generateId, getChannelName, getMemberData, getNumberEmojis, getUnicodeEmoji } from "./helpers/helpers.js";
 import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
-import { deleteDocument, findDocuments, insertDocument, updateDocument } from "../database/database_service.js";
+import { deleteDocument, getDocuments, insertDocument, updateDocument } from "../database/database_service.js";
 import { poll } from "../database/schemas/poll_schema.js";
 
 const pollEmbed = {
@@ -93,7 +93,7 @@ export const handlePoll = async (interaction) => {
                 guildId: interaction.guild.id
             };
 
-            findDocuments(poll, query).then(polls => {
+            getDocuments(poll, query).then(polls => {
                 if (polls.length > 0) {
                     const pollsSorted = polls.sort((a, b) => a.date.getTime() - b.date.getTime());
                     pollsSorted.forEach(field => pollEmbed.fields.push({
@@ -125,7 +125,7 @@ const canCreateNewPoll = async (author, guildId) => {
         guildId
     };
 
-    return findDocuments(poll, query).then(polls => {
+    return getDocuments(poll, query).then(polls => {
         if (polls.length >= 5) {
             return false;
         }
@@ -198,7 +198,7 @@ export const handlePollReaction = async (reaction, user) => {
         msgId: reaction.message.id
     };
 
-    const pollData = await findDocuments(poll, query);
+    const pollData = await getDocuments(poll, query);
     const vote = numberEmojis.indexOf(reaction._emoji.name) + 1;
 
     if (pollData) {
@@ -271,7 +271,7 @@ export const postPollResults = async (client) => {
             $lte: moment.utc()
         }
     };
-    const activePolls = await findDocuments(poll, findQuery);
+    const activePolls = await getDocuments(poll, findQuery);
 
     if (activePolls.length > 0) {
         for (const pollData of activePolls) {
@@ -375,7 +375,7 @@ export const postPollResults = async (client) => {
 };
 
 export const syncPollVotes = async (client) => {
-    const activePolls = await findDocuments(poll);
+    const activePolls = await getDocuments(poll);
 
     for (const pollData of activePolls) {
         const numbers = numberEmojis.slice(0, pollData.options.length);

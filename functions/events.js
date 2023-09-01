@@ -1,11 +1,11 @@
 import { ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/builders";
 import { ButtonStyle, TextInputStyle } from "discord.js";
 import moment from "moment";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, EMPTY, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, FETCH_ERR, ID, INSERT_FAILURE, INSERT_SUCCESS, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
-import { generateId, getChannelName, getUnicodeEmoji } from "../helpers/helpers.js";
-import { canSendMessageToChannel, isValidDateAndRepetition } from "../helpers/checks.js";
-import { deleteDocument, findDocuments, insertDocument, updateDocument } from "../../database/database_service.js";
-import { event } from "../../database/schemas/event_schema.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, EMPTY, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, FETCH_ERR, ID, INSERT_FAILURE, INSERT_SUCCESS, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../variables/constants.js";
+import { generateId, getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
+import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
+import { deleteDocument, getDocuments, insertDocument, updateDocument } from "../database/database_service.js";
+import { event } from "../database/schemas/event_schema.js";
 
 let channel;
 
@@ -87,7 +87,7 @@ export const handleEvent = async (interaction) => {
                 guildId: interaction.guild.id
             };
 
-            findDocuments(event, query).then(events => {
+            getDocuments(event, query).then(events => {
                 if (events.length > 0) {
                     const eventsSorted = events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
                     eventsSorted.forEach(field => eventEmbed.fields.push({
@@ -121,7 +121,7 @@ const canCreateNewEvent = async (author, guildId) => {
         guildId
     };
 
-    return findDocuments(event, query).then(events => {
+    return getDocuments(event, query).then(events => {
         if (events.length >= 5) {
             return false;
         }
@@ -329,7 +329,7 @@ export const handleJoinEvent = async (interaction) => {
         msgId: interaction.message.id
     };
 
-    const eventData = await findDocuments(event, query);
+    const eventData = await getDocuments(event, query);
 
     const user = {
         id: interaction.user.id,
@@ -372,7 +372,7 @@ export const eventReminderPost = async (client) => {
         }
     };
 
-    const activeEvents = await findDocuments(query);
+    const activeEvents = await getDocuments(query);
 
     for (const eventData of activeEvents) {
         const { eventId, msgId, author, name, description, thumbnail, dateTime, guildId, channelId, attendees } = eventData;
@@ -462,7 +462,7 @@ export const eventSummaryPost = async (client) => {
         }
     };
 
-    const activeEvents = await findDocuments(event, findQuery);
+    const activeEvents = await getDocuments(event, findQuery);
 
     for (const eventData of activeEvents) {
         const { eventId, msgId, author, name, description, thumbnail, dateTime, repeat, guildId, channelId, attendees } = eventData;

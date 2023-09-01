@@ -5,11 +5,11 @@ import { CMD_REGISTER_SUCCESS } from "../variables/constants.js";
 dotenv.config();
 
 export const initializeBot = async (client) => {
-    await setBotData(client);
+    await setBotNames(client);
     await createCommands(client);
 };
 
-const setBotData = async (client) => {
+const setBotNames = async (client) => {
     client.botNames = [
         "<@" + client.user.id + ">",
         client.user.username.toLowerCase(),

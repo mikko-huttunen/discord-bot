@@ -1,11 +1,12 @@
+import { canSendMessageToChannel } from "./helpers/checks.js";
 import { getRandomCustomEmote } from "./helpers/helpers.js";
 
 const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere", "päivää"];
 const greetingsEn = ["hi", "greetings", "hello", "hey", "yo"];
 
-export const greet = (client, msg) => {
-    if (msg.author.bot) return;
-    
+export const greet = async (client, msg) => {
+    if (!await canSendMessageToChannel(msg.guild, msg.channel)) return;
+
     const msgToLowerCase = msg.content.toLowerCase();
     const msgGreeting = msgToLowerCase.split(" ")[0];
     const msgBotName = msgToLowerCase.split(" ")[1];

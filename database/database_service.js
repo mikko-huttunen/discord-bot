@@ -4,7 +4,7 @@ export const insertDocument = (document, data) => {
     return new document(data).save();
 };
 
-export const findDocuments = (collection, query) => {
+export const getDocuments = (collection, query) => {
     return collection.find(query)
     .lean()
     .catch(err => {

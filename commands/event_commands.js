@@ -1,5 +1,5 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { handleEvent } from "../functions/events/events.js";
+import { handleEvent } from "../functions/events.js";
 import { CHANNEL, ID } from "../variables/constants.js";
 
 export const listEventsCommand = {

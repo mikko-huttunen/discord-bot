@@ -5,16 +5,17 @@ import { Client, Events, Partials } from "discord.js";
 import { initializeBot } from "./bot/bot.js";
 import { setBotPresence } from "./bot/presence.js";
 import { syncPollVotes } from "./functions/polls.js";
-import { canSendMessageToChannel, checkForTimedActions, checkReaction } from "./functions/helpers/checks.js";
+import { checkForTimedActions, checkReaction } from "./functions/helpers/checks.js";
 import { validateTimedMessage } from "./functions/timed_message.js";
-import { handleJoinEvent, validateEvent } from "./functions/events/events.js";
+import { handleJoinEvent, validateEvent } from "./functions/events.js";
 import { greet } from "./functions/greetings.js";
 import { generateMessage } from "./functions/welcome_message.js";
 import { setDatabase } from "./database/database.js";
-import { deletePollByMsg, getPollByMsg } from "./functions/polls/services/poll_service.js";
-import { deleteEventByMsg, getEventByMsg } from "./functions/events/services/event_service.js";
 import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, TIMED_MESSAGE_MODAL, USER_FETCH_ERR } from "./variables/constants.js";
 import { getMemberData } from "./functions/helpers/helpers.js";
+import { deleteDocument } from "./database/database_service.js";
+import { poll } from "./database/schemas/poll_schema.js";
+import { event } from "./database/schemas/event_schema.js";
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers",
@@ -28,7 +29,6 @@ client.on("ready", async () => {
     await setBotPresence(client);
     await syncPollVotes(client);
     await checkForTimedActions(client);
-    console.log(client);
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -49,9 +49,9 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
     if (interaction.isModalSubmit()) {
-        if (interaction.customId === TIMED_MESSAGE_MODAL) {
-            validateTimedMessage(interaction);
-        }
+        // if (interaction.customId === TIMED_MESSAGE_MODAL) {
+        //     validateTimedMessage(interaction);
+        // }
         
         if (interaction.customId === EVENT_MODAL) {
             validateEvent(interaction);
@@ -66,36 +66,25 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on("messageCreate", async (msg) => {
+    //Ignore bot messages
     if (msg.author.bot) return;
 
     const msgToLowerCase = msg.content.toLowerCase();
 
-    if (!await canSendMessageToChannel(msg.guild, msg.channel)) return;
     client.botNames.some(botName => msgToLowerCase.includes(botName)) ? greet(client, msg) : false;
 });
 
 client.on("messageDelete", async (msg) => {
-    const wasPoll = await getPollByMsg(msg);
-    const wasEvent = await getEventByMsg(msg);
-
-    if (wasPoll) {
-        deletePollByMsg(msg.id);
-    }
-
-    if (wasEvent) {
-        deleteEventByMsg(msg.id);
-    }
+    //If message was poll or event, delete them from database
+    await deleteDocument(poll, { msgId: msg.id });
+    await deleteDocument(event, { msgId: msg.id });
 });
 
 client.on("messageReactionAdd", async (reaction, user) => {
-    let reactionData = reaction;
-    let userData = user;
-
-    // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
+    //If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
     if (reaction.partial) {
 		try {
-			await reaction.fetch()
-                .then(r => reactionData = r);
+			await reaction.fetch();
 		} catch (error) {
 			console.error(MSG_FETCH_ERR, error);
 			return;
@@ -104,8 +93,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
     if (user.partial) {
         try {
-            await user.fetch()
-                .then(u => userData = u);
+            await user.fetch();
 		} catch (error) {
 			console.error(USER_FETCH_ERR, error);
 			return;
@@ -114,19 +102,16 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
     if (user.id === client.user.id || !reaction.message.author.bot) return;
 
-    userData = await getMemberData(userData.id, reactionData.message.guild);
-    checkReaction(reactionData, userData);
+    //Get full user data
+    user = await getMemberData(user.id, reaction.message.guild);
+    checkReaction(reaction, user);
 });
 
 client.on("messageReactionRemove", async (reaction, user) => {
-    let reactionData = reaction;
-    let userData = user;
-
-    // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
+    //If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
     if (reaction.partial) {
 		try {
-			await reaction.fetch()
-                .then(r => reactionData = r);
+			await reaction.fetch();
 		} catch (error) {
 			console.error(MSG_FETCH_ERR, error);
 			return;
@@ -135,18 +120,18 @@ client.on("messageReactionRemove", async (reaction, user) => {
 
     if (user.partial) {
         try {
-            await user.fetch()
-                .then(u => userData = u);
+            await user.fetch();
 		} catch (error) {
 			console.error(USER_FETCH_ERR, error);
 			return;
 		}
     }
 
-    if (userData.id === client.user.id || !reactionData.message.author.bot) return;
+    if (user.id === client.user.id || !reaction.message.author.bot) return;
 
-    userData = await getMemberData(userData.id, reactionData.message.guild);
-    checkReaction(reactionData, userData);
+    //Get full user data
+    user = await getMemberData(user.id, reaction.message.guild);
+    checkReaction(reaction, user);
 });
 
 client.on("guildMemberAdd", async (member) => {

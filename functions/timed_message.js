@@ -4,7 +4,7 @@ import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../variables/constants.js";
 import { generateId, getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
-import { deleteDocument, findDocuments, insertDocument, updateDocument } from "../database/database_service.js";
+import { deleteDocument, getDocuments, insertDocument, updateDocument } from "../database/database_service.js";
 import { timedMessage } from "../database/schemas/timed_message_schema.js";
 
 let channel;
@@ -71,7 +71,7 @@ export const handleTimedMessage = async (interaction) => {
                 guildId: interaction.guild.id
             };
 
-            findDocuments(timedMessage, query).then(messages => {
+            getDocuments(timedMessage, query).then(messages => {
                 if (messages.length > 0) {
                     const messagesSorted = messages.sort((a, b) => a.date.getTime() - b.date.getTime());
                     messagesSorted.forEach(field => timedMessagesEmbed.fields.push({
@@ -108,8 +108,8 @@ const timedMessageModal = (interaction) => {
         .setPlaceholder("Message content")
         .setRequired(true);
 
-    const dateInput = new TextInputBuilder()
-        .setCustomId("dateInput")
+    const dateTimeInput = new TextInputBuilder()
+        .setCustomId("dateTimeInput")
         .setLabel("Sending date (Within year in the future)")
         .setStyle(TextInputStyle.Short)
         .setPlaceholder("dd.mm.yyyy hh:mm")
@@ -123,12 +123,23 @@ const timedMessageModal = (interaction) => {
         .setRequired(false);
 
     const messageActionRow = new ActionRowBuilder().addComponents(messageInput);
-    const dateActionRow = new ActionRowBuilder().addComponents(dateInput);
+    const dateActionRow = new ActionRowBuilder().addComponents(dateTimeInput);
     const repeatActionRow = new ActionRowBuilder().addComponents(repeatInput);
 
     modal.addComponents(messageActionRow, dateActionRow, repeatActionRow);
 
     interaction.showModal(modal);
+
+    const filter = i => {
+        return i.user.id === interaction.user.id;
+    };
+
+    interaction.awaitModalSubmit({ time: 60_000, filter })
+        .then(i => {
+            i.reply('Thank you for your submission!');
+            validateTimedMessage(i, interaction.options.getChannel(CHANNEL));
+        })
+        .catch(err => console.log(err, 'No modal submit interaction was collected'));
 };
 
 const canCreateNewTimedMessage = async (interaction) => {
@@ -137,7 +148,7 @@ const canCreateNewTimedMessage = async (interaction) => {
         guildId: interaction.guild.id
     };
 
-    return findDocuments(timedMessage, query)
+    return getDocuments(timedMessage, query)
     .then(messages => {
         if (messages.length >= 5) {
             return false;
@@ -147,39 +158,52 @@ const canCreateNewTimedMessage = async (interaction) => {
     });
 };
 
-export const validateTimedMessage = async (interaction) => {
-    const id = generateId();
-    const author = interaction.user.id;
-    const message = interaction.fields.getTextInputValue("messageInput");
-	const inputDate = interaction.fields.getTextInputValue("dateInput");
-    const formattedDate = moment(inputDate, DAY_MONTH_YEAR_24).format(ISO_8601_24);
-    const repeat = interaction.fields.getTextInputValue("repeatInput").toLowerCase();
-    const guildId = interaction.guildId;
-
-    if (!isValidDateAndRepetition(interaction, formattedDate, repeat)) return;
-
-    const timedMessageData = {
-        id,
-        author,
-        message,
-        date: formattedDate,
-        repeat,
-        guildId,
+export const validateTimedMessage = async (interaction, channel) => {
+    console.log(channel);
+    const timedMessageTest = {
+        id: generateId(),
+        author: interaction.user.id,
+        message: interaction.fields.getTextInputValue("messageInput"),
+        dateTime: interaction.fields.getTextInputValue("dateTimeInput"),
+        repeat: interaction.fields.getTextInputValue("repeatInput").toLowerCase(),
+        guildId: interaction.guildId,
         channelId: channel.id
     };
 
-    insertDocument(timedMessage, timedMessageData)
-    .then(response => {
-        console.log(INSERT_SUCCESS, JSON.stringify(response));
-        interaction.reply({ 
-            content: "New timed message created successfully! " + getUnicodeEmoji("1F44D"),
-            ephemeral: true
-        });
-    })
-    .catch(err => {
-        console.error(INSERT_FAILURE, err);
-        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
-    });
+    console.log(timedMessageTest)
+
+    // const id = generateId();
+    // const author = interaction.user.id;
+    // const message = interaction.fields.getTextInputValue("messageInput");
+	// const inputDate = interaction.fields.getTextInputValue("dateTimeInput");
+    // const formattedDate = moment(inputDate, DAY_MONTH_YEAR_24).format(ISO_8601_24);
+    // const repeat = interaction.fields.getTextInputValue("repeatInput").toLowerCase();
+    // const guildId = interaction.guildId;
+
+    // if (!isValidDateAndRepetition(interaction, formattedDate, repeat)) return;
+
+    // const timedMessageData = {
+    //     id,
+    //     author,
+    //     message,
+    //     date: formattedDate,
+    //     repeat,
+    //     guildId,
+    //     channelId: channel.id
+    // };
+
+    // insertDocument(timedMessage, timedMessageData)
+    // .then(response => {
+    //     console.log(INSERT_SUCCESS, JSON.stringify(response));
+    //     interaction.reply({ 
+    //         content: "New timed message created successfully! " + getUnicodeEmoji("1F44D"),
+    //         ephemeral: true
+    //     });
+    // })
+    // .catch(err => {
+    //     console.error(INSERT_FAILURE, err);
+    //     interaction.reply({ content: ERROR_REPLY, ephemeral: true });
+    // });
 };
 
 export const postTimedMessages = async (client) => {
@@ -189,7 +213,7 @@ export const postTimedMessages = async (client) => {
         }
     };
 
-    const timedMessagesToPost = await findDocuments(timedMessage, findQuery);
+    const timedMessagesToPost = await getDocuments(timedMessage, findQuery);
 
     for (const timedMessageData of timedMessagesToPost) {
         const { id, author, message, date, repeat, guildId, channelId } = timedMessageData;
