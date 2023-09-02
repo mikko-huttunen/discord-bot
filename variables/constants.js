@@ -37,6 +37,7 @@ export const MONTHLY = "monthly";
 export const YEARLY = "yearly";
 
 //Channel
+export const NO_GUILD = "No guild to post ";
 export const NO_CHANNEL = "No channel to post ";
 
 //Permissions
@@ -58,7 +59,8 @@ export const INVALID_REPEAT = "Given repeat interval is invalid! Accepted values
 export const INVALID_LINK = "Link is not valid!";
 
 //Formatting
-export const EMPTY = "-";
+export const EMPTY = " ";
+export const NO_DATA = "-";
 
 //Messages
 export const MSG_DELETION_ERR = "Message does not exist!";

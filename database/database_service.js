@@ -12,7 +12,15 @@ export const getDocuments = (collection, query) => {
     });
 };
 
-export const updateDocument = (document, filter, update) => {
+export const getDocument = (collection, query) => {
+    return collection.findOne(query)
+    .lean()
+    .catch(err => {
+        console.error(FETCH_ERR, err);
+    });
+};
+
+export const updateDocument = async (document, filter, update) => {
     //Return changed document
     const options = { new: true };
 

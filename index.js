@@ -6,12 +6,11 @@ import { initializeBot } from "./bot/bot.js";
 import { setBotPresence } from "./bot/presence.js";
 import { syncPollVotes } from "./functions/polls.js";
 import { checkForTimedActions, checkReaction } from "./functions/helpers/checks.js";
-import { validateTimedMessage } from "./functions/timed_message.js";
 import { handleJoinEvent, validateEvent } from "./functions/events.js";
 import { greet } from "./functions/greetings.js";
 import { generateMessage } from "./functions/welcome_message.js";
 import { setDatabase } from "./database/database.js";
-import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, TIMED_MESSAGE_MODAL, USER_FETCH_ERR } from "./variables/constants.js";
+import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, USER_FETCH_ERR } from "./variables/constants.js";
 import { getMemberData } from "./functions/helpers/helpers.js";
 import { deleteDocument } from "./database/database_service.js";
 import { poll } from "./database/schemas/poll_schema.js";
@@ -27,7 +26,7 @@ client.on("ready", async () => {
     await setDatabase();
     await initializeBot(client);
     await setBotPresence(client);
-    await syncPollVotes(client);
+    //await syncPollVotes(client);
     await checkForTimedActions(client);
 });
 
@@ -49,10 +48,6 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
     if (interaction.isModalSubmit()) {
-        // if (interaction.customId === TIMED_MESSAGE_MODAL) {
-        //     validateTimedMessage(interaction);
-        // }
-        
         if (interaction.customId === EVENT_MODAL) {
             validateEvent(interaction);
         }
@@ -104,6 +99,8 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
     //Get full user data
     user = await getMemberData(user.id, reaction.message.guild);
+    console.log(reaction);
+    console.log(user);
     checkReaction(reaction, user);
 });
 

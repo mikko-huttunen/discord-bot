@@ -2,17 +2,15 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/bui
 import { TextInputStyle } from "discord.js";
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../variables/constants.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_GUILD, NO_RECORDS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../variables/constants.js";
 import { generateId, getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
 import { deleteDocument, getDocuments, insertDocument, updateDocument } from "../database/database_service.js";
 import { timedMessage } from "../database/schemas/timed_message_schema.js";
 
-let channel;
-
 export const handleTimedMessage = async (interaction) => {
     switch (interaction.commandName) {
         case "timedmessage": {
-            channel = interaction.options.getChannel(CHANNEL);
+            const channel = interaction.options.getChannel(CHANNEL);
 
             if (!await canCreateNewTimedMessage(interaction)) {
                 interaction.reply({ content: MAX_TIMED_MESSAGES, ephemeral: true });
@@ -25,6 +23,15 @@ export const handleTimedMessage = async (interaction) => {
             }
 
             timedMessageModal(interaction);
+
+            const filter = i => {
+                return i.user.id === interaction.user.id;
+            };
+        
+            interaction.awaitModalSubmit({ time: 120_000, filter }).then(i => {
+                createTimedMessage(i, channel);
+            }).catch(err => console.log(err, 'No modal submit interaction was collected'));
+
             break;
         }
 
@@ -37,8 +44,7 @@ export const handleTimedMessage = async (interaction) => {
                 author
             };
 
-            deleteDocument(timedMessage, query)
-            .then(response => {
+            deleteDocument(timedMessage, query).then(response => {
                 if (response) {
                     console.log(DELETE_SUCCESS, JSON.stringify(response));
                     interaction.reply({
@@ -51,8 +57,7 @@ export const handleTimedMessage = async (interaction) => {
                         ephemeral: true
                     });
                 }
-            })
-            .catch(err => {
+            }).catch(err => {
                 console.error(DELETE_ERR, err);
                 interaction.reply({ content: ERROR_REPLY, ephemeral: true });
             });
@@ -65,28 +70,27 @@ export const handleTimedMessage = async (interaction) => {
                 title: "Timed Messages",
                 fields: []
             };
-
             const query = {
                 author: interaction.user.id,
                 guildId: interaction.guild.id
             };
+            const timedMessages = await getDocuments(timedMessage, query);
+            
+            if (timedMessages.length <= 0) {
+                interaction.reply({ content: NO_RECORDS, ephemeral: true });
+                break;
+            }
 
-            getDocuments(timedMessage, query).then(messages => {
-                if (messages.length > 0) {
-                    const messagesSorted = messages.sort((a, b) => a.date.getTime() - b.date.getTime());
-                    messagesSorted.forEach(field => timedMessagesEmbed.fields.push({
-                        name: "ID: " + field.id,
-                        value: "Message: " + field.message +
-                            "\nDate: " + moment(field.date).format(DAY_MONTH_YEAR_24) + 
-                            "\nChannel: " + getChannelName(field.channelId)
-                    }));
+            const messagesSorted = timedMessages.sort((a, b) => a.date.getTime() - b.date.getTime());
+            
+            messagesSorted.forEach(tm => timedMessagesEmbed.fields.push({
+                name: "ID: " + tm.id,
+                value: "Message: " + tm.message +
+                    "\nDate: " + moment(tm.date).format(DAY_MONTH_YEAR_24) + 
+                    "\nChannel: " + getChannelName(tm.channelId)
+            }));
 
-                    interaction.reply({ embeds: [timedMessagesEmbed], ephemeral: true });
-                } else {
-                    interaction.reply({ content: NO_RECORDS, ephemeral: true });
-                }
-            });
-
+            interaction.reply({ embeds: [timedMessagesEmbed], ephemeral: true });
             break;
         }
 
@@ -129,17 +133,6 @@ const timedMessageModal = (interaction) => {
     modal.addComponents(messageActionRow, dateActionRow, repeatActionRow);
 
     interaction.showModal(modal);
-
-    const filter = i => {
-        return i.user.id === interaction.user.id;
-    };
-
-    interaction.awaitModalSubmit({ time: 60_000, filter })
-        .then(i => {
-            i.reply('Thank you for your submission!');
-            validateTimedMessage(i, interaction.options.getChannel(CHANNEL));
-        })
-        .catch(err => console.log(err, 'No modal submit interaction was collected'));
 };
 
 const canCreateNewTimedMessage = async (interaction) => {
@@ -148,8 +141,7 @@ const canCreateNewTimedMessage = async (interaction) => {
         guildId: interaction.guild.id
     };
 
-    return getDocuments(timedMessage, query)
-    .then(messages => {
+    return getDocuments(timedMessage, query).then(messages => {
         if (messages.length >= 5) {
             return false;
         }
@@ -158,57 +150,37 @@ const canCreateNewTimedMessage = async (interaction) => {
     });
 };
 
-export const validateTimedMessage = async (interaction, channel) => {
-    console.log(channel);
-    const timedMessageTest = {
+export const createTimedMessage = async (interaction, channel) => {
+    const userDateTime = interaction.fields.getTextInputValue("dateTimeInput");
+    const userRepeat = interaction.fields.getTextInputValue("repeatInput").toLowerCase();
+
+    const timedMessageData = {
         id: generateId(),
         author: interaction.user.id,
         message: interaction.fields.getTextInputValue("messageInput"),
-        dateTime: interaction.fields.getTextInputValue("dateTimeInput"),
-        repeat: interaction.fields.getTextInputValue("repeatInput").toLowerCase(),
+        dateTime: moment(userDateTime, DAY_MONTH_YEAR_24).format(ISO_8601_24),
+        repeat: userRepeat,
         guildId: interaction.guildId,
         channelId: channel.id
     };
 
-    console.log(timedMessageTest)
+    if (!isValidDateAndRepetition(interaction, timedMessageData.dateTime, userRepeat)) return;
 
-    // const id = generateId();
-    // const author = interaction.user.id;
-    // const message = interaction.fields.getTextInputValue("messageInput");
-	// const inputDate = interaction.fields.getTextInputValue("dateTimeInput");
-    // const formattedDate = moment(inputDate, DAY_MONTH_YEAR_24).format(ISO_8601_24);
-    // const repeat = interaction.fields.getTextInputValue("repeatInput").toLowerCase();
-    // const guildId = interaction.guildId;
-
-    // if (!isValidDateAndRepetition(interaction, formattedDate, repeat)) return;
-
-    // const timedMessageData = {
-    //     id,
-    //     author,
-    //     message,
-    //     date: formattedDate,
-    //     repeat,
-    //     guildId,
-    //     channelId: channel.id
-    // };
-
-    // insertDocument(timedMessage, timedMessageData)
-    // .then(response => {
-    //     console.log(INSERT_SUCCESS, JSON.stringify(response));
-    //     interaction.reply({ 
-    //         content: "New timed message created successfully! " + getUnicodeEmoji("1F44D"),
-    //         ephemeral: true
-    //     });
-    // })
-    // .catch(err => {
-    //     console.error(INSERT_FAILURE, err);
-    //     interaction.reply({ content: ERROR_REPLY, ephemeral: true });
-    // });
+    insertDocument(timedMessage, timedMessageData).then(response => {
+        console.log(INSERT_SUCCESS, JSON.stringify(response));
+        interaction.reply({ 
+            content: "New timed message created successfully! " + getUnicodeEmoji("1F44D"),
+            ephemeral: true
+        });
+    }).catch(err => {
+        console.error(INSERT_FAILURE, err);
+        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
+    });
 };
 
 export const postTimedMessages = async (client) => {
     const findQuery = {
-        date: {
+        dateTime: {
             $lte: moment.utc()
         }
     };
@@ -216,49 +188,62 @@ export const postTimedMessages = async (client) => {
     const timedMessagesToPost = await getDocuments(timedMessage, findQuery);
 
     for (const timedMessageData of timedMessagesToPost) {
-        const { id, author, message, date, repeat, guildId, channelId } = timedMessageData;
-        const guild = await client.guilds.cache.get(guildId);
-        const channelToSend = await client.channels.cache.get(channelId);
+        const { id, author, message, dateTime, repeat, guildId, channelId } = timedMessageData;
 
-        if (!channelToSend) {
-            console.log(NO_CHANNEL + id);
+        const guild = await client.guilds.cache.get(guildId);
+        const channel = await client.channels.cache.get(channelId);
+
+        if (!guild || !channel) {
+            if (!guild) console.log(NO_GUILD + guildId);
+            else if (!channel) console.log(NO_CHANNEL + id);
+
+            await deleteDocument(timedMessage, { id }).then(response => {
+                console.log(DELETE_SUCCESS, JSON.stringify(response));
+            }).catch(err => {
+                console.error(DELETE_ERR, err);
+            });
+
             continue;
         }
 
-        if (canSendMessageToChannel(guild, channelToSend)) {
-            channelToSend.send(message);
+        if (canSendMessageToChannel(guild, channel)) {
+            channel.send(message);
             console.log("Timed message posted", JSON.stringify(timedMessageData));
         } else {
             console.log("Cannot send timed message " + id + " to channel: " + channelId);
+
+            await deleteDocument(timedMessage, { id }).then(response => {
+                console.log(DELETE_SUCCESS, JSON.stringify(response));
+            }).catch(err => {
+                console.error(DELETE_ERR, err);
+            });
+
             continue;
         }
 
         if (repeat) {
-            let newDate;
+            let newDateTime;
             
             if (repeat === DAILY) {
-                newDate = moment(date).add(1, "d");
+                newDateTime = moment(dateTime).add(1, "d");
             } else if (repeat === WEEKLY) {
-                newDate = moment(date). add(1, "w");
+                newDateTime = moment(dateTime). add(1, "w");
             } else if (repeat === MONTHLY) {
-                newDate = moment(date). add(1, "M");
+                newDateTime = moment(dateTime). add(1, "M");
             } else if (repeat === YEARLY) {
-                newDate = moment(date). add(1, "y");
+                newDateTime = moment(dateTime). add(1, "y");
             }
 
-            const update = { date: newDate };
-            updateDocument(timedMessage, id, update);
+            updateDocument(timedMessage, { id }, { dateTime: newDateTime });
         } else {
             const deleteQuery = {
                 id,
                 author
             }
 
-            deleteDocument(timedMessage, deleteQuery)
-            .then(response => {
+            deleteDocument(timedMessage, deleteQuery).then(response => {
                 console.log(DELETE_SUCCESS, JSON.stringify(response));
-            })
-            .catch(err => {
+            }).catch(err => {
                 console.error(DELETE_ERR, err);
             });
         }

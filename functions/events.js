@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/builders";
 import { ButtonStyle, TextInputStyle } from "discord.js";
 import moment from "moment";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, EMPTY, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, FETCH_ERR, ID, INSERT_FAILURE, INSERT_SUCCESS, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../variables/constants.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, FETCH_ERR, ID, INSERT_FAILURE, INSERT_SUCCESS, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_DATA, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../variables/constants.js";
 import { generateId, getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { deleteDocument, getDocuments, insertDocument, updateDocument } from "../database/database_service.js";
@@ -317,7 +317,7 @@ const updateEventMsg = async (interaction, eventData, entries) => {
     }
     eventEmbed.fields.push({
         name: "Attendees (" + entries.length + "):",
-        value: entries.length > 0 ? entries.map(entry => entry.name).join(", ") : EMPTY
+        value: entries.length > 0 ? entries.map(entry => entry.name).join(", ") : NO_DATA
     });
     eventEmbed.footer = ({ text: "ID: " + eventData.eventId });
 
@@ -408,7 +408,7 @@ export const eventReminderPost = async (client) => {
                 name: "Attendees (" + attendees.number + "):",
                 value: attendees.entries.length > 0 ?
                     attendees.entries.map(entry => entry.name).join(", ") :
-                    EMPTY
+                    NO_DATA
             });
             eventEmbed.footer = ({ text: "ID: " + eventId });
 
@@ -498,7 +498,7 @@ export const eventSummaryPost = async (client) => {
                 name: "Attendees (" + attendees.number + "):",
                 value: attendees.entries.length > 0 ?
                     attendees.entries.map(entry => entry.name).join(", ") :
-                    EMPTY
+                    NO_DATA
             });
 
             eventEmbed.footer = {};
