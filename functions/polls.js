@@ -199,49 +199,27 @@ export const handlePollReaction = async (reaction, user) => {
         msgId: reaction.message.id
     };
     const pollData = await getDocument(poll, pollQuery);
-
     if (!pollData) return;
 
-    const voteNumber = numberEmojis.indexOf(reaction._emoji.name) + 1;
-    console.log(voteNumber);
-    console.log(pollData);
+    const pollVotes = new Map();
+    let reactions = reaction.message.reactions.cache;
+    reactions.filter(r => numberEmojis.includes(r._emoji.name));
+    let votes = 0;
 
-    //Check if number emoji is a valid vote
-    if (voteNumber > pollData.options.length) return;
-
-    const voteData = {
-        guildId: reaction.message.guildId,
-        pollId: pollData.pollId,
-        userId: user.user.id,
-        name: user.nickname ? user.nickname : user.user.username,
-        vote: voteNumber
-    };
-
-    let votes = await getDocuments(vote, { pollId: pollData.pollId });
-    const isExistingVote = votes.some(v => v.userId === user.user.id && v.vote === voteNumber);
-
-    let pollUpdate;
-
-    if (isExistingVote) {
-        const deleteQuery = {
-            pollId: pollData.id,
-            userId: user.user.id,
-            vote: voteNumber
-        };
-
-        await deleteDocument(vote, deleteQuery);
-        pollUpdate = { $inc : {"votes" : -1} };
-    } else if (!isExistingVote) {
-        await insertDocument(vote, voteData);
-        votes.push(voteData);
-        pollUpdate = { $inc : {"votes" : 1} };
+    for (let i = 0; i < pollData.options.length; i++) {
+        const voteNumber = numberEmojis.indexOf(reactions.get(numberEmojis[i])._emoji.name) + 1;
+        //Check if number emoji is a valid vote
+        if (voteNumber > pollData.options.length) return;
+        pollVotes.set(i, await reactions.get(numberEmojis[i]).users.fetch());
+        votes++;
     }
 
-    await updateDocument(poll, pollQuery, pollUpdate);
-    await updatePollMsg(pollData, votes, user.guild);
+    await updateDocument(poll, pollQuery, { votes });
+    await updatePollMsg(pollData, pollVotes, user.guild);
 };
 
 const updatePollMsg = async (pollData, pollVotes, guild) => {
+    console.log(pollVotes.get(0));
     const channel = guild.channels.cache.get(pollData.channelId);
     const msg = await channel.messages.fetch(pollData.msgId);
     const authorData = await guild.members.fetch(pollData.author);
@@ -260,7 +238,7 @@ const updatePollMsg = async (pollData, pollVotes, guild) => {
     pollEmbed.fields.push({
         name: EMPTY,
         value: pollData.options.map((option, index) => numberEmojis[index] + EMPTY + option + ": " +
-            pollVotes.filter(entry => entry.vote === index + 1).length).join("\n")
+            pollVotes.get(index).map(v => v.username).join(", ")).join("\n")
     });
     pollEmbed.fields.push({
         name: EMPTY,

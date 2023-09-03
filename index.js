@@ -99,8 +99,6 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
     //Get full user data
     user = await getMemberData(user.id, reaction.message.guild);
-    console.log(reaction);
-    console.log(user);
     checkReaction(reaction, user);
 });
 
