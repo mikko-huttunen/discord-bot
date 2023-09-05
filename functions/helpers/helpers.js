@@ -1,6 +1,5 @@
-export let dataHolder;
-
 export const getMemberData = async (id, guild) => {
+    console.log(id);
     return await guild.members.fetch(id);
 };
 

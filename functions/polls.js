@@ -1,10 +1,9 @@
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { generateId, getChannelName, getMemberData, getNumberEmojis, getUnicodeEmoji } from "./helpers/helpers.js";
-import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, EMPTY, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
+import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, EMPTY, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_DATA, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
 import { deleteDocument, getDocument, getDocuments, insertDocument, updateDocument } from "../database/database_service.js";
 import { poll } from "../database/schemas/poll_schema.js";
-import { vote } from "../database/schemas/vote_schema.js";
 
 const numberEmojis = getNumberEmojis();
 const barChartEmoji = getUnicodeEmoji("1F4CA");
@@ -194,35 +193,40 @@ export const createNewPoll = async (interaction, pollData, guild) => {
 };
 
 //TODO: Change to create new vote document
-export const handlePollReaction = async (reaction, user) => {
-    const pollQuery = {
-        msgId: reaction.message.id
-    };
-    const pollData = await getDocument(poll, pollQuery);
+export const handlePollReaction = async (reaction) => {
+    const pollVotes = new Map();
+    const pollData = await getDocument(poll, { msgId: reaction.message.id });
+
     if (!pollData) return;
 
-    const pollVotes = new Map();
-    let reactions = reaction.message.reactions.cache;
-    reactions.filter(r => numberEmojis.includes(r._emoji.name));
-    let votes = 0;
+    const reactions = reaction.message.reactions.cache.filter(r => numberEmojis.includes(r.emoji.name));
 
     for (let i = 0; i < pollData.options.length; i++) {
-        const voteNumber = numberEmojis.indexOf(reactions.get(numberEmojis[i])._emoji.name) + 1;
-        //Check if number emoji is a valid vote
+        const voteNumber = numberEmojis.indexOf(reactions.get(numberEmojis[i]).emoji.name) + 1;
+        //Check if number emoji is a valid voting number
         if (voteNumber > pollData.options.length) return;
-        pollVotes.set(i, await reactions.get(numberEmojis[i]).users.fetch());
-        votes++;
+
+        let users = await reactions.get(numberEmojis[i]).users.fetch();
+        users = await Promise.all(users.map(async (user) => {
+            if (!user.bot) return await getMemberData(user.id, reaction.message.guild);
+        }));
+        const filteredUsers = users.filter(u => u);
+
+        if (filteredUsers.length > 0) pollVotes.set(i, filteredUsers);
     }
 
-    await updateDocument(poll, pollQuery, { votes });
-    await updatePollMsg(pollData, pollVotes, user.guild);
+    console.log(pollVotes);
+
+    await updatePollMsg(pollData, pollVotes, reaction.message.guild);
 };
 
 const updatePollMsg = async (pollData, pollVotes, guild) => {
-    console.log(pollVotes.get(0));
     const channel = guild.channels.cache.get(pollData.channelId);
     const msg = await channel.messages.fetch(pollData.msgId);
     const authorData = await guild.members.fetch(pollData.author);
+
+    let votesNumber = 0;
+    pollVotes.forEach(v => votesNumber += Array.from(v).length);
     
     const pollEmbed = {
         color: 0x32cd32,
@@ -234,15 +238,14 @@ const updatePollMsg = async (pollData, pollVotes, guild) => {
         fields: [],
         footer: { text: "Deadline: " + moment(pollData.date).format(DAY_MONTH_YEAR_24) + "\nID: " + pollData.pollId }
     };
-    
+
     pollEmbed.fields.push({
         name: EMPTY,
-        value: pollData.options.map((option, index) => numberEmojis[index] + EMPTY + option + ": " +
-            pollVotes.get(index).map(v => v.username).join(", ")).join("\n")
-    });
-    pollEmbed.fields.push({
+        value: pollData.options.map((option, index) => numberEmojis[index] + " " + option + ": " +
+            (pollVotes ? (Array.from(pollVotes.get(index)).length ? pollVotes.get(index).map(v => v.nickname ? v.nickname : v.user.username).join(", ") : NO_DATA) : NO_DATA)).join("\n")
+    }, {
         name: EMPTY,
-        value: "Votes: " + pollVotes.length
+        value: "Votes: " + votesNumber
     });
 
     msg.edit({ embeds: [pollEmbed] });

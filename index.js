@@ -5,13 +5,12 @@ import { Client, Events, Partials } from "discord.js";
 import { initializeBot } from "./bot/bot.js";
 import { setBotPresence } from "./bot/presence.js";
 import { syncPollVotes } from "./functions/polls.js";
-import { checkForTimedActions, checkReaction } from "./functions/helpers/checks.js";
+import { checkForTimedActions, checkIfPollReaction } from "./functions/helpers/checks.js";
 import { handleJoinEvent, validateEvent } from "./functions/events.js";
 import { greet } from "./functions/greetings.js";
 import { generateMessage } from "./functions/welcome_message.js";
 import { setDatabase } from "./database/database.js";
 import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, USER_FETCH_ERR } from "./variables/constants.js";
-import { getMemberData } from "./functions/helpers/helpers.js";
 import { deleteDocument } from "./database/database_service.js";
 import { poll } from "./database/schemas/poll_schema.js";
 import { event } from "./database/schemas/event_schema.js";
@@ -96,10 +95,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
     }
 
     if (user.id === client.user.id || !reaction.message.author.bot) return;
-
-    //Get full user data
-    user = await getMemberData(user.id, reaction.message.guild);
-    checkReaction(reaction, user);
+    checkIfPollReaction(reaction);
 });
 
 client.on("messageReactionRemove", async (reaction, user) => {
@@ -123,10 +119,7 @@ client.on("messageReactionRemove", async (reaction, user) => {
     }
 
     if (user.id === client.user.id || !reaction.message.author.bot) return;
-
-    //Get full user data
-    user = await getMemberData(user.id, reaction.message.guild);
-    checkReaction(reaction, user);
+    checkIfPollReaction(reaction);
 });
 
 client.on("guildMemberAdd", async (member) => {
