@@ -207,17 +207,18 @@ export const handlePollReaction = async (reaction) => {
         if (voteNumber > pollData.options.length) return;
 
         let users = await reactions.get(numberEmojis[i]).users.fetch();
-        users = await Promise.all(users.map(async (user) => {
-            if (!user.bot) return await getMemberData(user.id, reaction.message.guild);
-        }));
-        const filteredUsers = users.filter(u => u);
+        console.log(users);
+        // users = await Promise.all(users.map(async (user) => {
+        //     if (!user.bot) return await getMemberData(user.id, reaction.message.guild);
+        // }));
+        const filteredUsers = users.filter(user => !user.bot);
 
-        if (filteredUsers.length > 0) pollVotes.set(i, filteredUsers);
+        if (filteredUsers.size > 0) pollVotes.set(i, filteredUsers);
     }
 
     console.log(pollVotes);
 
-    await updatePollMsg(pollData, pollVotes, reaction.message.guild);
+    updatePollMsg(pollData, pollVotes, reaction.message.guild);
 };
 
 const updatePollMsg = async (pollData, pollVotes, guild) => {
@@ -226,24 +227,37 @@ const updatePollMsg = async (pollData, pollVotes, guild) => {
     const authorData = await guild.members.fetch(pollData.author);
 
     let votesNumber = 0;
-    pollVotes.forEach(v => votesNumber += Array.from(v).length);
-    
+    pollVotes.forEach(vote => votesNumber += Array.from(vote).length);
+
+    const pollOption = (index, option) => {
+        return `${numberEmojis[index]} ${option}`;
+    };
+
+    const votersNumber = (index) => {
+        return pollVotes.has(index) ? Array.from(pollVotes.get(index)).length : 0;
+    };
+
+    const voters = (index) => {
+        return pollVotes.has(index) ? pollVotes.get(index).map(vote => vote.globalName).join(", ") : EMPTY;
+    }
+
+    const voteData = pollData.options.map((option, index) => ({
+        name: `${pollOption(index, option)}: ${votersNumber(index)}`,
+        value: voters(index)
+    }));
+
     const pollEmbed = {
         color: 0x32cd32,
         author: {
             name: authorData.nickname ? authorData.nickname : authorData.user.username,
             icon_url: authorData.user.avatarURL()
         },
-        title: barChartEmoji + " " + pollData.topic + " " + barChartEmoji,
-        fields: [],
+        title: `${barChartEmoji} ${pollData.topic} ${barChartEmoji}`,
+        fields: voteData,
         footer: { text: "Deadline: " + moment(pollData.date).format(DAY_MONTH_YEAR_24) + "\nID: " + pollData.pollId }
     };
 
     pollEmbed.fields.push({
-        name: EMPTY,
-        value: pollData.options.map((option, index) => numberEmojis[index] + " " + option + ": " +
-            (pollVotes ? (Array.from(pollVotes.get(index)).length ? pollVotes.get(index).map(v => v.nickname ? v.nickname : v.user.username).join(", ") : NO_DATA) : NO_DATA)).join("\n")
-    }, {
         name: EMPTY,
         value: "Votes: " + votesNumber
     });
