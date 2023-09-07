@@ -14,6 +14,7 @@ import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, USER_FETCH_ERR } fro
 import { deleteDocument } from "./database/database_service.js";
 import { poll } from "./database/schemas/poll_schema.js";
 import { event } from "./database/schemas/event_schema.js";
+import { getMemberData } from "./functions/helpers/helpers.js";
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers",
@@ -95,7 +96,9 @@ client.on("messageReactionAdd", async (reaction, user) => {
     }
 
     if (user.id === client.user.id || !reaction.message.author.bot) return;
-    checkIfPollReaction(reaction);
+
+    user = await getMemberData(user.id, reaction.message.guild);
+    checkIfPollReaction(reaction, user);
 });
 
 client.on("messageReactionRemove", async (reaction, user) => {
@@ -119,7 +122,9 @@ client.on("messageReactionRemove", async (reaction, user) => {
     }
 
     if (user.id === client.user.id || !reaction.message.author.bot) return;
-    checkIfPollReaction(reaction);
+
+    user = await getMemberData(user.id, reaction.message.guild);
+    checkIfPollReaction(reaction, user);
 });
 
 client.on("guildMemberAdd", async (member) => {

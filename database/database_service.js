@@ -12,7 +12,7 @@ export const getDocuments = (collection, query) => {
     });
 };
 
-export const getDocument = (collection, query) => {
+export const findOneDocument = (collection, query) => {
     return collection.findOne(query)
     .lean()
     .catch(err => {
@@ -22,14 +22,21 @@ export const getDocument = (collection, query) => {
 
 export const updateDocument = async (document, filter, update) => {
     //Return changed document
-    const options = { new: true };
+    const options = {
+        new: true,
+        upsert: true,
+        rawResult: true
+    };
 
-    document.findOneAndUpdate(
+    return document.findOneAndUpdate(
         filter,
         update,
         options
     )
-    .then(result => console.log(UPDATE_SUCCESS, JSON.stringify(result)))
+    .then(result => {
+        console.log(UPDATE_SUCCESS, JSON.stringify(result))
+        return result;
+    })
     .catch(err => console.error(UPDATE_ERR, err))
 };
 
