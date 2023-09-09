@@ -18,11 +18,11 @@ export const checkForTimedActions = async (client) => {
     setTimeout( function(){ checkForTimedActions(client); }, 60 * 1000);
 }
 
-export const checkIfPollReaction = async (reaction, user) => {
+export const checkIfPollReaction = async (reaction, user, action) => {
     const numberEmojis = getNumberEmojis();
 
     if (numberEmojis.includes(reaction.emoji.name)) {
-        await handlePollReaction(reaction, user);
+        await handlePollReaction(reaction, user, action);
     }
 }
 

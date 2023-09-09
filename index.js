@@ -26,7 +26,7 @@ client.on("ready", async () => {
     await setDatabase();
     await initializeBot(client);
     await setBotPresence(client);
-    //await syncPollVotes(client);
+    await syncPollVotes(client);
     await checkForTimedActions(client);
 });
 
@@ -98,7 +98,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
     if (user.id === client.user.id || !reaction.message.author.bot) return;
 
     user = await getMemberData(user.id, reaction.message.guild);
-    checkIfPollReaction(reaction, user);
+    checkIfPollReaction(reaction, user, "add");
 });
 
 client.on("messageReactionRemove", async (reaction, user) => {
@@ -124,7 +124,7 @@ client.on("messageReactionRemove", async (reaction, user) => {
     if (user.id === client.user.id || !reaction.message.author.bot) return;
 
     user = await getMemberData(user.id, reaction.message.guild);
-    checkIfPollReaction(reaction, user);
+    checkIfPollReaction(reaction, user, "remove");
 });
 
 client.on("guildMemberAdd", async (member) => {
