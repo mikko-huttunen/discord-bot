@@ -1,7 +1,12 @@
-import { DELETE_ERR, DELETE_SUCCESS, FETCH_ERR, UPDATE_ERR, UPDATE_SUCCESS } from "../variables/constants.js";
+import { DELETE_ERR, DELETE_SUCCESS, FETCH_ERR, INSERT_FAILURE, INSERT_SUCCESS, UPDATE_ERR, UPDATE_SUCCESS } from "../variables/constants.js";
 
-export const insertDocument = (document, data) => {
-    return new document(data).save();
+export const insertDocuments = (collection, data) => {
+    return collection.insertMany(data).then(result => {
+        console.log(INSERT_SUCCESS, JSON.stringify(result));
+        return result;
+    }).catch(err => {
+        console.error(INSERT_FAILURE, err);
+    });
 };
 
 export const getDocuments = (collection, query) => {
@@ -33,21 +38,16 @@ export const updateDocument = async (document, filter, update) => {
     }).catch(err => console.error(UPDATE_ERR, err))
 };
 
-export const deleteDocument = (collection, query) => {
-    return collection.findOneAndDelete(query).then(result =>
+export const deleteDocuments = (collection, query) => {
+    return collection.deleteMany(query).then(result => {
         console.log(DELETE_SUCCESS, JSON.stringify(result))
-    ).catch(err => console.error(DELETE_ERR, err));;
+        return result
+    }).catch(err => console.error(DELETE_ERR, err));
 };
-
-export const deleteManyDocuments = (collection, query) => {
-    return collection.deleteMany(query).then(response =>
-        console.log(DELETE_SUCCESS, JSON.stringify(response))
-    ).catch(err => console.error(DELETE_ERR, err));
-}
 
 export const bulkTransaction = async (collection, transactions) => {
     collection.bulkWrite(transactions).then(result => {
         console.log(UPDATE_SUCCESS, JSON.stringify(result));
-        result;
+        return result;
     }).catch(err => console.error(UPDATE_ERR, err));
 };

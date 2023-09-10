@@ -11,10 +11,11 @@ import { greet } from "./functions/greetings.js";
 import { generateMessage } from "./functions/welcome_message.js";
 import { setDatabase } from "./database/database.js";
 import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, USER_FETCH_ERR } from "./variables/constants.js";
-import { deleteDocument } from "./database/database_service.js";
+import { deleteDocuments } from "./database/database_service.js";
 import { poll } from "./database/schemas/poll_schema.js";
 import { event } from "./database/schemas/event_schema.js";
 import { getMemberData } from "./functions/helpers/helpers.js";
+import { vote } from "./database/schemas/vote_schema.js";
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers",
@@ -71,8 +72,13 @@ client.on("messageCreate", async (msg) => {
 
 client.on("messageDelete", async (msg) => {
     //If message was poll or event, delete them from database
-    await deleteDocument(poll, { msgId: msg.id });
-    await deleteDocument(event, { msgId: msg.id });
+    const deletedPoll = await deleteDocuments(poll, { msgId: msg.id });
+    if (deletedPoll) {
+        await deleteDocuments(vote, { msgId: deletedPoll.msgId });
+        return;
+    }
+
+    await deleteDocuments(event, { msgId: msg.id });
 });
 
 client.on("messageReactionAdd", async (reaction, user) => {

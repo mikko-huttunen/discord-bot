@@ -4,7 +4,7 @@ import moment from "moment";
 import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, FETCH_ERR, ID, INSERT_FAILURE, INSERT_SUCCESS, INVALID_LINK, ISO_8601_24, MAX_EVENTS, MONTHLY, MSG_DELETION_ERR, NO_CHANNEL, NO_DATA, NO_RECORDS, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../variables/constants.js";
 import { generateId, getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
-import { deleteDocument, getDocuments, insertDocument, updateDocument } from "../database/database_service.js";
+import { deleteDocuments, getDocuments, insertDocuments, updateDocument } from "../database/database_service.js";
 import { event } from "../database/schemas/event_schema.js";
 
 let channel;
@@ -48,7 +48,7 @@ export const handleEvent = async (interaction) => {
                 author
             };
 
-            deleteDocument(event, query).then(async (response) => {
+            deleteDocuments(event, query).then(async (response) => {
                 if (response) {
                     const guild = interaction.guild;
                     const channel = guild.channels.cache.get(response.channelId);
@@ -279,7 +279,7 @@ const createNewEvent = async (interaction, author, eventName, description, dateT
         channelId: channel.id
     };
 
-    insertDocument(event, eventData).then(response => {
+    insertDocuments(event, eventData).then(response => {
         console.log(INSERT_SUCCESS, JSON.stringify(response));
         interaction.reply({ 
             content: "New event created successfully! " + getUnicodeEmoji("1F44D"),
@@ -534,7 +534,7 @@ export const eventSummaryPost = async (client) => {
                     author
                 };
                 
-                deleteDocument(event, deleteQuery).then(async (response) => {
+                deleteDocuments(event, deleteQuery).then(async (response) => {
                     try {
                         const eventMsg = await channelToSend.messages.fetch(msgId);
                         eventMsg.delete();

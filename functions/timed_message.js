@@ -4,7 +4,7 @@ import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, ID, INSERT_FAILURE, INSERT_SUCCESS, ISO_8601_24, MAX_TIMED_MESSAGES, MONTHLY, NO_CHANNEL, NO_GUILD, NO_RECORDS, SEND_PERMISSION_ERR, TIMED_MESSAGE_MODAL, WEEKLY, YEARLY } from "../variables/constants.js";
 import { generateId, getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
-import { deleteDocument, getDocuments, insertDocument, updateDocument } from "../database/database_service.js";
+import { deleteDocuments, getDocuments, insertDocuments, updateDocument } from "../database/database_service.js";
 import { timedMessage } from "../database/schemas/timed_message_schema.js";
 
 export const handleTimedMessage = async (interaction) => {
@@ -44,7 +44,7 @@ export const handleTimedMessage = async (interaction) => {
                 author
             };
 
-            deleteDocument(timedMessage, query).then(response => {
+            deleteDocuments(timedMessage, query).then(response => {
                 if (response) {
                     console.log(DELETE_SUCCESS, JSON.stringify(response));
                     interaction.reply({
@@ -166,7 +166,7 @@ export const createTimedMessage = async (interaction, channel) => {
 
     if (!isValidDateAndRepetition(interaction, timedMessageData.dateTime, userRepeat)) return;
 
-    insertDocument(timedMessage, timedMessageData).then(response => {
+    insertDocuments(timedMessage, timedMessageData).then(response => {
         console.log(INSERT_SUCCESS, JSON.stringify(response));
         interaction.reply({ 
             content: "New timed message created successfully! " + getUnicodeEmoji("1F44D"),
@@ -197,7 +197,7 @@ export const postTimedMessages = async (client) => {
             if (!guild) console.log(NO_GUILD + guildId);
             else if (!channel) console.log(NO_CHANNEL + id);
 
-            await deleteDocument(timedMessage, { id }).then(response => {
+            await deleteDocuments(timedMessage, { id }).then(response => {
                 console.log(DELETE_SUCCESS, JSON.stringify(response));
             }).catch(err => {
                 console.error(DELETE_ERR, err);
@@ -212,7 +212,7 @@ export const postTimedMessages = async (client) => {
         } else {
             console.log("Cannot send timed message " + id + " to channel: " + channelId);
 
-            await deleteDocument(timedMessage, { id }).then(response => {
+            await deleteDocuments(timedMessage, { id }).then(response => {
                 console.log(DELETE_SUCCESS, JSON.stringify(response));
             }).catch(err => {
                 console.error(DELETE_ERR, err);
@@ -241,7 +241,7 @@ export const postTimedMessages = async (client) => {
                 author
             }
 
-            deleteDocument(timedMessage, deleteQuery).then(response => {
+            deleteDocuments(timedMessage, deleteQuery).then(response => {
                 console.log(DELETE_SUCCESS, JSON.stringify(response));
             }).catch(err => {
                 console.error(DELETE_ERR, err);

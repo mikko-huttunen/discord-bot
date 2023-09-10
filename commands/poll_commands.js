@@ -1,5 +1,5 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { handlePoll } from "../functions/polls.js";
+import { createPoll, deletePoll, listPolls } from "../functions/polls.js";
 import { CHANNEL, DAILY, DATE, ID, MONTHLY, NEVER, REPEAT, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
 
 export const listPollsCommand = {
@@ -7,7 +7,7 @@ export const listPollsCommand = {
 		.setName("listpolls")
 		.setDescription("List of active polls"),
 	execute: async (interaction) => {
-        handlePoll(interaction);
+        listPolls(interaction);
     },
 };
 
@@ -104,7 +104,7 @@ export const pollCommand = {
                 .setMaxLength(50)
                 .setRequired(false)),
 	execute: async (interaction) => {
-        handlePoll(interaction);
+        createPoll(interaction);
     },
 };
 
@@ -118,6 +118,6 @@ export const deletePollCommand = {
                 .setMaxLength(6)
                 .setRequired(true)),
 	execute: async (interaction) => {
-        handlePoll(interaction);
+        deletePoll(interaction);
     },
 };
