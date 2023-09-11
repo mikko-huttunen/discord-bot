@@ -9,7 +9,7 @@ const pollSchema = new mongoose.Schema({
     repeat: { type: String, required: true },
     guildId: { type: String, required: true },
     channelId: { type: String, required: false },
-    options: { type: [String], required: true },
+    voteOptions: { type: [String], required: true },
 }, { autoCreate: false });
 
 export const poll = mongoose.model("polls", pollSchema);

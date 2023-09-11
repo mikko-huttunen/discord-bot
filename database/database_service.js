@@ -38,10 +38,17 @@ export const updateDocument = async (document, filter, update) => {
     }).catch(err => console.error(UPDATE_ERR, err))
 };
 
-export const deleteDocuments = (collection, query) => {
+export const deleteDocument = (collection, query) => {
+    return collection.findOneAndDelete(query).then(result => {
+        console.log(DELETE_SUCCESS, JSON.stringify(result))
+        return result;
+    }).catch(err => console.error(DELETE_ERR, err));
+};
+
+export const deleteManyDocuments = (collection, query) => {
     return collection.deleteMany(query).then(result => {
         console.log(DELETE_SUCCESS, JSON.stringify(result))
-        return result
+        return result;
     }).catch(err => console.error(DELETE_ERR, err));
 };
 
