@@ -2,12 +2,12 @@ import { PermissionsBitField } from "discord.js";
 import moment from "moment";
 import { eventReminderPost, eventSummaryPost } from "../events.js";
 import { handlePollReaction, postPollResults } from "../polls.js";
-import { postTimedMessages } from "../timed_message.js";
+import { postScheduledMessages } from "../scheduled_message.js";
 import { DAILY, DISTANT_DATE, EXPIRED_DATE, INVALID_DATE, INVALID_REPEAT, ISO_8601_24, MONTHLY, NEVER, WEEKLY, YEARLY } from "../../variables/constants.js";
 import { getNumberEmojis } from "./helpers.js";
 
 export const checkForTimedActions = async (client) => {
-    await postTimedMessages(client);
+    await postScheduledMessages(client);
     await postPollResults(client);
     await eventSummaryPost(client);
 

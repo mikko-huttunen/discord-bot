@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const timedMessageSchema = new mongoose.Schema({
+const scheduledMessageSchema = new mongoose.Schema({
     id: { type: String, required: true },
     author: { type: String, required: true },
     message: { type: String, required: true },
@@ -10,4 +10,4 @@ const timedMessageSchema = new mongoose.Schema({
     channelId: { type: String, required: true }
 }, { autoCreate: false });
 
-export const timedMessage = mongoose.model("timed-messages", timedMessageSchema);
+export const scheduledMessage = mongoose.model("scheduled-messages", scheduledMessageSchema);

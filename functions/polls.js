@@ -1,7 +1,7 @@
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { generateId, getChannelName, getMemberData, getNumberEmojis, getUnicodeEmoji } from "./helpers/helpers.js";
-import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
+import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
 import { bulkTransaction, deleteDocument, deleteManyDocuments, findOneDocument, getDocuments, insertDocuments, updateDocument } from "../database/database_service.js";
 import { poll } from "../database/schemas/poll_schema.js";
 import { vote } from "../database/schemas/vote_schema.js";
@@ -296,6 +296,7 @@ export const postPollResults = async (client) => {
         
         const authorData = await getMemberData(author, guild);
         const pollEmbed = {
+            color: 0x32cd32,
             author: {
                 name: authorData.nickname ? authorData.nickname : authorData.user.username,
                 icon_url: authorData.user.avatarURL()
@@ -381,17 +382,12 @@ export const syncPollVotes = async (client) => {
 
         if (!pollMsg) {
             const query = {
-                msgId: pollData.msgId,
+                pollId: pollData.pollId,
                 repeat: NEVER
             };
 
-            await deleteDocument(poll, query).then(response =>
-                console.log(DELETE_SUCCESS, JSON.stringify(response))
-            ).catch(err => console.error(DELETE_ERR, err));
-
-            await deleteManyDocuments(vote, { pollId: pollData.pollId }).then(response =>
-                console.log(DELETE_SUCCESS, JSON.stringify(response))
-            ).catch(err => console.error(DELETE_ERR, err));
+            await deleteDocument(poll, query);
+            await deleteManyDocuments(vote, { pollId: pollData.pollId });
 
             continue;
         }

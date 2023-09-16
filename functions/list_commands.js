@@ -17,11 +17,11 @@ export const listCommands = (interaction) => {
                     "**/event**\nCreate new event\n" +
                     "**/deleteevent**\nDelete event\n"
             }, {
-                name: "Timed Message Commands",
+                name: "Scheduled Message Commands",
                 value:
-                    "**/listtimedmessages**\nList of your timed messages\n" +
-                    "**/timedmessage**\nCreate new timed message\n" +
-                    "**/deletetimedmessage**\nDelete timed message\n"
+                    "**/listscheduledmessages**\nList of your scheduled messages\n" +
+                    "**/scheduledmessage**\nCreate new scheduled message\n" +
+                    "**/deletescheduledmessage**\nDelete scheduled message\n"
             }, {
                 name: "Poll Commands",
                 value:

@@ -42,7 +42,10 @@ export const deleteDocument = (collection, query) => {
     return collection.findOneAndDelete(query).then(result => {
         console.log(DELETE_SUCCESS, JSON.stringify(result))
         return result;
-    }).catch(err => console.error(DELETE_ERR, err));
+    }).catch(err => {
+        console.error(DELETE_ERR, err);
+        return "error";
+    });
 };
 
 export const deleteManyDocuments = (collection, query) => {

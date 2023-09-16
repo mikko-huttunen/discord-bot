@@ -1,40 +1,40 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { handleTimedMessage } from "../functions/timed_message.js";
+import { createScheduledMessage, deleteScheduledMessage, listScheduledMessages } from "../functions/scheduled_message.js";
 import { CHANNEL, ID } from "../variables/constants.js";
 
-export const listTimedMessagesCommand = {
+export const listScheduledMessagesCommand = {
     data: new SlashCommandBuilder()
-		.setName("listtimedmessages")
-		.setDescription("List of your timed messages"),
+		.setName("listscheduledmessages")
+		.setDescription("List of your scheduled messages"),
 	execute: async (interaction) => {
-        handleTimedMessage(interaction);
+        listScheduledMessages(interaction);
     },
 };
 
-export const timedMessageCommand = {
+export const scheduledMessageCommand = {
     data: new SlashCommandBuilder()
-		.setName("timedmessage")
-		.setDescription("Create new timed message")
+		.setName("scheduledmessage")
+		.setDescription("Create new scheduled message")
         .addChannelOption(option =>
             option.setName(CHANNEL)
                 .setDescription("Channel to send message to")
                 .addChannelTypes(ChannelType.GuildText)
                 .setRequired(true)),
 	execute: async (interaction) => {
-        handleTimedMessage(interaction);
+        createScheduledMessage(interaction);
     },
 };
 
-export const deleteTimedMessageCommand = {
+export const deleteScheduledMessageCommand = {
     data: new SlashCommandBuilder()
-        .setName("deletetimedmessage")
-        .setDescription("Delete timed message")
+        .setName("deletescheduledmessage")
+        .setDescription("Delete scheduled message")
         .addStringOption(option =>
                 option.setName(ID)
-                    .setDescription("ID of the timed message to delete")
+                    .setDescription("ID of the scheduled message to delete")
                     .setMaxLength(6)
                     .setRequired(true)),
     execute: async (interaction) => {
-        handleTimedMessage(interaction);
+        deleteScheduledMessage(interaction);
     },
 };

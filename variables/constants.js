@@ -73,14 +73,14 @@ export const MAX_EVENTS = "Maximum of 5 events allowed!\n" +
 export const MAX_POLLS = "Maximum of 5 polls allowed!\n" +
     "Check your polls with **/listpolls** command, and delete polls with **/deletepolls** command.";
 
-//Timed messages
-export const MAX_TIMED_MESSAGES = "Maximum of 5 timed messages allowed!\n" +
-    "Check your timed messages with **/listtimedmessages** command, and delete timed messages with **/deletetimedmessage** command.";
+//Scheduled messages
+export const MAX_SCHEDULED_MESSAGES = "Maximum of 5 scheduled messages allowed!\n" +
+    "Check your scheduled messages with **/listscheduledmessages** command, and delete scheduled messages with **/deletescheduledmessage** command.";
 
 //IDs
 export const EVENT_MODAL = "event-modal";
 export const EVENT_BUTTON = "event-button";
-export const TIMED_MESSAGE_MODAL = "timed-message-modal";
+export const SCHEDULED_MESSAGE_MODAL = "scheduled-message-modal";
 
 //Members
 export const MEMBER_FETCH_ERR = "Error fetching guild members!";
