@@ -1,5 +1,5 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { createScheduledMessage, deleteScheduledMessage, listScheduledMessages } from "../functions/scheduled_message.js";
+import { createScheduledMessage, deleteScheduledMessage, listScheduledMessages } from "../functions/scheduled_messages.js";
 import { CHANNEL, ID } from "../variables/constants.js";
 
 export const listScheduledMessagesCommand = {

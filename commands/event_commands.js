@@ -1,5 +1,5 @@
 import { ChannelType, SlashCommandBuilder } from "discord.js";
-import { handleEvent } from "../functions/events.js";
+import { createEvent, deleteEvent, listEvents } from "../functions/events.js";
 import { CHANNEL, ID } from "../variables/constants.js";
 
 export const listEventsCommand = {
@@ -7,7 +7,7 @@ export const listEventsCommand = {
 		.setName("listevents")
 		.setDescription("List of active events"),
 	execute: async (interaction) => {
-        handleEvent(interaction);
+        listEvents(interaction);
     },
 };
 
@@ -21,7 +21,7 @@ export const addEventCommand = {
                 .addChannelTypes(ChannelType.GuildText)
                 .setRequired(true)),
 	execute: async (interaction) => {
-        handleEvent(interaction);
+        createEvent(interaction);
     },
 };
 
@@ -35,6 +35,6 @@ export const deleteEventCommand = {
                 .setMaxLength(6)
                 .setRequired(true)),
     execute: async (interaction) => {
-        handleEvent(interaction);
+        deleteEvent(interaction);
     },
 };

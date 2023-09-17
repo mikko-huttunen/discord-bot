@@ -55,9 +55,6 @@ export const INVALID_REPEAT = "Given repeat interval is invalid! Accepted values
     "monthly = Repeat every month\n" +
     "yearly = Repeat every year";
 
-//Validation
-export const INVALID_LINK = "Link is not valid!";
-
 //Formatting
 export const EMPTY = " ";
 export const NO_DATA = "-";

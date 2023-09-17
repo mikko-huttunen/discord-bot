@@ -6,11 +6,11 @@ import { initializeBot } from "./bot/bot.js";
 import { setBotPresence } from "./bot/presence.js";
 import { syncPollVotes } from "./functions/polls.js";
 import { checkForTimedActions, checkIfPollReaction } from "./functions/helpers/checks.js";
-import { handleJoinEvent, validateEvent } from "./functions/events.js";
+import { handleJoinEvent } from "./functions/events.js";
 import { greet } from "./functions/greetings.js";
 import { generateMessage } from "./functions/welcome_message.js";
 import { setDatabase } from "./database/database.js";
-import { CMD_ERR, EVENT_BUTTON, EVENT_MODAL, MSG_FETCH_ERR, NEVER, USER_FETCH_ERR } from "./variables/constants.js";
+import { CMD_ERR, EVENT_BUTTON, MSG_FETCH_ERR, NEVER, USER_FETCH_ERR } from "./variables/constants.js";
 import { deleteDocument, deleteManyDocuments } from "./database/database_service.js";
 import { poll } from "./database/schemas/poll_schema.js";
 import { event } from "./database/schemas/event_schema.js";
@@ -45,12 +45,6 @@ client.on(Events.InteractionCreate, async interaction => {
         } catch (error) {
             console.error(error);
             await interaction.reply({ content: CMD_ERR, ephemeral: true });
-        }
-    }
-
-    if (interaction.isModalSubmit()) {
-        if (interaction.customId === EVENT_MODAL) {
-            validateEvent(interaction);
         }
     }
 

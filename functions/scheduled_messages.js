@@ -2,15 +2,15 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/bui
 import { TextInputStyle } from "discord.js";
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, DELETE_ERR, DELETE_SUCCESS, ERROR_REPLY, ID, ISO_8601_24, MAX_SCHEDULED_MESSAGES, MONTHLY, NO_CHANNEL, NO_GUILD, NO_RECORDS, SCHEDULED_MESSAGE_MODAL, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../variables/constants.js";
-import { generateId, getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
+import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_SCHEDULED_MESSAGES, MONTHLY, NO_CHANNEL, NO_GUILD, NO_RECORDS, SCHEDULED_MESSAGE_MODAL, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../variables/constants.js";
+import { canCreateNew, generateId, getChannelName, getMemberData, getUnicodeEmoji } from "./helpers/helpers.js";
 import { deleteDocument, getDocuments, insertDocuments, updateDocument } from "../database/database_service.js";
 import { scheduledMessage } from "../database/schemas/scheduled_message_schema.js";
 
 export const createScheduledMessage = async (interaction) => {
     const channel = interaction.options.getChannel(CHANNEL);
 
-    if (!await canCreateNewScheduledMessage(interaction)) {
+    if (!await canCreateNew(scheduledMessage, interaction.user.id, interaction.guild.id)) {
         interaction.reply({ content: MAX_SCHEDULED_MESSAGES, ephemeral: true });
         return;
     }
@@ -26,17 +26,17 @@ export const createScheduledMessage = async (interaction) => {
         return i.user.id === interaction.user.id;
     };
 
-    const modalSubmit = interaction.awaitModalSubmit({ time: 120_000, filter });
+    const modalSubmit = interaction.awaitModalSubmit({ time: 300_000, filter });
     const userDateTime = modalSubmit.fields.getTextInputValue("dateTimeInput");
     const userRepeat = modalSubmit.fields.getTextInputValue("repeatInput").toLowerCase();
 
     const scheduledMessageData = {
         id: generateId(),
-        author: interaction.user.id,
+        author: modalSubmit.user.id,
         message: modalSubmit.fields.getTextInputValue("messageInput"),
         dateTime: moment(userDateTime, DAY_MONTH_YEAR_24).format(ISO_8601_24),
         repeat: userRepeat,
-        guildId: interaction.guildId,
+        guildId: modalSubmit.guild.id,
         channelId: channel.id
     };
 
@@ -62,7 +62,10 @@ export const listScheduledMessages = async (interaction) => {
     };
     const scheduledMessages = await getDocuments(scheduledMessage, query);
     
-    if (scheduledMessages.length <= 0) {
+    if (scheduledMessages === "error") {
+        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
+        return;
+    } else if (scheduledMessages.length === 0) {
         interaction.reply({ content: NO_RECORDS, ephemeral: true });
         return;
     }
@@ -147,21 +150,6 @@ const scheduledMessageModal = (interaction) => {
     interaction.showModal(modal);
 };
 
-const canCreateNewScheduledMessage = async (interaction) => {
-    const query = {
-        author: interaction.user.id,
-        guildId: interaction.guild.id
-    };
-
-    return getDocuments(scheduledMessage, query).then(messages => {
-        if (messages.length >= 5) {
-            return false;
-        }
-
-        return true;
-    });
-};
-
 export const postScheduledMessages = async (client) => {
     const findQuery = {
         dateTime: {
@@ -181,29 +169,33 @@ export const postScheduledMessages = async (client) => {
             if (!guild) console.log(NO_GUILD + guildId);
             else if (!channel) console.log(NO_CHANNEL + id);
 
-            await deleteDocument(scheduledMessage, { id }).then(response => {
-                console.log(DELETE_SUCCESS, JSON.stringify(response));
-            }).catch(err => {
-                console.error(DELETE_ERR, err);
-            });
+            await deleteDocument(scheduledMessage, { id });
 
             continue;
         }
 
-        if (canSendMessageToChannel(guild, channel)) {
-            channel.send(message);
-            console.log("Scheduled message posted", JSON.stringify(scheduledMessageData));
-        } else {
+        if (!canSendMessageToChannel(guild, channel)) {
             console.log("Cannot send scheduled message " + id + " to channel: " + channelId);
-
-            await deleteDocument(scheduledMessage, { id }).then(response => {
-                console.log(DELETE_SUCCESS, JSON.stringify(response));
-            }).catch(err => {
-                console.error(DELETE_ERR, err);
-            });
+            await deleteDocument(scheduledMessage, { id });
 
             continue;
         }
+
+        const authorData = await getMemberData(author, guild);
+
+        const scheduledMessageEmbed = {
+            color: 0xBF40BF,
+            author: {
+                name: authorData.nickname ? authorData.nickname : authorData.user.username,
+                icon_url: authorData.user.avatarURL()
+            },
+            title: EMPTY,
+            fields: [message],
+            footer: "This is a scheduled message"
+        };
+
+        await channel.send({ embeds: [scheduledMessageEmbed] });
+        console.log("Scheduled message posted", JSON.stringify(scheduledMessageData));
 
         if (repeat) {
             let newDateTime;
@@ -218,18 +210,14 @@ export const postScheduledMessages = async (client) => {
                 newDateTime = moment(dateTime). add(1, "y");
             }
 
-            updateDocument(scheduledMessage, { id }, { dateTime: newDateTime });
+            await updateDocument(scheduledMessage, { id }, { dateTime: newDateTime });
         } else {
             const deleteQuery = {
                 id,
                 author
             }
 
-            deleteDocument(scheduledMessage, deleteQuery).then(response => {
-                console.log(DELETE_SUCCESS, JSON.stringify(response));
-            }).catch(err => {
-                console.error(DELETE_ERR, err);
-            });
+            await deleteDocument(scheduledMessage, deleteQuery);
         }
     }
 };

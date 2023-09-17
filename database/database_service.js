@@ -6,6 +6,7 @@ export const insertDocuments = (collection, data) => {
         return result;
     }).catch(err => {
         console.error(INSERT_FAILURE, err);
+        return "error";
     });
 };
 
@@ -14,6 +15,7 @@ export const getDocuments = (collection, query) => {
     .lean()
     .catch(err => {
         console.error(FETCH_ERR, err);
+        return "error";
     });
 };
 
