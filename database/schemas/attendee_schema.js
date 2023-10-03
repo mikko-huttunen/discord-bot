@@ -7,4 +7,4 @@ const attendeeSchema = new mongoose.Schema({
     name: { type: String, required: true }
 }, { autoCreate: false });
 
-export const event = mongoose.model("attendees", attendeeSchema);
+export const attendee = mongoose.model("attendees", attendeeSchema);

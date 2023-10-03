@@ -54,6 +54,8 @@ export const INVALID_REPEAT = "Given repeat interval is invalid! Accepted values
     "weekly = Repeat every week\n" +
     "monthly = Repeat every month\n" +
     "yearly = Repeat every year";
+export const MIDNIGHT = "00:00";
+export const MIDDAY = "12:00";
 
 //Formatting
 export const EMPTY = " ";

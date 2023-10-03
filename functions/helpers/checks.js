@@ -1,18 +1,34 @@
 import { PermissionsBitField } from "discord.js";
 import moment from "moment";
-import { eventReminderPost, eventSummaryPost } from "../events.js";
+import { postEvent } from "../events.js";
 import { handlePollReaction, postPollResults } from "../polls.js";
 import { postScheduledMessages } from "../scheduled_messages.js";
-import { DAILY, DISTANT_DATE, EXPIRED_DATE, INVALID_DATE, INVALID_REPEAT, ISO_8601_24, MONTHLY, NEVER, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { DAILY, DISTANT_DATE, EXPIRED_DATE, INVALID_DATE, INVALID_REPEAT, ISO_8601_24, MIDDAY, MIDNIGHT, MONTHLY, NEVER, WEEKLY, YEARLY } from "../../variables/constants.js";
 import { getNumberEmojis } from "./helpers.js";
 
 export const checkForTimedActions = async (client) => {
     await postScheduledMessages(client);
     await postPollResults(client);
-    await eventSummaryPost(client);
 
-    if (moment().format("HH:mm") === "00:00" || moment().format("HH:mm") === "12:00") {
-        await eventReminderPost(client);
+    let query = {
+        dateTime: {
+            $lte: moment.utc()
+        }
+    };
+
+    await postEvent(client, "summary", query);
+
+    if (moment().format("HH:mm") === MIDNIGHT || moment().format("HH:mm") === MIDDAY) {
+        const start = moment().startOf("day");
+        const end = moment().endOf("day");
+
+        query = {
+            dateTime: {
+                "$gte": start, "$lte": end
+            }
+        };
+
+        await postEvent(client, "reminder", query);
     }
 
     setTimeout( function(){ checkForTimedActions(client); }, 60 * 1000);

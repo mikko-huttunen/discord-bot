@@ -1,4 +1,6 @@
-import { getDocuments } from "../../database/database_service.js";
+import moment from "moment";
+import { getDocuments } from "../../database/mongodb_service.js";
+import { DAILY, MONTHLY, WEEKLY, YEARLY } from "../../variables/constants.js";
 
 export const getMemberData = async (id, guild) => {
     return await guild.members.fetch(id);
@@ -41,3 +43,23 @@ export const canCreateNew = async (collection, author, guildId) => {
 
     return true;
 };
+
+export const getNewDate = (dateTime, repeat) => {
+    switch (repeat) {
+        case DAILY:
+            return moment(dateTime).add(1, "d");
+
+        case WEEKLY:
+            return moment(dateTime). add(1, "w");
+
+        case MONTHLY:
+            return moment(dateTime). add(1, "M");
+
+        case YEARLY:
+            return moment(dateTime). add(1, "y");
+
+        default:
+            console.error("Invalid repeat!");
+            break;
+    }
+}

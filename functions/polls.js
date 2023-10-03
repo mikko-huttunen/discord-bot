@@ -1,8 +1,8 @@
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
-import { canCreateNew, generateId, getChannelName, getMemberData, getNumberEmojis, getUnicodeEmoji } from "./helpers/helpers.js";
-import { CHANNEL, DAILY, DATE, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_POLLS, MONTHLY, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC, WEEKLY, YEARLY } from "../variables/constants.js";
-import { bulkTransaction, deleteDocument, deleteManyDocuments, findOneDocument, getDocuments, insertDocuments, updateDocument } from "../database/database_service.js";
+import { canCreateNew, generateId, getChannelName, getMemberData, getNewDate, getNumberEmojis, getUnicodeEmoji } from "./helpers/helpers.js";
+import { CHANNEL, DATE, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_POLLS, MSG_DELETION_ERR, MSG_FETCH_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC } from "../variables/constants.js";
+import { bulkTransaction, deleteDocument, deleteManyDocuments, findOneDocument, getDocuments, insertDocuments, updateDocument } from "../database/mongodb_service.js";
 import { poll } from "../database/schemas/poll_schema.js";
 import { vote } from "../database/schemas/vote_schema.js";
 
@@ -44,12 +44,7 @@ export const createPoll = async (interaction) => {
     pollData.msgId = pollMsg.id;
     const inserted = await insertDocuments(poll, pollData);
     
-    if (inserted) {
-        interaction.reply({
-            content: "New poll created successfully! " + getUnicodeEmoji("1F44D"),
-            ephemeral: true
-        });
-    } else {
+    if (!inserted) {
         try {
             pollMsg.delete();
         } catch (error) {
@@ -59,6 +54,11 @@ export const createPoll = async (interaction) => {
         interaction.reply({ content: ERROR_REPLY, ephemeral: true });
         return;
     }
+    
+    interaction.reply({
+        content: `New poll created successfully! ${getUnicodeEmoji("1F44D")}`,
+        ephemeral: true
+    });
 
     pollData.voteOptions.forEach((_option, index) => {
         pollMsg.react(numberEmojis[index]);
@@ -66,10 +66,7 @@ export const createPoll = async (interaction) => {
 };
 
 export const listPolls = async (interaction) => {
-    const query = {
-        guildId: interaction.guild.id
-    };
-    const polls = await getDocuments(poll, query);
+    const polls = await getDocuments(poll, { guildId: interaction.guild.id });
     
     if (polls === "error") {
         interaction.reply({ content: ERROR_REPLY, ephemeral: true });
@@ -80,7 +77,6 @@ export const listPolls = async (interaction) => {
     }
 
     const pollsSorted = polls.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
-
     const pollsData = await Promise.all(pollsSorted.map(async p => {
         const author = await getMemberData(p.author, interaction.guild);
         return ({
@@ -106,9 +102,12 @@ export const deletePoll = async (interaction) => {
     const author = interaction.user.id;
     const deleted = await deleteDocument(poll, { pollId, author });
 
-    if (!deleted) {
+    if (deleted === "error") {
+        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
+        return;
+    } else if (!deleted) {
         interaction.reply({
-            content: "Cannot delete poll **" + pollId + "**, or given ID is wrong!",
+            content: `Cannot delete poll **${pollId}**, or given ID is wrong!`,
             ephemeral: true
         });
         return;
@@ -128,7 +127,7 @@ export const deletePoll = async (interaction) => {
     await deleteManyDocuments(vote, { pollId: deleted.pollId });
 
     interaction.reply({
-        content: "Poll deleted successfully! " + getUnicodeEmoji("1F44D"),
+        content: `Poll deleted successfully! ${getUnicodeEmoji("1F44D")}`,
         ephemeral: true 
     });
 };
@@ -172,7 +171,7 @@ const createPollMessage = async (pollData, guild, pollVotes) => {
         title: `${barChartEmoji} ${pollData.topic}`,
         fields: [...voteData, totalVotes],
         footer: {
-            text: "Deadline: " + moment(pollData.dateTime).format(DAY_MONTH_YEAR_24) + "\nID: " + pollData.pollId
+            text: `Deadline: ${moment(pollData.dateTime).format(DAY_MONTH_YEAR_24)}\nID: ${pollData.pollId}`
         }
     };
 
@@ -184,6 +183,52 @@ const createPollMessage = async (pollData, guild, pollVotes) => {
     else await pollMsg.edit({ embeds: [pollEmbed] });
 
     return pollMsg;
+};
+
+const createPollResultsMessage = async (pollData, guild, channel) => {
+    const votes = await getDocuments(vote, { pollId: pollData.pollId });
+        let totalVotes = 0;
+        
+        const numberOfVotes = (index) => {
+            if (!votes) return 0;
+            const number = votes.filter(v => v.vote === index + 1).length;
+            totalVotes += number;
+            return number;
+        };
+    
+        const voters = (index) => {
+            if (!votes) return EMPTY;
+            return votes.filter(v => v.vote === index + 1).map(v => v.name).join(", ");
+        };
+
+        const results = pollData.voteOptions.map((option, index) => ({
+            option: `**${option}: ${numberOfVotes(index)}**`,
+            voters: voters(index)
+        })).sort((a, b) => b.voters.length - a.voters.length);
+
+        const pollTopicAndVotes = {
+            name: pollData.topic,
+            value: results.map(v => v.voters ? `${v.option}\n${v.voters}` : v.option).join("\n")
+        };
+
+        const getTotalVotes = {
+            name: `Votes: ${totalVotes}`,
+            value: EMPTY
+        };
+        
+        const authorData = await getMemberData(pollData.author, guild);
+        const pollEmbed = {
+            color: 0x32cd32,
+            author: {
+                name: authorData.nickname ? authorData.nickname : authorData.user.username,
+                icon_url: authorData.user.avatarURL()
+            },
+            title: `${barChartEmoji} Poll Results`,
+            fields: [pollTopicAndVotes, getTotalVotes]
+        };
+
+        await channel.send({ embeds: [pollEmbed] });
+        console.log("Poll results posted", JSON.stringify(pollData));
 };
 
 export const handlePollReaction = async (reaction, user, action) => {
@@ -230,7 +275,7 @@ export const postPollResults = async (client) => {
     if (activePolls.length == 0) return;
     
     for (const pollData of activePolls) {
-        const { pollId, msgId, author, topic, dateTime, repeat, guildId, channelId, voteOptions } = pollData;
+        let { pollId, msgId, author, dateTime, repeat, guildId, channelId, voteOptions } = pollData;
         const guild = await client.guilds.cache.get(guildId);
         const channel = await guild.channels.cache.get(channelId);
 
@@ -242,55 +287,13 @@ export const postPollResults = async (client) => {
         }
 
         if (!canSendMessageToChannel(guild, channel)) {
-            console.log("Cannot send poll results of " + pollId + " to channel: " + channelId);
+            console.log(`Cannot post poll results of ${pollId} to channel: ${channelId}`);
             await deleteDocument(poll, { pollId });
             await deleteManyDocuments(vote, { pollId });
             continue;
         }
 
-        const votes = await getDocuments(vote, { pollId });
-        let totalVotes = 0;
-        
-        const numberOfVotes = (index) => {
-            if (!votes) return 0;
-            const number = votes.filter(v => v.vote === index + 1).length;
-            totalVotes += number;
-            return number;
-        };
-    
-        const voters = (index) => {
-            if (!votes) return EMPTY;
-            return votes.filter(v => v.vote === index + 1).map(v => v.name).join(", ");
-        };
-
-        const results = voteOptions.map((option, index) => ({
-            option: `**${option}: ${numberOfVotes(index)}**`,
-            voters: voters(index)
-        })).sort((a, b) => b.voters.length - a.voters.length);
-
-        const pollTopicAndVotes = {
-            name: topic,
-            value: results.map(v => v.voters ? `${v.option}\n${v.voters}` : v.option).join("\n")
-        };
-
-        const getTotalVotes = {
-            name: `Votes: ${totalVotes}`,
-            value: EMPTY
-        };
-        
-        const authorData = await getMemberData(author, guild);
-        const pollEmbed = {
-            color: 0x32cd32,
-            author: {
-                name: authorData.nickname ? authorData.nickname : authorData.user.username,
-                icon_url: authorData.user.avatarURL()
-            },
-            title: `${barChartEmoji} Poll Results`,
-            fields: [pollTopicAndVotes, getTotalVotes]
-        };
-
-        await channel.send({ embeds: [pollEmbed] });
-        console.log("Poll results posted", JSON.stringify(pollData));
+        await createPollResultsMessage(pollData, guild, channel);
 
         if (repeat === NEVER) {
             const deleteQuery = {
@@ -299,7 +302,7 @@ export const postPollResults = async (client) => {
             };
 
             await deleteDocument(poll, deleteQuery);
-            await deleteManyDocuments(vote, { pollId: pollId });
+            await deleteManyDocuments(vote, { pollId });
                 
             try {
                 const pollMsg = await channel.messages.fetch(msgId);
@@ -309,46 +312,37 @@ export const postPollResults = async (client) => {
             }
 
             continue;
-        } else {
-            //Poll is set to repeat so update it's data and reset votes
-            let newDate;
-
-            if (repeat === DAILY) {
-                newDate = moment(dateTime).add(1, "d");
-            } else if (repeat === WEEKLY) {
-                newDate = moment(dateTime). add(1, "w");
-            } else if (repeat === MONTHLY) {
-                newDate = moment(dateTime). add(1, "M");
-            } else if (repeat === YEARLY) {
-                newDate = moment(dateTime). add(1, "y");
-            }
-
-            try {
-                const pollMsg = await channel.messages.fetch(msgId);
-                pollMsg.delete();
-            } catch (err) {
-                console.error(MSG_DELETION_ERR, err);
-            }
-
-            pollData.dateTime = newDate;
-            pollData.msgId = null;
-
-            await deleteManyDocuments(vote, { pollId });
-            const newPollMsg = await createPollMessage(pollData, guild);
-            const update = {
-                msgId: newPollMsg.id,
-                dateTime: newDate
-            };
-
-            await updateDocument(poll, { pollId }, update);
-
-            voteOptions.forEach((_option, index) => {
-                newPollMsg.react(numberEmojis[index]);
-            });
         }
+
+        //Poll is set to repeat so update it's date and reset votes
+        const newDateTime = getNewDate(dateTime, repeat);
+
+        try {
+            const pollMsg = await channel.messages.fetch(msgId);
+            pollMsg.delete();
+        } catch (err) {
+            console.error(MSG_DELETION_ERR, err);
+        }
+
+        pollData.dateTime = newDateTime;
+        pollData.msgId = null;
+
+        await deleteManyDocuments(vote, { pollId });
+        const newPollMsg = await createPollMessage(pollData, guild);
+        const update = {
+            msgId: newPollMsg.id,
+            dateTime: newDateTime
+        };
+
+        await updateDocument(poll, { pollId }, update);
+
+        voteOptions.forEach((_option, index) => {
+            newPollMsg.react(numberEmojis[index]);
+        });
     }
 };
 
+//Used to synchronize votes added when bot has been offline
 export const syncPollVotes = async (client) => {
     const activePolls = await getDocuments(poll);
 
@@ -419,24 +413,24 @@ const getEntries = async (client, pollId, reactions, guild) => {
     let entries = [];
 
     for (const reaction of reactions) {
-        await reaction.users.fetch().then(users => {
-            users.forEach(user => {
-                getMemberData(user.id, guild).then(userData => {
-                    if (user.id !== client.user.id) {
-                        const entry = {
-                            guildId: guild.id,
-                            pollId,
-                            userId: userData.user.id,
-                            name: userData.nickname ? userData.nickname : userData.user.username,
-                            vote: numberEmojis.indexOf(reaction._emoji.name) + 1
-                        };
+        const users = await reaction.users.fetch();
+        
+        users.forEach(user => {
+            getMemberData(user.id, guild).then(userData => {
+                if (user.id !== client.user.id) {
+                    const entry = {
+                        guildId: guild.id,
+                        pollId,
+                        userId: userData.user.id,
+                        name: userData.nickname ? userData.nickname : userData.user.username,
+                        vote: numberEmojis.indexOf(reaction._emoji.name) + 1
+                    };
 
-                        entries.push(entry);
-                    }
-                });
+                    entries.push(entry);
+                }
             });
         });
     }
 
     return entries;
-}
+};

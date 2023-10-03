@@ -11,7 +11,7 @@ import { greet } from "./functions/greetings.js";
 import { generateMessage } from "./functions/welcome_message.js";
 import { setDatabase } from "./database/database.js";
 import { CMD_ERR, EVENT_BUTTON, MSG_FETCH_ERR, NEVER, USER_FETCH_ERR } from "./variables/constants.js";
-import { deleteDocument, deleteManyDocuments } from "./database/database_service.js";
+import { deleteDocument, deleteManyDocuments } from "./database/mongodb_service.js";
 import { poll } from "./database/schemas/poll_schema.js";
 import { event } from "./database/schemas/event_schema.js";
 import { getMemberData } from "./functions/helpers/helpers.js";
@@ -36,7 +36,7 @@ client.on(Events.InteractionCreate, async interaction => {
         const command = interaction.client.commands.get(interaction.commandName);
 
         if (!command) {
-            console.error("No command matching " + interaction.commandName + " was found.");
+            console.error(`No command matching ${interaction.commandName} was found!`);
             return;
         }
 

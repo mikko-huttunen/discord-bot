@@ -2,9 +2,9 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/bui
 import { TextInputStyle } from "discord.js";
 import moment from "moment";
 import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
-import { CHANNEL, DAILY, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_SCHEDULED_MESSAGES, MONTHLY, NO_CHANNEL, NO_GUILD, NO_RECORDS, SCHEDULED_MESSAGE_MODAL, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../variables/constants.js";
-import { canCreateNew, generateId, getChannelName, getMemberData, getUnicodeEmoji } from "./helpers/helpers.js";
-import { deleteDocument, getDocuments, insertDocuments, updateDocument } from "../database/database_service.js";
+import { CHANNEL, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_SCHEDULED_MESSAGES, NO_CHANNEL, NO_GUILD, NO_RECORDS, SCHEDULED_MESSAGE_MODAL, SEND_PERMISSION_ERR } from "../variables/constants.js";
+import { canCreateNew, generateId, getChannelName, getMemberData, getNewDate, getUnicodeEmoji } from "./helpers/helpers.js";
+import { deleteDocument, getDocuments, insertDocuments, updateDocument } from "../database/mongodb_service.js";
 import { scheduledMessage } from "../database/schemas/scheduled_message_schema.js";
 
 export const createScheduledMessage = async (interaction) => {
@@ -198,26 +198,17 @@ export const postScheduledMessages = async (client) => {
         console.log("Scheduled message posted", JSON.stringify(scheduledMessageData));
 
         if (repeat) {
-            let newDateTime;
-            
-            if (repeat === DAILY) {
-                newDateTime = moment(dateTime).add(1, "d");
-            } else if (repeat === WEEKLY) {
-                newDateTime = moment(dateTime). add(1, "w");
-            } else if (repeat === MONTHLY) {
-                newDateTime = moment(dateTime). add(1, "M");
-            } else if (repeat === YEARLY) {
-                newDateTime = moment(dateTime). add(1, "y");
-            }
+            const newDateTime = getNewDate(dateTime, repeat);
 
             await updateDocument(scheduledMessage, { id }, { dateTime: newDateTime });
-        } else {
-            const deleteQuery = {
-                id,
-                author
-            }
-
-            await deleteDocument(scheduledMessage, deleteQuery);
+            continue;
         }
+
+        const deleteQuery = {
+            id,
+            author
+        };
+
+        await deleteDocument(scheduledMessage, deleteQuery);
     }
 };
