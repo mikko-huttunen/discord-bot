@@ -26,7 +26,7 @@ export const createScheduledMessage = async (interaction) => {
         return i.user.id === interaction.user.id;
     };
 
-    const modalSubmit = interaction.awaitModalSubmit({ time: 300_000, filter });
+    const modalSubmit = await interaction.awaitModalSubmit({ time: 300_000, filter });
     const userDateTime = modalSubmit.fields.getTextInputValue("dateTimeInput");
     const userRepeat = modalSubmit.fields.getTextInputValue("repeatInput").toLowerCase();
 
@@ -40,16 +40,16 @@ export const createScheduledMessage = async (interaction) => {
         channelId: channel.id
     };
 
-    if (!isValidDateAndRepetition(interaction, scheduledMessageData.dateTime, userRepeat)) return;
+    if (!isValidDateAndRepetition(modalSubmit, scheduledMessageData.dateTime, userRepeat)) return;
 
     const inserted = await insertDocuments(scheduledMessage, scheduledMessageData);
 
     if (!inserted) {
-        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
+        modalSubmit.reply({ content: ERROR_REPLY, ephemeral: true });
         return;
     }
 
-    interaction.reply({ 
+    modalSubmit.reply({ 
         content: "New scheduled message created successfully! " + getUnicodeEmoji("1F44D"),
         ephemeral: true
     });
@@ -190,8 +190,11 @@ export const postScheduledMessages = async (client) => {
                 icon_url: authorData.user.avatarURL()
             },
             title: EMPTY,
-            fields: [message],
-            footer: "This is a scheduled message"
+            fields: [{
+                name: message,
+                value: EMPTY
+            }],
+            footer: { text: "This is a scheduled message" }
         };
 
         await channel.send({ embeds: [scheduledMessageEmbed] });

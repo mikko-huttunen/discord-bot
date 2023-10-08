@@ -35,7 +35,10 @@ export const handleRoleCommand = async (interaction) => {
                 break;
             }
             
-            interaction.reply({ content: "Roolisi: " + userRoles.join(", "), ephemeral: true });
+            interaction.reply({ 
+                content: "Your roles: " + userRoles.join(", "), 
+                ephemeral: true
+            });
             break;
         }
 

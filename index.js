@@ -16,6 +16,7 @@ import { poll } from "./database/schemas/poll_schema.js";
 import { event } from "./database/schemas/event_schema.js";
 import { getMemberData } from "./functions/helpers/helpers.js";
 import { vote } from "./database/schemas/vote_schema.js";
+import { attendee } from "./database/schemas/attendee_schema.js";
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers",
@@ -72,8 +73,10 @@ client.on("messageDelete", async (msg) => {
         return;
     }
 
-    const deletedEvent = await deleteDocument(event, { msgId: msg.id, repeat: NEVER });
-    //TODO: Delete event attendees
+    const deletedEvent = await deleteDocument(event, { msgId: msg.id, repeat: "" });
+    if (deletedEvent) {
+        await deleteManyDocuments(attendee, { eventId: deletedEvent.eventId });
+    }
 });
 
 client.on("messageReactionAdd", async (reaction, user) => {

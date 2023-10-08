@@ -7,7 +7,6 @@ import { canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/che
 import { deleteDocument, deleteManyDocuments, findOneDocument, getDocuments, insertDocuments, updateDocument } from "../database/mongodb_service.js";
 import { event } from "../database/schemas/event_schema.js";
 import { attendee } from "../database/schemas/attendee_schema.js";
-import { repeat } from "lodash";
 
 const calendarEmoji = getUnicodeEmoji("1F5D3");
 
@@ -31,7 +30,7 @@ export const createEvent = async (interaction) => {
         return i.user.id === interaction.user.id;
     };
 
-    const modalSubmit = interaction.awaitModalSubmit({ time: 300_000, filter });
+    const modalSubmit = await interaction.awaitModalSubmit({ time: 300_000, filter });
     const userDateTime = modalSubmit.fields.getTextInputValue("eventDateInput");
     const userRepeat = modalSubmit.fields.getTextInputValue("repeatInput").toLowerCase();
 
@@ -47,7 +46,7 @@ export const createEvent = async (interaction) => {
         channelId: channel.id
     };
 
-    if (!isValidDateAndRepetition(interaction, eventData.dateTime, userRepeat)) return;
+    if (!isValidDateAndRepetition(modalSubmit, eventData.dateTime, userRepeat)) return;
 
     const eventMsg = await createEventMessage(eventData, guild);
     eventData.msgId = eventMsg.id;
@@ -60,11 +59,11 @@ export const createEvent = async (interaction) => {
             console.error(MSG_DELETION_ERR, error);
         }
 
-        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
+        modalSubmit.reply({ content: ERROR_REPLY, ephemeral: true });
         return;
     }
 
-    interaction.reply({ 
+    modalSubmit.reply({ 
         content: `New event created successfully! ${getUnicodeEmoji("1F44D")}`,
         ephemeral: true
     });
@@ -117,6 +116,12 @@ export const deleteEvent = async (interaction) => {
         });
         return;
     }
+
+    const query = {
+        eventId,
+        userId: author
+    };
+    await deleteManyDocuments(attendee, query);
 
     const guild = interaction.guild;
     const channel = guild.channels.cache.get(deleted.channelId);
@@ -206,17 +211,17 @@ const createEventMessage = async (eventData, guild, eventAttendees) => {
     };
 
     const numberOfAttendees = () => {
-        if (!eventAttendees) return 0;
+        if (!eventAttendees.length) return 0;
         return eventAttendees.length;
     };
 
     const attendees = () => {
-        if (!eventAttendees) return NO_DATA;
+        if (!eventAttendees.length) return NO_DATA;
         return eventAttendees.map(attendee => attendee.name).join(", ");
     }
 
     const attendeesData = {
-        name: `Attendees (${numberOfAttendees}):`,
+        name: `Attendees (${numberOfAttendees()}):`,
         value: attendees()
     }
     
@@ -313,6 +318,7 @@ export const handleJoinEvent = async (interaction) => {
         };
 
         await deleteDocument(attendee, query);
+        entries = entries.filter(e => e.userId !== attendeeData.userId);
     }
 
     await createEventMessage(eventData, interaction.guild, entries);
@@ -320,7 +326,7 @@ export const handleJoinEvent = async (interaction) => {
 };
 
 export const postEvent = async (client, postType, query) => {
-    const activeEvents = await getDocuments(query);
+    const activeEvents = await getDocuments(event, query);
 
     for (const eventData of activeEvents) {
         const { eventId, guildId, channelId } = eventData;

@@ -28,6 +28,7 @@ export const handleImageSearch = async (interaction) => {
             content: "Search terms: " + searchterms,
             files: [{
                 attachment: image.url,
+                //TODO: Get image extension dynamically
                 name: image.id + ".png"
             }]
         });
