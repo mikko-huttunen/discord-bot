@@ -40,7 +40,7 @@ export const setBotPresence = async (client) => {
     client.user.setPresence({
         status: "online",
         activities: [{
-            name: activity.name,
+            name: `${activity.name} | /help`,
             type: activity.type
         }]
     });
