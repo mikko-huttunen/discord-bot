@@ -64,11 +64,11 @@ export const generateMessage = async (member) => {
     ctx.textAlign = "center";
 
     // draw in Welcome
-    ctx.font = "80px Luminari";
+    ctx.font = "80px Young Serif";
     ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 50));
 
     // draw in the username
-    ctx.font = "80px Luminari";
+    ctx.font = "80px Young Serif";
     ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 70);
 
     const attachment = new AttachmentBuilder(canvasPaper.toBuffer(), {
