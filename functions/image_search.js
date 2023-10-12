@@ -13,7 +13,7 @@ export const handleImageSearch = async (interaction) => {
         safe: true,
         parse_ads: true,
         additional_params: {
-            hl: "en",
+            hl: "fi",
         }
     }
 
