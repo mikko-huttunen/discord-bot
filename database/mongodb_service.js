@@ -42,7 +42,9 @@ export const updateDocument = async (document, filter, update) => {
 
 export const deleteDocument = (collection, query) => {
     return collection.findOneAndDelete(query).then(result => {
-        console.log(DELETE_SUCCESS, JSON.stringify(result))
+        if (result) {
+            console.log(DELETE_SUCCESS, JSON.stringify(result))
+        }
         return result;
     }).catch(err => {
         console.error(DELETE_ERR, err);

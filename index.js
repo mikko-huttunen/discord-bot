@@ -131,8 +131,8 @@ client.on("messageReactionRemove", async (reaction, user) => {
     checkIfPollReaction(reaction, user, "remove");
 });
 
-client.on("guildMemberAdd", async (member) => {
-    generateMessage(member);
+client.on("guildMemberAdd", async (client, member) => {
+    generateMessage(client, member);
 });
 
 client.login(process.env.TOKEN);

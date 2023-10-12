@@ -1,10 +1,13 @@
 import google from "googlethis"
 import { SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../variables/constants.js";
 import { canSendMessageToChannel } from "./helpers/checks.js";
-import { getChannelName } from "./helpers/helpers.js";
+import { getChannelName, getImageFileExtension } from "./helpers/helpers.js";
 
 export const handleImageSearch = async (interaction) => {
-    const searchterms = interaction.options.getString("searchterms");
+    const guild = interaction.guild;
+    const channel = await guild.channels.cache.get(interaction.channelId);
+
+    const searchTerms = interaction.options.getString("searchterms");
     const options = {
         page: 0, 
         safe: true,
@@ -15,24 +18,26 @@ export const handleImageSearch = async (interaction) => {
     }
 
     try {
-        const searchResults = await google.image(searchterms, options);
+        const searchResults = await google.image(searchTerms, options);
         const image = searchResults[Math.floor(Math.random() * searchResults.length)];
-
         console.log(SEARCH_SUCCESS, JSON.stringify(image));
-        if (!await canSendMessageToChannel(interaction.guild, interaction.channel)) {
+
+        if (!await canSendMessageToChannel(guild, channel)) {
             interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId), ephemeral: true });
             return;
         }
 
-        interaction.reply({
-            content: "Search terms: " + searchterms,
+        const extension = getImageFileExtension(image.url);
+        const imageName = extension ? `${image.id}.${extension}` : `${image.id}.png`
+
+        await interaction.reply({
+            content: searchTerms,
             files: [{
                 attachment: image.url,
-                //TODO: Get image extension dynamically
-                name: image.id + ".png"
+                name: imageName,
             }]
         });
-    } catch {
-        interaction.reply({ content: SEARCH_ERR, ephemeral: true });
+    } catch (err){
+        console.error(SEARCH_ERR, err)
     }
 };

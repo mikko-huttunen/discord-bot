@@ -26,33 +26,34 @@ export const createScheduledMessage = async (interaction) => {
         return i.user.id === interaction.user.id;
     };
 
-    const modalSubmit = await interaction.awaitModalSubmit({ time: 300_000, filter });
-    const userDateTime = modalSubmit.fields.getTextInputValue("dateTimeInput");
-    const userRepeat = modalSubmit.fields.getTextInputValue("repeatInput").toLowerCase();
+    await interaction.awaitModalSubmit({ time: 300_000, filter }).then(async intr => {
+        const userDateTime = intr.fields.getTextInputValue("dateTimeInput");
+        const userRepeat = intr.fields.getTextInputValue("repeatInput").toLowerCase();
 
-    const scheduledMessageData = {
-        id: generateId(),
-        author: modalSubmit.user.id,
-        message: modalSubmit.fields.getTextInputValue("messageInput"),
-        dateTime: moment(userDateTime, DAY_MONTH_YEAR_24).format(ISO_8601_24),
-        repeat: userRepeat,
-        guildId: modalSubmit.guild.id,
-        channelId: channel.id
-    };
+        const scheduledMessageData = {
+            id: generateId(),
+            author: intr.user.id,
+            message: intr.fields.getTextInputValue("messageInput"),
+            dateTime: moment(userDateTime, DAY_MONTH_YEAR_24).format(ISO_8601_24),
+            repeat: userRepeat,
+            guildId: intr.guild.id,
+            channelId: channel.id
+        };
 
-    if (!isValidDateAndRepetition(modalSubmit, scheduledMessageData.dateTime, userRepeat)) return;
+        if (!isValidDateAndRepetition(intr, scheduledMessageData.dateTime, userRepeat)) return;
 
-    const inserted = await insertDocuments(scheduledMessage, scheduledMessageData);
+        const inserted = await insertDocuments(scheduledMessage, scheduledMessageData);
 
-    if (!inserted) {
-        modalSubmit.reply({ content: ERROR_REPLY, ephemeral: true });
-        return;
-    }
+        if (!inserted) {
+            intr.reply({ content: ERROR_REPLY, ephemeral: true });
+            return;
+        }
 
-    modalSubmit.reply({ 
-        content: "New scheduled message created successfully! " + getUnicodeEmoji("1F44D"),
-        ephemeral: true
-    });
+        intr.reply({ 
+            content: "New scheduled message created successfully! " + getUnicodeEmoji("1F44D"),
+            ephemeral: true
+        });
+    }).catch(console.error);
 };
 
 export const listScheduledMessages = async (interaction) => {
@@ -75,7 +76,8 @@ export const listScheduledMessages = async (interaction) => {
         name: "ID: " + message.id,
         value: "Message: " + message.message +
             "\nDate: " + moment(message.dateTime).format(DAY_MONTH_YEAR_24) + 
-            "\nChannel: " + getChannelName(message.channelId)
+            "\nChannel: " + getChannelName(message.channelId),
+        inline: true
     }));
 
     const scheduledMessageEmbed = {
@@ -93,7 +95,8 @@ export const deleteScheduledMessage = async (interaction) => {
 
     const query = {
         id,
-        author
+        author,
+        guildId: interaction.guild.id
     };
 
     const deleted = await deleteDocument(scheduledMessage, query);

@@ -54,15 +54,15 @@ export const INVALID_REPEAT = "Given repeat interval is invalid! Accepted values
     "weekly = Repeat every week\n" +
     "monthly = Repeat every month\n" +
     "yearly = Repeat every year";
-export const MIDNIGHT = "00:00";
-export const MIDDAY = "12:00";
+export const MIDNIGHT = "21:04";
+export const MIDDAY = "21:05";
 
 //Formatting
 export const EMPTY = " ";
 export const NO_DATA = "-";
 
 //Messages
-export const MSG_DELETION_ERR = "Message does not exist!";
+export const MSG_NOT_FOUND_ERR = "Message does not exist!";
 
 //Events
 export const MAX_EVENTS = "Maximum of 5 events allowed!\n" +
@@ -89,5 +89,5 @@ export const NO_ROLES = "You have no roles!";
 
 //Media
 export const SEARCH_SUCCESS = "Search success!";
-export const SEARCH_ERR = "Search failed. Please try again!";
+export const SEARCH_ERR = "Search failed!";
 export const NO_RESULTS = "No results with search terms:";

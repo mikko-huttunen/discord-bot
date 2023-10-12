@@ -20,6 +20,8 @@ const setBotNames = async (client) => {
 };
 
 const createCommands = async (client) => {
+    //Delete cached commands at startup
+    await client.application.commands.set([]);
     client.commands = new Collection();
     let commandList = [];
 
