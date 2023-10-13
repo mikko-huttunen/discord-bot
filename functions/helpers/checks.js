@@ -5,6 +5,7 @@ import { handlePollReaction, postPollResults } from "../polls.js";
 import { postScheduledMessages } from "../scheduled_messages.js";
 import { DAILY, DISTANT_DATE, EXPIRED_DATE, INVALID_DATE, INVALID_REPEAT, ISO_8601_24, MIDDAY, MIDNIGHT, MONTHLY, NEVER, WEEKLY, YEARLY } from "../../variables/constants.js";
 import { getNumberEmojis } from "./helpers.js";
+import { getDocuments } from "../../database/mongodb_service.js";
 
 export const checkForTimedActions = async (client) => {
     await postScheduledMessages(client);
@@ -32,7 +33,7 @@ export const checkForTimedActions = async (client) => {
     }
 
     setTimeout( function(){ checkForTimedActions(client); }, 60 * 1000);
-}
+};
 
 export const checkIfPollReaction = async (reaction, user, action) => {
     const numberEmojis = getNumberEmojis();
@@ -40,7 +41,7 @@ export const checkIfPollReaction = async (reaction, user, action) => {
     if (numberEmojis.includes(reaction.emoji.name)) {
         await handlePollReaction(reaction, user, action);
     }
-}
+};
 
 export const canSendMessageToChannel = async (guild, channel) => {
     if (!guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
@@ -48,7 +49,16 @@ export const canSendMessageToChannel = async (guild, channel) => {
     }
 
     return true
-}
+};
+
+export const canCreateNew = async (collection, author, guildId) => {
+    const documents = await getDocuments(collection, { author, guildId });
+    if (documents.length >= 5) {
+        return false;
+    }
+
+    return true;
+};
 
 export const isValidDateAndRepetition = (interaction, dateTime, repeat) => {
     if (!moment(dateTime, "YYYY/MM/DD").isValid()) {
@@ -71,4 +81,4 @@ export const isValidDateAndRepetition = (interaction, dateTime, repeat) => {
     }
 
     return true;
-}
+};

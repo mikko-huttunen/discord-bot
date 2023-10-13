@@ -1,5 +1,4 @@
 import moment from "moment";
-import { getDocuments } from "../../database/mongodb_service.js";
 import { DAILY, MONTHLY, WEEKLY, YEARLY } from "../../variables/constants.js";
 
 export const getMemberData = async (id, guild) => {
@@ -35,15 +34,6 @@ export const getUnicodeEmoji = (code) => {
     return String.fromCodePoint(`0x${code}`);
 };
 
-export const canCreateNew = async (collection, author, guildId) => {
-    const documents = await getDocuments(collection, { author, guildId });
-    if (documents.length >= 5) {
-        return false;
-    }
-
-    return true;
-};
-
 export const getNewDate = (dateTime, repeat) => {
     switch (repeat) {
         case DAILY:
@@ -67,8 +57,8 @@ export const getNewDate = (dateTime, repeat) => {
 export const getImageFileExtension = (fileName) => {
     //Discord supported image file extensions
     const imageExtensions = ["jpg", "jpeg", "JPG", "JPEG", "png", "PNG", "gif", "gifv", ".webm"]
-    const extension = fileName.split(".").pop().toLowerCase();
+    const extension = fileName.split(".").pop();
     
-    if (imageExtensions.includes(extension)) return `${extension}`;
+    if (imageExtensions.includes(extension)) return extension;
     return;
-}
+};
