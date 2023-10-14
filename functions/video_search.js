@@ -14,24 +14,36 @@ export const handleVideoSearch = async (interaction) => {
     };
     
     if (!await canSendMessageToChannel(interaction.guild, interaction.channel)) {
-        interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId), ephemeral: true });
+        interaction.reply({ 
+            content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId),
+            ephemeral: true 
+        });
         return;
     }
 
     await videoSearch(searchterms, options, async function(err, results) {
         if (err) {
-            interaction.reply({ content: SEARCH_ERR, ephemeral: true });
+            interaction.reply({
+                content: SEARCH_ERR,
+                ephemeral: true 
+            });
             return;
         }
 
         if (results.length <= 0) {
             console.log(NO_RESULTS, searchterms);
-            interaction.reply({ content: NO_RESULTS + searchterms, ephemeral: true });
+            interaction.reply({
+                content: NO_RESULTS + searchterms,
+                ephemeral: true
+            });
             return;
         }
 
         const video = results[0];
         console.log(SEARCH_SUCCESS, JSON.stringify(video));
-        await interaction.reply({ content: "Search terms: " + searchterms + "\nVideo: " + video.link, ephemeral: false });
+        await interaction.reply({
+            content: `${searchterms}\n${video.link}`,
+            ephemeral: false
+        });
     });
 };

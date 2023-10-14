@@ -18,7 +18,8 @@ export const handleImageSearch = async (interaction) => {
     }
 
     try {
-        const searchResults = await google.image(searchTerms, options);
+        //Get first 10 images for more optimal results
+        const searchResults = (await google.image(searchTerms, options)).slice(0, 10);
         const image = searchResults[Math.floor(Math.random() * searchResults.length)];
         console.log(SEARCH_SUCCESS, JSON.stringify(image));
 

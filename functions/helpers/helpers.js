@@ -56,9 +56,11 @@ export const getNewDate = (dateTime, repeat) => {
 
 export const getImageFileExtension = (fileName) => {
     //Discord supported image file extensions
-    const imageExtensions = ["jpg", "jpeg", "JPG", "JPEG", "png", "PNG", "gif", "gifv", ".webm"]
+    const imageExtensions = ["jpg", "jpeg", "JPG", "JPEG", "png", "PNG", "gif", "gifv", "webm"]
     const extension = fileName.split(".").pop();
-    
+
+    if (extension === "gifv") return "gif";
     if (imageExtensions.includes(extension)) return extension;
+    
     return;
 };

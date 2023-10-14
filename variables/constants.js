@@ -90,4 +90,4 @@ export const NO_ROLES = "You have no roles!";
 //Media
 export const SEARCH_SUCCESS = "Search success!";
 export const SEARCH_ERR = "Search failed!";
-export const NO_RESULTS = "No results with search terms:";
+export const NO_RESULTS = "No results with search terms: ";
