@@ -1,7 +1,7 @@
 import { canSendMessageToChannel } from "./helpers/checks.js";
 import { getRandomCustomEmote } from "./helpers/helpers.js";
 
-const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere", "päivää"];
+const greetingsFin = ["morjensta", "morjens", "moikka", "moro", "moi", "heippa", "hei", "terve", "tere"];
 const greetingsEn = ["hi", "greetings", "hello", "hey", "yo"];
 
 export const greet = async (client, msg) => {

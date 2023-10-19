@@ -1,75 +1,44 @@
-export const handleDiceRoll = (interaction) => {
+import { SEND_PERMISSION_ERR } from "../variables/constants.js";
+import { canSendMessageToChannel } from "./helpers/checks.js";
+import { getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
+
+export const handleDiceRoll = async (interaction) => {
+    const dice = interaction.options.getInteger("dice") ? interaction.options.getInteger("dice") : 1;
+    const sides = interaction.options.getInteger("sides") ? interaction.options.getInteger("sides") : 6;
+    const results = [];
+
+    for (var i = 0; i < dice; i++) {
+        results.push(Math.floor(Math.random() * sides + 1));
+    }
+
+    const calcResults = calculateDice(results);
+    const chunk = sliceArray(results, 10);
+
     const diceRollEmbed = {
         color: 0xffa500,
-        title: "🎲 Dice Roll 🎲",
-        fields: []
-    };
-    const dice = interaction.options.getInteger("dice");
-    const sides = interaction.options.getInteger("sides");
-    let results = [];
-
-    if ((!dice || dice === 1) && !sides) {
-        diceRollEmbed.fields.push({
-            name: "Results:",
-            value: Math.floor(Math.random() * 6 + 1)
-        });
-        
-        interaction.reply({ embeds: [diceRollEmbed] });
-    }
-        
-    if (dice > 1 && !sides) {
-        for (var i=0; i<dice; i++) {
-            results.push(Math.floor(Math.random() * 6 + 1));
-        }
-        const calcResults = calculateDice(results);
-        const chunk = sliceArray(results, 10);
-
-        diceRollEmbed.fields.push({
+        title: `${getUnicodeEmoji("1F3B2")} Dice Roll`,
+        fields: [{
             name: "Roll:",
-            value: "Dice: " + dice
+            value: `Dice: ${dice}, sides: ${sides}`
         }, {
             name: "Results:",
             value: chunk.join(",\n")
-        }, {
+        }]
+    }; 
+    
+    if (dice > 1) {
+        diceRollEmbed.fields.push({
             name: "Stats:",
             value: Object.entries(calcResults).map(value => value.join(": ")).join("\n")
         });
-
-        interaction.reply({ embeds: [diceRollEmbed] });
     }
 
-    if (!dice && sides) {
-        diceRollEmbed.fields.push({
-            name: "Roll:",
-            value: "Sides: " + sides
-        }, {
-            name: "Results:",
-            value: Math.floor(Math.random() * sides + 1)
-        });
-        
-        interaction.reply({ embeds: [diceRollEmbed] });
+    if (!await canSendMessageToChannel(interaction.guild, interaction.channel)) {
+        interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channel.id), ephemeral: true });
+        return;
     }
 
-    if (dice && sides) {
-        for (var j=0; j<dice; j++) {
-            results.push(Math.floor(Math.random() * sides + 1));
-        }
-        const calcResults = calculateDice(results);
-        const chunk = sliceArray(results, 10);
-
-        diceRollEmbed.fields.push({
-            name: "Roll:",
-            value: "Dice: " + dice + ", sides: " + sides
-        }, {
-            name: "Results:",
-            value: chunk.join(",\n")
-        }, {
-            name: "Stats:",
-            value: Object.entries(calcResults).map(value => value.join(": ")).join("\n")
-        });
-
-        interaction.reply({ embeds: [diceRollEmbed] });
-    }
+    interaction.reply({ embeds: [diceRollEmbed] });
 }
 
 const calculateDice = (results) => {
