@@ -67,19 +67,19 @@ export const generateMessage = async (member) => {
 
     //Draw in the welcome text and username based on username length
     if (username.length > 25) {
-        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 20));
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 5));
         ctx.font = "20px Young Serif";
         ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 50);
     } else if (username.length > 20) {
-        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 25));
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 10));
         ctx.font = "25px Young Serif";
         ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 55);
     } else if (username.length > 15) {
-        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 30));
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 15));
         ctx.font = "30px Young Serif";
         ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 60);
     } else if (username.length > 10) {
-        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 40));
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 25));
         ctx.font = "40px Young Serif";
         ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 65);
     } else {
