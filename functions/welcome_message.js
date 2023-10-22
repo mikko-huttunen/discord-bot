@@ -66,36 +66,26 @@ export const generateMessage = async (member) => {
     ctx.font = "80px Young Serif";
 
     //Draw in the welcome text and username based on username length
-    switch (username) {
-        case username.length > 25:
-            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 30));
-            ctx.font = "20px Young Serif";
-            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 50);
-            break;
-
-        case username.length > 20:
-            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 35));
-            ctx.font = "30px Young Serif";
-            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 55);
-            break;
-
-        case username.length > 15:
-            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 40));
-            ctx.font = "40px Young Serif";
-            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 60);
-            break;
-
-        case username.length > 10:
-            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 45));
-            ctx.font = "50px Young Serif";
-            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 65);
-            break;
-    
-        default:
-            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 50));
-            ctx.font = "80px Young Serif";
-            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 70);
-            break;
+    if (username.length > 25) {
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 30));
+        ctx.font = "20px Young Serif";
+        ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 50);
+    } else if (username.length > 20) {
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 35));
+        ctx.font = "30px Young Serif";
+        ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 55);
+    } else if (username.length > 15) {
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 40));
+        ctx.font = "40px Young Serif";
+        ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 60);
+    } else if (username.length > 10) {
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 45));
+        ctx.font = "50px Young Serif";
+        ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 65);
+    } else {
+        ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 50));
+        ctx.font = "80px Young Serif";
+        ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 70);
     }
 
     const attachment = new AttachmentBuilder(canvasPaper.toBuffer(), {
