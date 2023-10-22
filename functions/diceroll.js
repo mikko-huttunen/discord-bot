@@ -1,6 +1,5 @@
-import { SEND_PERMISSION_ERR } from "../variables/constants.js";
 import { canSendMessageToChannel } from "./helpers/checks.js";
-import { getChannelName, getUnicodeEmoji } from "./helpers/helpers.js";
+import { getUnicodeEmoji } from "./helpers/helpers.js";
 
 export const handleDiceRoll = async (interaction) => {
     const dice = interaction.options.getInteger("dice") ? interaction.options.getInteger("dice") : 1;
@@ -33,10 +32,7 @@ export const handleDiceRoll = async (interaction) => {
         });
     }
 
-    if (!await canSendMessageToChannel(interaction.guild, interaction.channel)) {
-        interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channel.id), ephemeral: true });
-        return;
-    }
+    if (!await canSendMessageToChannel(interaction.guild, interaction.channel, interaction)) return;
 
     interaction.reply({ embeds: [diceRollEmbed] });
 }

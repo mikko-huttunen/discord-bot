@@ -1,7 +1,7 @@
 import google from "googlethis"
-import { SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../variables/constants.js";
+import { SEARCH_ERR, SEARCH_SUCCESS } from "../variables/constants.js";
 import { canSendMessageToChannel } from "./helpers/checks.js";
-import { getChannelName, getImageFileExtension } from "./helpers/helpers.js";
+import { getImageFileExtension } from "./helpers/helpers.js";
 
 export const handleImageSearch = async (interaction) => {
     const guild = interaction.guild;
@@ -23,10 +23,7 @@ export const handleImageSearch = async (interaction) => {
         const image = searchResults[Math.floor(Math.random() * searchResults.length)];
         console.log(SEARCH_SUCCESS, JSON.stringify(image));
 
-        if (!await canSendMessageToChannel(guild, channel)) {
-            interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId), ephemeral: true });
-            return;
-        }
+        if (!await canSendMessageToChannel(guild, channel, interaction)) return;
 
         const extension = getImageFileExtension(image.url);
         const imageName = extension ? `${image.id}.${extension}` : `${image.id}.png`

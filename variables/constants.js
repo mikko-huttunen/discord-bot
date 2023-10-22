@@ -1,5 +1,3 @@
-import { getUnicodeEmoji } from "../functions/helpers/helpers.js";
-
 //Commands
 export const CMD_ERR = "There was an error while executing this command!";
 export const CMD_REGISTER_SUCCESS = "Successfully registered application commands!"
@@ -14,7 +12,7 @@ export const CONNECTING_DB = "Connecting to database...";
 export const CONNECTED_DB = "Connected to database!";
 export const CONNECTION_FAILURE_DB = "Cannot connect to database!";
 export const NO_RECORDS = "Nothing to see here...";
-export const ERROR_REPLY = "Something went wrong! " + getUnicodeEmoji("1F648");
+export const ERROR_REPLY = "Something went wrong!";
 export const INSERT_SUCCESS = "New entity inserted successfully!";
 export const INSERT_FAILURE = "Failed to insert new entity!";
 export const FETCH_ERR = "Error fetching data from database!";

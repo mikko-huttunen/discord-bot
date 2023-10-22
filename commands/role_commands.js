@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
-import { handleRoleCommand } from "../functions/roles.js";
+import { addRole, listRoles, myRoles, removeRole } from "../functions/roles.js";
 import { ROLE } from "../variables/constants.js";
 
 export const rolesCommand = {
@@ -7,7 +7,7 @@ export const rolesCommand = {
 		.setName("roles")
 		.setDescription("List of all roles and members"),
 	execute: async (interaction) => {
-        await handleRoleCommand(interaction);
+        await listRoles(interaction);
     }
 }
 
@@ -16,7 +16,7 @@ export const myRolesCommand = {
 		.setName("myroles")
 		.setDescription("List of your roles"),
 	execute: async (interaction) => {
-        await handleRoleCommand(interaction);
+        myRoles(interaction);
     }
 }
 
@@ -29,7 +29,7 @@ export const addRoleCommand = {
                 .setDescription("Role to add")
                 .setRequired(true)),
 	execute: async (interaction) => {
-        await handleRoleCommand(interaction);
+        await addRole(interaction);
     }
 }
 
@@ -42,6 +42,6 @@ export const removeRoleCommand = {
                 .setDescription("Role to remove")
                 .setRequired(true)),
 	execute: async (interaction) => {
-        await handleRoleCommand(interaction);
+        await removeRole(interaction);
     }
 }

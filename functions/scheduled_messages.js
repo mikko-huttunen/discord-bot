@@ -2,7 +2,7 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/bui
 import { TextInputStyle } from "discord.js";
 import moment from "moment";
 import { canCreateNew, canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
-import { CHANNEL, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_SCHEDULED_MESSAGES, NO_CHANNEL, NO_GUILD, NO_RECORDS, SCHEDULED_MESSAGE_MODAL, SEND_PERMISSION_ERR } from "../variables/constants.js";
+import { CHANNEL, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_SCHEDULED_MESSAGES, NO_CHANNEL, NO_GUILD, NO_RECORDS, SCHEDULED_MESSAGE_MODAL } from "../variables/constants.js";
 import { generateId, getChannelName, getMemberData, getNewDate, getUnicodeEmoji } from "./helpers/helpers.js";
 import { deleteDocument, getDocuments, insertDocuments, updateDocument } from "../database/mongodb_service.js";
 import { scheduledMessage } from "../database/schemas/scheduled_message_schema.js";
@@ -15,10 +15,7 @@ export const createScheduledMessage = async (interaction) => {
         return;
     }
 
-    if (!await canSendMessageToChannel(interaction.guild, channel)) {
-        interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(channel.id), ephemeral: true });
-        return;
-    }
+    if (!await canSendMessageToChannel(interaction.guild, channel, interaction)) return;
 
     scheduledMessageModal(interaction);
 
@@ -177,7 +174,7 @@ export const postScheduledMessages = async (client) => {
             continue;
         }
 
-        if (!canSendMessageToChannel(guild, channel)) {
+        if (!await canSendMessageToChannel(guild, channel)) {
             console.log("Cannot send scheduled message " + id + " to channel: " + channelId);
             await deleteDocument(scheduledMessage, { id });
 

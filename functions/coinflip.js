@@ -1,6 +1,4 @@
-import { SEND_PERMISSION_ERR } from "../variables/constants.js";
 import { canSendMessageToChannel } from "./helpers/checks.js";
-import { getChannelName } from "./helpers/helpers.js";
 
 const coinHeads = "https://i.imgur.com/4xsT5U5.png";
 const coinTails = "https://i.imgur.com/bH9n2z1.png";
@@ -27,10 +25,7 @@ export const handleCoinFlip = async (interaction) => {
         author: result()
     };
 
-    if (!await canSendMessageToChannel(interaction.guild, interaction.channel)) {
-        interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(interaction.channel.id), ephemeral: true });
-        return;
-    }
+    if (!await canSendMessageToChannel(interaction.guild, interaction.channel, interaction)) return;
 
     interaction.reply({ embeds: [coinFlipEmbed] });
 }

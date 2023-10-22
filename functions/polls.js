@@ -1,7 +1,7 @@
 import moment from "moment";
 import { canCreateNew, canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { generateId, getChannelName, getMemberData, getNewDate, getNumberEmojis, getUnicodeEmoji } from "./helpers/helpers.js";
-import { CHANNEL, DATE, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_POLLS, MSG_FETCH_ERR, MSG_NOT_FOUND_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, SEND_PERMISSION_ERR, TOPIC } from "../variables/constants.js";
+import { CHANNEL, DATE, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, ID, ISO_8601_24, MAX_POLLS, MSG_FETCH_ERR, MSG_NOT_FOUND_ERR, NEVER, NO_CHANNEL, NO_RECORDS, REPEAT, TOPIC } from "../variables/constants.js";
 import { bulkTransaction, deleteDocument, deleteManyDocuments, findOneDocument, getDocuments, insertDocuments, updateDocument } from "../database/mongodb_service.js";
 import { poll } from "../database/schemas/poll_schema.js";
 import { vote } from "../database/schemas/vote_schema.js";
@@ -20,10 +20,7 @@ export const createPoll = async (interaction) => {
         return;
     }
 
-    if (!await canSendMessageToChannel(guild, channel)) {
-        interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(channel.id), ephemeral: true });
-        return;
-    }
+    if (!await canSendMessageToChannel(guild, channel, interaction)) return;
 
     const pollData = {
         pollId: generateId(),
@@ -51,7 +48,10 @@ export const createPoll = async (interaction) => {
             console.error(MSG_NOT_FOUND_ERR, error);
         }
 
-        interaction.reply({ content: ERROR_REPLY, ephemeral: true });
+        interaction.reply({
+            content: ERROR_REPLY + getUnicodeEmoji("1F648"),
+            ephemeral: true
+        });
         return;
     }
     
@@ -294,7 +294,7 @@ export const postPollResults = async (client) => {
             continue;
         }
 
-        if (!canSendMessageToChannel(guild, channel)) {
+        if (!await canSendMessageToChannel(guild, channel)) {
             console.log(`Cannot post poll results of ${pollId} to channel: ${channelId}`);
             await deleteDocument(poll, { pollId });
             await deleteManyDocuments(vote, { pollId });

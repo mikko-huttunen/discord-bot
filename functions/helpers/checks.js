@@ -3,8 +3,8 @@ import moment from "moment";
 import { postEvent } from "../events.js";
 import { handlePollReaction, postPollResults } from "../polls.js";
 import { postScheduledMessages } from "../scheduled_messages.js";
-import { DAILY, DISTANT_DATE, EXPIRED_DATE, INVALID_DATE, INVALID_REPEAT, ISO_8601_24, MIDDAY, MIDNIGHT, MONTHLY, NEVER, WEEKLY, YEARLY } from "../../variables/constants.js";
-import { getNumberEmojis } from "./helpers.js";
+import { DAILY, DISTANT_DATE, EXPIRED_DATE, INVALID_DATE, INVALID_REPEAT, ISO_8601_24, MIDDAY, MIDNIGHT, MONTHLY, NEVER, SEND_PERMISSION_ERR, WEEKLY, YEARLY } from "../../variables/constants.js";
+import { getChannelName, getNumberEmojis } from "./helpers.js";
 import { getDocuments } from "../../database/mongodb_service.js";
 
 export const checkForTimedActions = async (client) => {
@@ -43,8 +43,12 @@ export const checkIfPollReaction = async (reaction, user, action) => {
     }
 };
 
-export const canSendMessageToChannel = async (guild, channel) => {
+export const canSendMessageToChannel = async (guild, channel, interaction) => {
     if (!guild.members.me.permissionsIn(channel).has(PermissionsBitField.Flags.SendMessages)) {
+        interaction?.reply({
+            content: SEND_PERMISSION_ERR + getChannelName(interaction.channel.id),
+            ephemeral: true
+        });
         return false;
     }
 

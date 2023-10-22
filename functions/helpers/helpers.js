@@ -10,7 +10,7 @@ export const tagUsername = (id) => {
 }
 
 export const getChannelName = (channelId) => {
-    return "<#" + channelId + ">";
+    return `<#${channelId}>`;
 };
 
 export const generateId = () => {
@@ -19,8 +19,9 @@ export const generateId = () => {
 
 export const getRandomCustomEmote = (msg) => {
     const emojis = msg.guild.emojis.cache.map(
-        (emoji) => " <:" + emoji.name + ":" + emoji.id + ">"
+        emoji => `<:${emoji.name}:${emoji.id}>`
     );
+    
     return emojis[Math.floor(Math.random() * emojis.length)];
 };
 

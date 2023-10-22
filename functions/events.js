@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder } from "@discordjs/builders";
 import { ButtonStyle, TextInputStyle } from "discord.js";
 import moment from "moment";
-import { CHANNEL, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, ID, ISO_8601_24, MAX_EVENTS, MSG_NOT_FOUND_ERR, NO_CHANNEL, NO_DATA, NO_RECORDS, SEND_PERMISSION_ERR } from "../variables/constants.js";
+import { CHANNEL, DAY_MONTH_YEAR_24, EMPTY, ERROR_REPLY, EVENT_BUTTON, EVENT_MODAL, ID, ISO_8601_24, MAX_EVENTS, MSG_NOT_FOUND_ERR, NO_CHANNEL, NO_DATA, NO_RECORDS } from "../variables/constants.js";
 import { generateId, getChannelName, getMemberData, getNewDate, getUnicodeEmoji } from "./helpers/helpers.js";
 import { canCreateNew, canSendMessageToChannel, isValidDateAndRepetition } from "./helpers/checks.js";
 import { deleteDocument, deleteManyDocuments, findOneDocument, getDocuments, insertDocuments, updateDocument } from "../database/mongodb_service.js";
@@ -19,10 +19,7 @@ export const createEvent = async (interaction) => {
         return;
     }
     
-    if (!await canSendMessageToChannel(guild, channel)) {
-        interaction.reply({ content: SEND_PERMISSION_ERR + getChannelName(channel.id), ephemeral: true });
-        return;
-    }
+    if (!await canSendMessageToChannel(guild, channel, interaction)) return;
 
     eventModal(interaction);
 
@@ -330,7 +327,7 @@ export const postEvent = async (client, postType, query) => {
             continue;
         }
 
-        if (!canSendMessageToChannel(guild, channel)) {
+        if (!await canSendMessageToChannel(guild, channel)) {
             console.log(`Cannot post event reminder of ${eventId} to channel: ${channelId}`);
             await deleteDocument(event, { eventId });
             await deleteManyDocuments(attendee, { eventId });

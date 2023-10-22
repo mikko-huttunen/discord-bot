@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv";
 import videoSearch from "youtube-search";
-import { NO_RESULTS, SEARCH_ERR, SEARCH_SUCCESS, SEND_PERMISSION_ERR } from "../variables/constants.js";
-import { getChannelName } from "./helpers/helpers.js";
+import { NO_RESULTS, SEARCH_ERR, SEARCH_SUCCESS } from "../variables/constants.js";
 import { canSendMessageToChannel } from "./helpers/checks.js";
 dotenv.config();
 
@@ -13,13 +12,7 @@ export const handleVideoSearch = async (interaction) => {
         type: "video"
     };
     
-    if (!await canSendMessageToChannel(interaction.guild, interaction.channel)) {
-        interaction.reply({ 
-            content: SEND_PERMISSION_ERR + getChannelName(interaction.channelId),
-            ephemeral: true 
-        });
-        return;
-    }
+    if (!await canSendMessageToChannel(interaction.guild, interaction.channel, interaction)) return;
 
     await videoSearch(searchterms, options, async function(err, results) {
         if (err) {

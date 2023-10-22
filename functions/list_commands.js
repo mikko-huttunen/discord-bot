@@ -1,7 +1,9 @@
+import { getUnicodeEmoji } from "./helpers/helpers.js";
+
 export const listCommands = (interaction) => {
     const commandEmbed = {
         color: 0xFFEA00,
-        title: "Commands",
+        title: `${getUnicodeEmoji("1F50D")} Commands`,
         fields: [
             {
                 name: "Role Commands",

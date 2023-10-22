@@ -33,11 +33,11 @@ export const generateMessage = async (member) => {
     const canvasPaper = createCanvas(dim.width, dim.height);
     const ctx = canvasPaper.getContext("2d");
 
-    // draw in the background
+    //Draw in the background
     const backimg = await loadImage(background);
     ctx.drawImage(backimg, 0, 0);
 
-    // draw black tinted box
+    //Draw black tinted box
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(dim.margin, dim.margin, dim.width, dim.height);
 
@@ -59,17 +59,44 @@ export const generateMessage = async (member) => {
     if (avimg) ctx.drawImage(avimg, av.x, av.y);
     ctx.restore();
 
-    // write in text
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
 
-    // draw in Welcome
+    //Welcome text font
     ctx.font = "80px Young Serif";
-    ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 50));
 
-    // draw in the username
-    ctx.font = "80px Young Serif";
-    ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 70);
+    //Draw in the welcome text and username based on username length
+    switch (username) {
+        case username.length > 25:
+            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 30));
+            ctx.font = "20px Young Serif";
+            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 50);
+            break;
+
+        case username.length > 20:
+            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 35));
+            ctx.font = "30px Young Serif";
+            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 55);
+            break;
+
+        case username.length > 15:
+            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 40));
+            ctx.font = "40px Young Serif";
+            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 60);
+            break;
+
+        case username.length > 10:
+            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 45));
+            ctx.font = "50px Young Serif";
+            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 65);
+            break;
+    
+        default:
+            ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 50));
+            ctx.font = "80px Young Serif";
+            ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 70);
+            break;
+    }
 
     const attachment = new AttachmentBuilder(canvasPaper.toBuffer(), {
         name: "welcome.png",
