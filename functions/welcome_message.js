@@ -72,11 +72,11 @@ export const generateMessage = async (member) => {
         ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 50);
     } else if (username.length > 20) {
         ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 35));
-        ctx.font = "30px Young Serif";
+        ctx.font = "25px Young Serif";
         ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 55);
     } else if (username.length > 15) {
         ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 40));
-        ctx.font = "40px Young Serif";
+        ctx.font = "35px Young Serif";
         ctx.fillText(username, ((dim.width / 2) - 180), (dim.height / 2) + 60);
     } else if (username.length > 10) {
         ctx.fillText("Welcome", ((dim.width / 2) - 180), ((dim.height / 2) - 45));
