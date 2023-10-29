@@ -10,13 +10,8 @@ import { handleJoinEvent } from "./functions/events.js";
 import { greet } from "./functions/greetings.js";
 import { generateMessage } from "./functions/welcome_message.js";
 import { setDatabase } from "./database/database.js";
-import { CMD_ERR, EVENT_BUTTON, MSG_FETCH_ERR, NEVER, USER_FETCH_ERR } from "./variables/constants.js";
-import { deleteDocument, deleteManyDocuments } from "./database/mongodb_service.js";
-import { poll } from "./database/schemas/poll_schema.js";
-import { event } from "./database/schemas/event_schema.js";
+import { CMD_ERR, EVENT_BUTTON, MSG_FETCH_ERR, USER_FETCH_ERR } from "./variables/constants.js";
 import { getMemberData } from "./functions/helpers/helpers.js";
-import { vote } from "./database/schemas/vote_schema.js";
-import { attendee } from "./database/schemas/attendee_schema.js";
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers", "GuildEmojisAndStickers",
@@ -63,20 +58,6 @@ client.on("messageCreate", async (msg) => {
     const msgToLowerCase = msg.content.toLowerCase();
 
     client.botNames.some(botName => msgToLowerCase.includes(botName)) ? greet(client, msg) : false;
-});
-
-client.on("messageDelete", async (msg) => {
-    //If message was poll or event, delete them from database
-    const deletedPoll = await deleteDocument(poll, { msgId: msg.id, repeat: NEVER });
-    if (deletedPoll) {
-        await deleteManyDocuments(vote, { msgId: deletedPoll.msgId });
-        return;
-    }
-
-    const deletedEvent = await deleteDocument(event, { msgId: msg.id, repeat: "" });
-    if (deletedEvent) {
-        await deleteManyDocuments(attendee, { eventId: deletedEvent.eventId });
-    }
 });
 
 client.on("messageReactionAdd", async (reaction, user) => {

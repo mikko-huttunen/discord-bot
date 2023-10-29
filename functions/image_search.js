@@ -2,15 +2,21 @@ import google from "googlethis"
 import { SEARCH_ERR, SEARCH_SUCCESS } from "../variables/constants.js";
 import { canSendMessageToChannel } from "./helpers/checks.js";
 import { getImageFileExtension } from "./helpers/helpers.js";
+import { findOneDocument } from "../database/mongodb_service.js";
+import { configuration } from "../database/schemas/configuration_schema.js";
 
 export const handleImageSearch = async (interaction) => {
     const guild = interaction.guild;
     const channel = await guild.channels.cache.get(interaction.channelId);
+    const nsfwFilter = await findOneDocument(configuration, { guildId: guild.id }).then(result => {
+        if (result.nsfwFilter !== null) return result.nsfwFilter;
+        return true;
+    });
 
     const searchTerms = interaction.options.getString("searchterms");
     const options = {
         page: 0, 
-        safe: true,
+        safe: nsfwFilter,
         parse_ads: true,
         additional_params: {
             hl: "fi",
@@ -32,7 +38,7 @@ export const handleImageSearch = async (interaction) => {
             content: searchTerms,
             files: [{
                 attachment: image.url,
-                name: imageName,
+                name: nsfwFilter ? imageName : `SPOILER_${imageName}`,
             }]
         });
     } catch (err){

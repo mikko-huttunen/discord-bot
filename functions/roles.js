@@ -114,7 +114,7 @@ export const removeRole = async (interaction) => {
     });
 };
 
-const getGuildRoleData = async (guild) => {
+export const getGuildRoleData = async (guild) => {
     try {
         await guild.members.fetch();
     } catch(err) {

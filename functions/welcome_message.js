@@ -2,6 +2,8 @@ import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder } from "discord.js";
 import { tagUsername } from "./helpers/helpers.js";
 import { canSendMessageToChannel } from "./helpers/checks.js";
+import { findOneDocument } from "../database/mongodb_service.js";
+import { configuration } from "../database/schemas/configuration_schema.js";
 
 const background = "https://i.imgur.com/RdqOaKw.png";
 
@@ -19,7 +21,13 @@ const av = {
 
 export const generateMessage = async (member) => {
     const guild = member.guild;
-    const channel = guild.channels.cache.filter(c => c.type === 0).find(x => x.position == 0);
+    const configurationData = await findOneDocument(configuration, { guildId: guild.id });
+
+    if (!configurationData.displayWelcomeMessage) return;
+
+    const channel = configurationData.welcomeMessageChannel ? 
+        guild.channels.cache.get(configurationData.welcomeMessageChannel) :
+        guild.channels.cache.filter(c => c.type === 0).find(x => x.position == 0);
 
     if (!await canSendMessageToChannel(guild, channel)) return;
 
@@ -91,6 +99,8 @@ export const generateMessage = async (member) => {
     const attachment = new AttachmentBuilder(canvasPaper.toBuffer(), {
         name: "welcome.png",
     });
+
+    if (configurationData.defaultRoleId !== null) member.roles.add(configurationData.defaultRoleId);
     
     await channel.send({
         content: "Welcome " + tagUsername(member.id) + "!\n" +

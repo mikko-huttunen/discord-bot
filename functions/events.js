@@ -342,23 +342,27 @@ export const postEvent = async (client, postType, query) => {
 };
 
 const handleEventReminder = async (eventData, eventAttendees, guild, channel) => {
-    //TODO: Create better solution for msgId handling
-    const msgId = eventData.msgId;
-    eventData.msgId = null;
-    const newEventMsg = await createEventMessage(eventData, guild, eventAttendees);
-    console.log("Event reminder posted for " + eventData.eventId, JSON.stringify(eventData));
-
-    await updateDocument(event, { eventId: eventData.eventId }, { msgId: newEventMsg.id });
-
     try {
-        const originalEventMsg = await channel.messages.fetch(msgId);
+        const originalEventMsg = await channel.messages.fetch(eventData.msgId);
         originalEventMsg.delete();
     } catch (error) {
         console.error(MSG_NOT_FOUND_ERR, error);
     }
+
+    const newEventMsg = await createEventMessage(eventData, guild, eventAttendees);
+
+    await updateDocument(event, { eventId: eventData.eventId }, { msgId: newEventMsg.id });
+    console.log("Event reminder posted for " + eventData.eventId, JSON.stringify(eventData));
 };
 
 const handleEventSummary = async (eventData, eventAttendees, guild, channel) => {
+    try {
+        const eventMsg = await channel.messages.fetch(eventData.msgId);
+        eventMsg.delete();
+    } catch (err) {
+        console.error(MSG_NOT_FOUND_ERR, err);
+    }
+
     await createEventMessage(eventData, guild, eventAttendees, true);
     await deleteManyDocuments(attendee, { eventId: eventData.eventId });
 
@@ -369,30 +373,12 @@ const handleEventSummary = async (eventData, eventAttendees, guild, channel) => 
         };
         
         await deleteDocument(event, deleteQuery);
-
-        try {
-            const eventMsg = await channel.messages.fetch(eventData.msgId);
-            eventMsg.delete();
-        } catch (err) {
-            console.error(MSG_NOT_FOUND_ERR, err);
-        }
-
         return;
     }
 
     //Event is set to repeat so update it's date and clear current attendees
     const newDateTime = getNewDate(eventData.dateTime, eventData.repeat);
-
-    try {
-        const eventMsg = await channel.messages.fetch(eventData.msgId);
-        eventMsg.delete();
-    } catch (err) {
-        console.error(MSG_NOT_FOUND_ERR, err);
-    }
-
-    //TODO: Create better solution for msgId handling
     eventData.dateTime = newDateTime;
-    eventData.msgId = null;
 
     const newEventMsg = await createEventMessage(eventData, guild);
     const update = {

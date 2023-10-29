@@ -44,6 +44,10 @@ export const listCommands = (interaction) => {
                 value: "**/image**\nGet random picture based on given keyword\n" +
                     "**/video**\nGet YouTube video based on given keyword\n",
                 inline: true
+            }, {
+                name: "Settings",
+                value: "**/configure**\nChange or view current bot configuration (Requires manage server permission)",
+                inline: true
             }
         ],
     };
