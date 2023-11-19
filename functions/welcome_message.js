@@ -23,7 +23,7 @@ export const generateMessage = async (member) => {
     const guild = member.guild;
     const configurationData = await findOneDocument(configuration, { guildId: guild.id });
 
-    if (!configurationData.displayWelcomeMessage) return;
+    if (configurationData.displayWelcomeMessage !== null && configuration.displayWelcomeMessage === false) return;
 
     const channel = configurationData.welcomeMessageChannel ? 
         guild.channels.cache.get(configurationData.welcomeMessageChannel) :
