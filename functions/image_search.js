@@ -9,7 +9,7 @@ export const handleImageSearch = async (interaction) => {
     const guild = interaction.guild;
     const channel = await guild.channels.cache.get(interaction.channelId);
     const nsfwFilter = await findOneDocument(configuration, { guildId: guild.id }).then(result => {
-        if (result.nsfwFilter !== null) return result.nsfwFilter;
+        if (result && result.nsfwFilter !== null) return result.nsfwFilter;
         return true;
     });
 
